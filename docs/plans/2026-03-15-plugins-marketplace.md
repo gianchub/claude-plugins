@@ -8,7 +8,7 @@
 
 **Spec:** `docs/specs/2026-03-15-plugins-marketplace-design.md`
 
-**Parallelization:** Chunks 1 (code-audit), 2 (blueprint), and 3 (execute) are independent of each other after Task 1 (scaffold). If subagents are available, Tasks 2-5, 6-9, and 10-12 can be executed in parallel.
+**Parallelization:** Chunks 1 (code-audit) and 2 (blueprint + execute) are independent of each other after Task 1 (scaffold). If subagents are available, Tasks 2-5 and 6-12 can be executed in parallel.
 
 **Pre-existing files:** `LICENSE` already exists in the repo root and does not need to be created.
 
@@ -22,7 +22,7 @@
 - Modify: `README.md`
 - Create: `plugins/` (directory structure only)
 
-- [ ] **Step 1: Create the directory scaffold for all three plugins**
+- [ ] **Step 1: Create the directory scaffold for both plugins**
 
 Create the full directory tree as defined in the spec:
 ```
@@ -32,14 +32,11 @@ plugins/
 │   └── skills/
 │       └── audit/
 │           └── references/
-├── blueprint/
-│   ├── .claude-plugin/
-│   └── skills/
-│       └── blueprint/
-│           └── references/
-└── execute/
+└── blueprint/
     ├── .claude-plugin/
     └── skills/
+        ├── blueprint/
+        │   └── references/
         └── execute/
             └── references/
 ```
@@ -272,7 +269,7 @@ git commit -m "feat(code-audit): add audit skill with workflow and references"
 ```json
 {
   "name": "blueprint",
-  "description": "Collaborative implementation planning with build-review-verify cycles per step",
+  "description": "Collaborative implementation planning and execution with build-review-verify cycles per step",
   "author": {
     "name": "fab"
   }
@@ -451,38 +448,12 @@ git commit -m "feat(blueprint): add blueprint skill with collaborative planning 
 
 ---
 
-## Chunk 3: execute Plugin
+## Chunk 3: execute Skill (within blueprint plugin)
 
-### Task 10: execute — plugin.json
-
-**Files:**
-- Create: `plugins/execute/.claude-plugin/plugin.json`
-
-- [ ] **Step 1: Write plugin.json**
-
-```json
-{
-  "name": "execute",
-  "description": "Plan execution engine that drives blueprint plans through build-review-verify phases using subagents",
-  "author": {
-    "name": "fab"
-  }
-}
-```
-
-- [ ] **Step 2: Commit**
-
-```bash
-git add plugins/execute/.claude-plugin/plugin.json
-git commit -m "feat(execute): add plugin manifest"
-```
-
----
-
-### Task 11: execute — references/subagent-prompts.md
+### Task 10: execute — references/subagent-prompts.md
 
 **Files:**
-- Create: `plugins/execute/skills/execute/references/subagent-prompts.md`
+- Create: `plugins/blueprint/skills/execute/references/subagent-prompts.md`
 
 - [ ] **Step 1: Write the subagent prompt templates**
 
@@ -510,16 +481,16 @@ This file contains detailed prompt templates for each of the three subagent type
 - [ ] **Step 2: Commit**
 
 ```bash
-git add plugins/execute/skills/execute/references/subagent-prompts.md
-git commit -m "feat(execute): add subagent prompt templates reference"
+git add plugins/blueprint/skills/execute/references/subagent-prompts.md
+git commit -m "feat(blueprint): add execute subagent prompt templates reference"
 ```
 
 ---
 
-### Task 12: execute — SKILL.md
+### Task 11: execute — SKILL.md
 
 **Files:**
-- Create: `plugins/execute/skills/execute/SKILL.md`
+- Create: `plugins/blueprint/skills/execute/SKILL.md`
 
 - [ ] **Step 1: Write SKILL.md**
 
@@ -576,21 +547,21 @@ Same validation as previous skills, plus:
 - [ ] **Step 3: Commit**
 
 ```bash
-git add plugins/execute/skills/execute/SKILL.md
-git commit -m "feat(execute): add execute skill with subagent orchestration workflow"
+git add plugins/blueprint/skills/execute/SKILL.md
+git commit -m "feat(blueprint): add execute skill with subagent orchestration workflow"
 ```
 
 ---
 
 ## Chunk 4: Final Validation and Marketplace Registration
 
-### Task 13: Cross-Plugin Validation
+### Task 12: Cross-Plugin Validation
 
 - [ ] **Step 1: Validate all plugin structures**
 
-For each plugin (code-audit, blueprint, execute), verify:
+For each plugin (code-audit, blueprint), verify:
 - `.claude-plugin/plugin.json` exists and has valid JSON with `name`, `description`, `author`
-- `skills/<name>/SKILL.md` exists with valid YAML frontmatter (`name`, `description`)
+- Each `skills/<name>/SKILL.md` exists with valid YAML frontmatter (`name`, `description`)
 - All files referenced in SKILL.md actually exist
 - No duplicated content between SKILL.md and reference files
 - All SKILL.md files use imperative/infinitive form
@@ -598,7 +569,7 @@ For each plugin (code-audit, blueprint, execute), verify:
 
 - [ ] **Step 2: Verify 3-phase cycle consistency**
 
-Check that the 3-phase cycle terminology is consistent across all three plugins:
+Check that the 3-phase cycle terminology is consistent across all skills:
 - blueprint defines it (Phase 1 — Build, Phase 2 — Adversarial Review, Phase 3 — Verification)
 - execute references it with matching names
 - code-audit does not use it (different workflow) — verify no accidental cross-contamination
@@ -607,7 +578,7 @@ Check that the 3-phase cycle terminology is consistent across all three plugins:
 
 If validation found issues, fix them and commit with specific file paths:
 ```bash
-git add plugins/code-audit/skills/audit/SKILL.md plugins/blueprint/skills/blueprint/SKILL.md plugins/execute/skills/execute/SKILL.md
+git add plugins/code-audit/skills/audit/SKILL.md plugins/blueprint/skills/blueprint/SKILL.md plugins/blueprint/skills/execute/SKILL.md
 git commit -m "fix: address cross-plugin validation issues"
 ```
 
@@ -615,7 +586,7 @@ Skip this step if no issues were found.
 
 ---
 
-### Task 14: Marketplace Registration Test
+### Task 13: Marketplace Registration Test
 
 This is a manual/exploratory task. Claude Code's CLI interface for plugin testing may vary — adapt commands as needed.
 

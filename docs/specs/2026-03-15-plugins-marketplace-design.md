@@ -9,11 +9,10 @@ This repository (`claude-plugins`) serves as a personal Claude Code plugins mark
 
 ## Scope
 
-Three plugins for the initial release:
+Two plugins for the initial release:
 
 1. **code-audit** — Language-agnostic codebase auditing with structured report output
-2. **blueprint** — Collaborative implementation planning with a 3-phase cycle per step
-3. **execute** — Plan execution engine that drives blueprint plans through build/review/verify phases using subagents
+2. **blueprint** — Collaborative implementation planning with a 3-phase cycle per step, plus plan execution via subagents. Contains two skills: `blueprint` (planning) and `execute` (execution). These are bundled together because execute depends on blueprint's output format and they are always used together.
 
 Codex compatibility is out of scope. Claude Code only.
 
@@ -33,19 +32,15 @@ claude-plugins/
 │   │           └── references/
 │   │               ├── categories.md
 │   │               └── report-template.md
-│   ├── blueprint/
-│   │   ├── .claude-plugin/
-│   │   │   └── plugin.json
-│   │   └── skills/
-│   │       └── blueprint/
-│   │           ├── SKILL.md
-│   │           └── references/
-│   │               ├── step-template.md
-│   │               └── tool-discovery.md
-│   └── execute/
+│   └── blueprint/
 │       ├── .claude-plugin/
 │       │   └── plugin.json
 │       └── skills/
+│           ├── blueprint/
+│           │   ├── SKILL.md
+│           │   └── references/
+│           │       ├── step-template.md
+│           │       └── tool-discovery.md
 │           └── execute/
 │               ├── SKILL.md
 │               └── references/
@@ -239,7 +234,7 @@ Detected tools are presented to the user for confirmation before being embedded 
 ```json
 {
   "name": "blueprint",
-  "description": "Collaborative implementation planning with build-review-verify cycles per step",
+  "description": "Collaborative implementation planning and execution with build-review-verify cycles per step",
   "author": {
     "name": "fab"
   }
@@ -248,7 +243,7 @@ Detected tools are presented to the user for confirmation before being embedded 
 
 ---
 
-## Plugin 3: execute
+## Execute Skill (within blueprint plugin)
 
 ### Purpose
 
@@ -303,17 +298,7 @@ All subagents are dispatched via Claude Code's Agent tool. The review subagent m
 - **SKILL.md** (~2,000-2,500 words) — Orchestration workflow: plan location, git handling, batching rules, subagent dispatch, failure handling, progress marking
 - **references/subagent-prompts.md** — Detailed prompt templates for build, review, and verification subagents
 
-### plugin.json
-
-```json
-{
-  "name": "execute",
-  "description": "Plan execution engine that drives blueprint plans through build-review-verify phases using subagents",
-  "author": {
-    "name": "fab"
-  }
-}
-```
+Note: This skill lives under `plugins/blueprint/skills/execute/`, not as a standalone plugin. It shares the blueprint plugin's `plugin.json`.
 
 ---
 
