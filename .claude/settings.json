@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Read",
+      "Write",
+      "Edit",
+      "MultiEdit",
+      "Bash(uv *)",
+      "Bash(make *)",
+      "Bash(python *)",
+      "Bash(git stash *)",
+      "Bash(find *)"
+    ]
+  }
+}
