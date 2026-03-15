@@ -1,0 +1,7 @@
+{
+  "name": "code-audit",
+  "description": "Language-agnostic codebase auditing with structured severity-ranked reports",
+  "author": {
+    "name": "fab"
+  }
+}
