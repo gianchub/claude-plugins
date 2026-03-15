@@ -1,0 +1,7 @@
+{
+  "name": "blueprint",
+  "description": "Collaborative implementation planning and execution with build-review-verify cycles per step",
+  "author": {
+    "name": "fab"
+  }
+}
