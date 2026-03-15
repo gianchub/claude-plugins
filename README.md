@@ -30,7 +30,7 @@ Add an entry to `~/.claude/plugins/known_marketplaces.json`:
 
 ### 2. Install plugins
 
-Restart Claude Code. The marketplace will be discovered automatically. Install plugins through the plugin install flow (`/install-plugin` or the plugins menu).
+Restart Claude Code. The marketplace will be discovered automatically. Install plugins through the plugin install flow.
 
 ### 3. Verify
 
