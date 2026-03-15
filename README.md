@@ -11,11 +11,33 @@ Personal Claude Code plugins marketplace.
 
 ## Installation
 
-Register this repository as a marketplace in Claude Code:
+### 1. Register the marketplace
 
-1. Push this repo to GitHub
-2. In Claude Code, add the marketplace via `~/.claude/plugins/known_marketplaces.json`
-3. Install individual plugins through the plugin install flow
+Add an entry to `~/.claude/plugins/known_marketplaces.json`:
+
+```json
+{
+  "claude-plugins-official": { ... },
+  "gianchub-plugins": {
+    "source": {
+      "source": "github",
+      "repo": "gianchub/claude-plugins"
+    },
+    "installLocation": "~/.claude/plugins/marketplaces/gianchub-plugins"
+  }
+}
+```
+
+### 2. Install plugins
+
+Restart Claude Code. The marketplace will be discovered automatically. Install plugins through the plugin install flow (`/install-plugin` or the plugins menu).
+
+### 3. Verify
+
+After installation, the skills should appear in your session. Try:
+- `"audit this codebase"` to trigger the audit skill
+- `"create a blueprint for ..."` to trigger the blueprint skill
+- `"execute the plan"` to trigger the execute skill
 
 ## Auto-Update
 
