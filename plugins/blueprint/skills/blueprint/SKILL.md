@@ -195,19 +195,21 @@ Do not include:
 
 ## Handling Plan Execution
 
-When the user asks to execute a plan (or begins working through steps), shift into execution mode:
+When the user asks to execute a plan (or begins working through steps), shift into execution mode. If the `execute` skill is available (it ships with this plugin), defer to it — it provides full subagent-based orchestration with batching, git handling, and progress tracking. If the execute skill is not available, follow this fallback:
 
-- Work through one step at a time, completing all three phases before moving to the next.
-- After Phase 3 verification passes, summarize what was completed and confirm readiness to proceed to the next step.
-- If Phase 2 review or Phase 3 verification reveals issues, fix them within the current step before moving on.
+- Work through one step at a time, completing all three phases before moving to the next. Never proceed to the next step until the current step's verification passes.
+- After Phase 3 verification passes, summarize what was completed and confirm readiness to proceed to the next step. Include a brief list of files changed and tests added.
+- If Phase 2 review or Phase 3 verification reveals issues, fix them within the current step before moving on. Surface blocking issues to the user rather than silently resolving them.
 - If execution reveals that a future step needs modification (scope changed, new constraint discovered), note the required adjustment and confirm with the user before modifying the plan.
+- For multi-session execution, mark completed steps with a ✅ checkmark in the plan file (e.g., `### Step 1: Auth` → `### ✅ Step 1: Auth`). On resume, find the first unmarked step and continue from there.
 
 ## Handling Ambiguity and Scope Changes
 
-- If the user's request is too vague to plan ("make the app better"), ask for specifics. Do not generate a plan from vague input.
-- If the user changes scope mid-planning, acknowledge the change, assess its impact on the current plan state, and either adjust or restart as appropriate.
-- If a step proves unnecessary during execution, skip it explicitly — do not silently omit it. Note why it was skipped.
-- If new steps are needed during execution, propose them with the same 3-phase structure and get user confirmation before adding them.
+- If the user's request is too vague to plan ("make the app better"), ask for specifics. Do not generate a plan from vague input. Push back respectfully — a clear problem statement is a prerequisite for a useful plan.
+- If the user changes scope mid-planning, acknowledge the change, assess its impact on the current plan state, and either adjust or restart as appropriate. If the change invalidates more than half the existing plan, recommend starting fresh rather than patching.
+- If a step proves unnecessary during execution, skip it explicitly — do not silently omit it. Note why it was skipped and confirm with the user.
+- If new steps are needed during execution, propose them with the same 3-phase structure and get user confirmation before adding them to the plan.
+- If conflicting requirements surface during planning, flag the conflict immediately. Present the tradeoff to the user with a recommended resolution rather than silently choosing one interpretation.
 
 ## Additional Resources
 

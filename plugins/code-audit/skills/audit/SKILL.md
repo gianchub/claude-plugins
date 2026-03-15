@@ -87,10 +87,10 @@ Before moving to report generation, deduplicate findings:
 
 When the scope contains more than roughly 50 files or 10,000 lines of code, use parallel subagents to avoid superficial analysis:
 
-- Partition the scope into logical modules or directory subtrees. Aim for partitions of roughly equal size.
-- Assign one subagent per partition. Each subagent performs Phase A (file-level analysis) on its partition independently, following the same checklist and recording format.
-- After all subagents complete, perform Phase B (cross-file analysis) on the merged set of findings, focusing on interactions between partitions.
-- Deduplicate findings that were independently discovered by multiple subagents operating on shared or overlapping code.
+- Partition the scope into logical modules or directory subtrees. Aim for partitions of roughly equal size. Prefer boundaries that align with architectural layers (e.g., data access, business logic, API handlers) rather than arbitrary file count splits, since this produces more meaningful cross-file analysis within each partition.
+- Assign one subagent per partition. Each subagent performs Phase A (file-level analysis) on its partition independently, following the same checklist and recording format. Provide each subagent with a brief description of the overall codebase architecture so it can reason about external dependencies.
+- After all subagents complete, perform Phase B (cross-file analysis) on the merged set of findings, focusing on interactions between partitions. Pay special attention to trust boundaries — data flowing from one partition to another is a common source of missed validation and injection vulnerabilities.
+- Deduplicate findings that were independently discovered by multiple subagents operating on shared or overlapping code. When multiple subagents report variations of the same issue, consolidate into the highest-severity version and list all affected locations.
 
 If subagents are not available or the scope is small enough, perform all phases sequentially as a single agent.
 
