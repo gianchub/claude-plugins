@@ -195,13 +195,15 @@ Do not include:
 
 ## Handling Plan Execution
 
-When the user asks to execute a plan (or begins working through steps), shift into execution mode. If the `execute` skill is available (it ships with this plugin), defer to it — it provides full subagent-based orchestration with batching, git handling, and progress tracking. If the execute skill is not available, follow this fallback:
+When the user asks to execute a plan (or begins working through steps), shift into execution mode. **Preferred**: use the `blueprint:execute` skill (it ships with this plugin) — it provides full subagent-based orchestration with batching, git handling, and progress tracking. Always try to invoke `blueprint:execute` first.
+
+If the execute skill is not available, follow this fallback:
 
 - Work through one step at a time, completing all three phases before moving to the next. Never proceed to the next step until the current step's verification passes.
 - After Phase 3 verification passes, summarize what was completed and confirm readiness to proceed to the next step. Include a brief list of files changed and tests added.
 - If Phase 2 review or Phase 3 verification reveals issues, fix them within the current step before moving on. Surface blocking issues to the user rather than silently resolving them.
 - If execution reveals that a future step needs modification (scope changed, new constraint discovered), note the required adjustment and confirm with the user before modifying the plan.
-- For multi-session execution, mark completed steps with a ✅ checkmark in the plan file (e.g., `### Step 1: Auth` → `### ✅ Step 1: Auth`). On resume, find the first unmarked step and continue from there.
+- For multi-session execution, mark completed steps with a ✅ checkmark in the plan file (e.g., `### Step 1: Auth` → `### ✅ Step 1: Auth`) and tick all markdown checkboxes within the completed step (`- [ ]` → `- [x]`). On resume, find the first unmarked step and continue from there.
 
 ## Handling Ambiguity and Scope Changes
 

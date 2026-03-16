@@ -39,6 +39,7 @@ Before executing the first step, ask the user which git mode to use. Present exa
 
 **Skill-managed mode:**
 - After each individual step passes all three phases, create a commit automatically.
+- Include the plan file's progress updates (✅ heading prefix and ticked checkboxes) in the same commit as the step's implementation changes — do not create a separate commit for plan progress.
 - Use a clear, descriptive commit message in conventional commits format referencing the step.
 - Never include Claude Code or AI attribution in commit messages. No co-authored-by lines, no bot signatures, no AI references of any kind.
 - After committing, proceed to the next step without pausing (unless the batch boundary is reached).
@@ -94,19 +95,12 @@ Steps that have already passed all three phases and been marked complete retain 
 
 ### Progress Tracking
 
-Immediately after a step passes all three phases (build, review, verify), mark it complete in the plan file by prepending a checkmark to the step heading. For example, transform:
+Immediately after a step passes all three phases (build, review, verify), mark it complete in the plan file with two updates:
 
-```
-### Step 1: Auth middleware
-```
+1. Prepend a checkmark to the step heading. For example, transform `### Step 1: Auth middleware` into `### ✅ Step 1: Auth middleware`.
+2. Tick all markdown checkboxes within the completed step by changing `- [ ]` to `- [x]` for every checkbox in that step's Phase 3 verification checklist (and any other checkboxes within the step).
 
-into:
-
-```
-### ✅ Step 1: Auth middleware
-```
-
-Write this change to the plan file on disk so progress persists across sessions. On resume, scan the plan file for the first step heading that does not have a ✅ prefix and begin execution from that step.
+Write both changes to the plan file on disk so progress persists across sessions. On resume, scan the plan file for the first step heading that does not have a ✅ prefix and begin execution from that step.
 
 If the user previously paused execution (user-managed git mode), re-read the entire plan file before resuming. The user may have edited the plan during the pause — added steps, removed steps, reordered steps, or modified instructions. Honor whatever the plan file contains at resume time.
 
