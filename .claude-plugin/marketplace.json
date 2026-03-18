@@ -1,27 +1,28 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "gianchub-plugins",
-  "description": "Personal Claude Code plugins for code auditing and implementation planning",
+  "description": "Claude Code plugins for implementation planning and code auditing",
   "owner": {
-    "name": "gianchub"
+    "name": "Fabrizio Romano",
+    "url": "https://github.com/gianchub"
   },
   "plugins": [
-    {
-      "name": "code-audit",
-      "description": "Language-agnostic codebase auditing with structured severity-ranked reports",
-      "author": {
-        "name": "gianchub"
-      },
-      "source": "./plugins/code-audit",
-      "category": "productivity"
-    },
     {
       "name": "blueprint",
       "description": "Collaborative implementation planning and execution with build-review-verify cycles per step",
       "author": {
-        "name": "gianchub"
+        "name": "Fabrizio Romano"
       },
       "source": "./plugins/blueprint",
+      "category": "productivity"
+    },
+    {
+      "name": "code-audit",
+      "description": "Language-agnostic codebase auditing with structured severity-ranked reports",
+      "author": {
+        "name": "Fabrizio Romano"
+      },
+      "source": "./plugins/code-audit",
       "category": "productivity"
     }
   ]
