@@ -5,8 +5,7 @@ description: >
   "blueprint this feature", "plan this implementation", "make a plan",
   "create an implementation plan", "design the architecture",
   "break this down into steps", or needs a structured plan with
-  build-review-verify cycles. Produces plan artifacts with a 3-phase
-  cycle per step.
+  build-review-verify cycles.
 ---
 
 # Blueprint Skill
@@ -17,7 +16,7 @@ Produce collaborative implementation plans as written artifacts, where every ste
 
 ## Effort Level
 
-Apply maximum effort. Explore the codebase exhaustively before generating any plan. Read existing code, configuration, tests, and CI pipelines to understand the current architecture, conventions, and constraints. Never plan in a vacuum — every step must account for the real state of the project.
+Scale exploration depth to the complexity of the task, but always err on the side of more thoroughness, not less. Even for a seemingly simple change, investigate its context — what it touches, what depends on it, what patterns surround it. A small refactoring doesn't need full-project archaeology, but it does need enough context to produce a plan that accounts for ripple effects. The goal is a plan so thorough that execution surfaces zero surprises. Read broadly before narrowing. Understand the surrounding architecture before planning a change to one piece of it. When in doubt, explore more rather than less.
 
 ## Design Principles
 
@@ -39,6 +38,8 @@ Plan steps describe intent, behavior, and constraints in prose. Do not include c
 1. **Interface signatures** — when an exact function, method, or API signature is critical for cross-step compatibility.
 2. **Exact config keys** — when a configuration shape must match a specific external contract.
 3. **Schema shapes** — when a data schema (database columns, API response shape, message format) is the primary deliverable of the step.
+
+Tool commands in Phase 3 verification checklists (e.g., `pytest tests/ -x -q`, `ruff check .`) are not violations of prose-over-code — they are operational instructions, not implementation details.
 
 Everything else stays in prose. If a step feels like it needs code to be clear, that signals the step is too large or too implementation-focused. Split it or raise the abstraction level.
 
@@ -94,6 +95,8 @@ Discovered tools for this project:
 Add, remove, or reorder? (or confirm to proceed)
 ```
 
+**Fast-path for small plans**: If the user's request is narrowly scoped (e.g., a config change, single-file refactoring, or other small task that will clearly result in 3 or fewer steps), discover tools as normal but present them inline with the generated plan rather than as a separate confirmation gate. Still include the tool chain table in the plan header. For multi-step or architecturally significant plans, keep the separate confirmation step described above.
+
 ### 2. Assess Complexity
 
 With the task understood and tool chain confirmed, determine the plan's scope:
@@ -105,7 +108,7 @@ With the task understood and tool chain confirmed, determine the plan's scope:
 
 **Step sizing guidance**:
 
-- A step should take between 15 minutes and 2 hours to execute. Shorter than 15 minutes means it should be merged with an adjacent step. Longer than 2 hours means it should be split.
+- A step should represent a single logical unit of work — larger than a trivial config change, smaller than a full feature. If it can be described in one sentence, merge it with an adjacent step. If it needs its own sub-plan, split it.
 - Each step must be independently verifiable — all its tests pass without depending on future steps being complete.
 - Steps should build on each other sequentially. Later steps may depend on earlier steps, but not the reverse.
 - Avoid steps that are purely structural ("set up the directory") unless the project has no existing structure. Structural work should be folded into the first functional step.
@@ -142,7 +145,7 @@ Write the plan artifact(s) following the structure defined in `references/step-t
 - Write clear, specific titles that describe the deliverable ("Add user authentication endpoint"), not the activity ("Work on authentication").
 - Write acceptance criteria that are concrete and testable. Avoid vague criteria like "code is clean" or "performance is good." Use measurable conditions: "Response time under 200ms for 95th percentile," "All validation errors return 422 with field-level messages."
 - In Phase 1 (Build), describe intent per the prose-first approach. Specify what to create, modify, and test. Reference existing code patterns where applicable ("Follow the same repository pattern used in `src/repos/product_repo.py`").
-- In Phase 2 (Adversarial Review), write step-specific review questions. Target the most likely failure modes for what was just built. Do not use generic checklists — every review question should be relevant to the specific step.
+- In Phase 2 (Adversarial Review), write step-specific review questions targeting the most likely failure modes, but also include broader integration questions: Does this change fit naturally in the existing codebase? Does it follow established conventions and patterns? Could it break or degrade anything outside its immediate scope? The review is a thorough, critical code review of the work done — not just an acceptance criteria checklist. The goal is to eliminate all issues introduced by the build phase before proceeding.
 - In Phase 3 (Verification), include the full checklist with tool commands from the confirmed tool chain. Add step-specific verification items beyond the standard checks.
 
 **Dependency tracking**: If a step depends on artifacts from a previous step, state the dependency explicitly in the objective. Example: "Depends on Step 2 (user repository). Uses the `UserRepository` interface defined there."

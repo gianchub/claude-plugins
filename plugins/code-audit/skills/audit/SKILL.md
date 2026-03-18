@@ -5,8 +5,7 @@ description: >
   "audit this code", "security audit", "code audit", "find vulnerabilities",
   "check for bugs", "review code quality", "find dead code",
   "check for anti-patterns", "performance audit", or mentions wanting a
-  comprehensive code quality analysis. Produces a structured severity-ranked
-  report file.
+  comprehensive code quality analysis.
 ---
 
 # Code Audit Skill
@@ -17,7 +16,7 @@ Perform a thorough, language-agnostic audit of a codebase or subset of files, pr
 
 ## Effort Level
 
-Apply maximum effort throughout the audit. Read every line of in-scope code. Trace data flows from external inputs through processing layers to outputs and storage. Follow call chains across module boundaries to detect issues that only manifest through component interaction. Examine configuration files, build scripts, and infrastructure definitions alongside application code. When the scope is large enough that a single pass would be superficial, split the work across parallel subagents by module or directory, then merge and deduplicate findings before report generation.
+Read every line of in-scope code. Do not skim, sample, or rely on heuristics to skip files. Trace data flows from external inputs through processing layers to outputs and storage. Follow call chains across module boundaries to detect issues that only manifest through component interaction. When the scope is large enough that thoroughness would suffer in a single pass, split work across parallel subagents by module or directory, then merge and deduplicate findings. The goal is zero missed findings within the confirmed categories — the report should be comprehensive enough that a second audit would find nothing new.
 
 ## Workflow
 
@@ -34,9 +33,9 @@ If the prompt does not contain enough information to determine scope, ask a sing
 
 Once scope is established, enumerate all files that fall within it. Exclude generated files (e.g., lock files, compiled output, vendored dependencies, minified bundles) unless the user explicitly includes them. State the resolved scope back to the user before continuing.
 
-### Step 2 — Confirm Categories
+### Step 2 — Select and Confirm Categories
 
-Present the seven audit categories to the user:
+Analyze the user's request and the codebase to select the most relevant audit categories from the full list:
 
 1. Security vulnerabilities
 2. Race conditions and concurrency
@@ -45,8 +44,11 @@ Present the seven audit categories to the user:
 5. Performance
 6. Correctness
 7. Error handling gaps
+8. Test quality
 
-Allow the user to remove categories that are not relevant or add custom categories. If the user does not respond or confirms the defaults, proceed with all seven. Record the final category list for inclusion in the report summary.
+Consider both what the user explicitly asked for and what the code naturally warrants. For example, if the codebase uses async patterns, include the concurrency category even if the user didn't mention it. If the user explicitly names categories (e.g., "security audit"), start with those and add others only if the code strongly warrants it.
+
+Present the selected categories to the user with a brief rationale for each inclusion, and ask if they want to add or remove any before proceeding. For broad requests ("audit this codebase"), default to all categories.
 
 Consult `references/categories.md` for the detailed checklist within each category. Use those checklists as the basis for systematic analysis. Skip individual checklist items that do not apply to the languages, frameworks, or paradigms present in the codebase.
 
