@@ -27,7 +27,7 @@ Collaborative implementation planning and execution with build-review-verify cyc
 | --- | --- |
 | `/blueprint:setup` | Set blueprint as the default planning skill for the current project |
 
-The `setup` command saves a preference to Claude's project memory so that generic planning requests ("make a plan", "execute the plan") route to the blueprint plugin instead of other skills with overlapping triggers (e.g. superpowers). Run it once per project. You can still invoke other planning skills explicitly by name when needed.
+The `setup` command saves a preference to Claude's project memory so that generic planning requests ("make a plan", "execute the plan") route to the blueprint plugin instead of other plugins with overlapping triggers. Run it once per project. You can still invoke other planning skills explicitly by name when needed.
 
 ### Code Audit
 
