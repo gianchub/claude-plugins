@@ -65,6 +65,12 @@ This is NOT a generic code review. Build a **step-specific checklist** that targ
 - Verify error handling: does every failure mode produce a clear, actionable error? Are errors logged appropriately?
 - Check test quality: do tests cover the acceptance criteria? Do they test failure paths, not just happy paths? Are assertions specific (not just "no error")?
 
+**Beyond the step — codebase integration:**
+- Does the new code follow the conventions, patterns, and idioms already established in the codebase? Check naming conventions, error handling style, module structure, and import patterns against existing code.
+- Does the implementation sit at the right abstraction layer? Does it respect existing boundaries (service layers, repository patterns, API contracts)? Would the change surprise a developer familiar with the codebase?
+- Could this change break or degrade anything outside its immediate scope? Check imports, shared utilities, configuration, and any module that depends on modified interfaces.
+- The review should aim to eliminate all issues introduced by the build phase before proceeding. Anything that passes review should be genuinely production-ready — not just "meets acceptance criteria."
+
 **Anti-patterns to flag**:
 - Tests that only verify the happy path.
 - Error messages that leak internal details.
@@ -146,6 +152,8 @@ Create the authentication endpoint in the API layer.
 8. Are tests asserting on specific status codes and response shapes, not just "request succeeded"?
 9. Is there a test that verifies the timing side-channel is mitigated (same response time for valid vs invalid email)?
 10. Does the login handler avoid logging the submitted password, even at debug level?
+11. Does the authentication module follow the same patterns used elsewhere in the codebase (error response format, middleware registration, service instantiation)?
+12. Could the new auth routes or middleware interfere with existing routes or middleware in the application?
 
 #### Phase 3 — Verification
 

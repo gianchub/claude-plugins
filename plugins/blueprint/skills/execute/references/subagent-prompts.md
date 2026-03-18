@@ -10,6 +10,8 @@ Prompt templates for the three subagent types dispatched during plan execution. 
 - `{{PHASE_1_INSTRUCTIONS}}` — the step's Phase 1 instructions, copied verbatim from the plan
 - `{{PROJECT_ROOT}}` — absolute path to the project root
 - `{{STEP_LABEL}}` — human-readable step label (e.g., "Step 2: Auth middleware")
+- `{{STEP_OBJECTIVE}}` — the step's objective text, copied verbatim from the plan
+- `{{ACCEPTANCE_CRITERIA}}` — the step's acceptance criteria list, copied verbatim from the plan
 
 **Prompt:**
 
@@ -19,14 +21,21 @@ You are a build subagent executing one step of an implementation plan.
 STEP: {{STEP_LABEL}}
 PROJECT ROOT: {{PROJECT_ROOT}}
 
+OBJECTIVE:
+{{STEP_OBJECTIVE}}
+
+ACCEPTANCE CRITERIA (every criterion must be met by the end of this build):
+{{ACCEPTANCE_CRITERIA}}
+
 INSTRUCTIONS (follow exactly):
 {{PHASE_1_INSTRUCTIONS}}
 
 PROCESS:
-1. Read all files relevant to this step BEFORE making any changes. Understand the existing code structure, conventions, and patterns already in use.
-2. Implement the changes described in the instructions above. Follow existing project conventions for naming, structure, formatting, and style.
-3. Write thorough tests for all new and modified functionality. Tests must actually run and pass.
-4. Do not modify files outside the scope of this step unless strictly necessary. If you must touch an out-of-scope file, note it explicitly in your summary.
+1. Read the acceptance criteria above. These define "done" for this step — keep them in mind throughout implementation.
+2. Read all files relevant to this step BEFORE making any changes. Understand the existing code structure, conventions, and patterns already in use.
+3. Implement the changes described in the instructions above. Follow existing project conventions for naming, structure, formatting, and style.
+4. Write thorough tests for all new and modified functionality. Tests must actually run and pass.
+5. Do not modify files outside the scope of this step unless strictly necessary. If you must touch an out-of-scope file, note it explicitly in your summary.
 
 CONSTRAINTS:
 - Follow existing project conventions detected from the codebase (formatting, naming, structure, import style, test patterns).
@@ -92,9 +101,11 @@ PROCESS:
    - Integration issues (broken imports, incompatible interfaces, missing migrations)
    - Error handling gaps (bare excepts, swallowed errors, missing validation)
 4. Also note non-blocking observations worth mentioning.
+5. Evaluate codebase integration. Read surrounding files beyond the changed files to assess whether the new code follows existing conventions, patterns, and idioms. Flag inconsistencies in style, structure, naming, error handling approach, or architectural patterns compared to the rest of the codebase.
+6. Assess ripple effects. Check whether the changes could break or degrade anything outside the step's immediate scope — shared utilities, dependent modules, configuration, imports. A change that meets its acceptance criteria but clashes with established patterns or breaks surrounding code is a blocking finding.
 
 CLASSIFICATION RULES:
-- **blocking**: Must fix before proceeding. Includes: correctness bugs, security issues, missing tests for core paths, acceptance criteria not met, integration breakage.
+- **blocking**: Must fix before proceeding. Includes: correctness bugs, security issues, missing tests for core paths, acceptance criteria not met, integration breakage, codebase convention violations that would require rework if discovered later, and pattern inconsistencies with the established codebase.
 - **advisory**: Worth noting but does not block. Includes: style suggestions, minor improvements, future considerations, optional optimizations.
 
 RETURN FORMAT (respond with exactly this structure):

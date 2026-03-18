@@ -95,3 +95,17 @@ Use the checklists below to systematically evaluate the codebase. Each category 
 - [ ] **Missing retry and backoff** — Identify network calls, external API requests, or distributed operations that lack retry logic or use retry without exponential backoff and jitter.
 - [ ] **Unhandled promise rejections** — In async/event-driven code, verify that all promises, futures, or deferred results have rejection/error handlers attached. Check for missing `.catch()` or `try/catch` around `await`.
 - [ ] **Missing finally/defer** — Look for resource acquisition that lacks a corresponding cleanup block guaranteed to execute regardless of success or failure.
+
+---
+
+## 8. Test Quality
+
+- [ ] **Excessive mocking** — Identify tests that mock so many dependencies they are effectively testing the mocks, not the code. Flag cases where real dependencies could be used (e.g., in-memory databases, filesystem stubs) but mocks are used for convenience, hiding real integration issues.
+- [ ] **Vacuous assertions** — Find tests that assert on truthy values, check only that "no error occurred" instead of verifying actual output, or use overly broad matchers that would pass for almost any value.
+- [ ] **Missing failure path tests** — Check whether test suites only cover happy paths. Verify that error conditions, edge cases, boundary values, and invalid inputs are tested for critical code paths.
+- [ ] **Test pollution** — Look for shared mutable state between tests, test order dependencies, missing teardown or cleanup, and global state mutations that cause flaky or non-deterministic test runs.
+- [ ] **Snapshot overuse** — Identify snapshot tests used as a substitute for behavioral assertions. Flag snapshots that are large, frequently updated without review, or that test implementation details rather than observable behavior.
+- [ ] **Duplicated test setup** — Find repeated setup code across test files that should be extracted into shared fixtures, factories, or helper functions.
+- [ ] **Tests coupled to implementation** — Identify tests that depend on internal implementation details (private methods, internal state, specific call sequences) rather than observable behavior, making refactoring unnecessarily difficult and brittle.
+- [ ] **Dead or skipped tests** — Find tests marked as skip, pending, disabled, or xfail that have been left in that state indefinitely without a linked issue or expiration. These represent either untested behavior or dead code.
+- [ ] **Missing integration tests** — Check whether unit tests exist but no tests verify that components work together correctly across module boundaries, API layers, or service interfaces.

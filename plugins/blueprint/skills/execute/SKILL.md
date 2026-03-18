@@ -5,7 +5,6 @@ description: >
   "run the plan", "execute the plan", "start building from the plan",
   "implement the blueprint", "execute 01_milestone_name.md",
   or wants to drive a blueprint plan through its build-review-verify cycles.
-  Orchestrates plan execution using subagents for each phase.
 ---
 
 # Execute
@@ -16,7 +15,7 @@ Execute blueprint plans by driving each step through a strict build, review, and
 
 ## Effort Level
 
-Apply maximum effort to every phase. Treat each build as a real implementation, each review as an adversarial audit, and each verification as a gate that must actually pass. Never rubber-stamp a phase. Never skip checks. Never assume a step succeeded without evidence.
+Treat each phase as if it were the only chance to get it right. Builds should be complete, well-tested implementations — not drafts to be cleaned up later. Reviews should be genuinely adversarial — actively searching for flaws, not confirming success. Verifications should run every tool and inspect every result. Never rubber-stamp a phase. The standard is: after all three phases pass, the step's code should be production-ready with no known issues.
 
 ## Workflow
 
@@ -63,6 +62,8 @@ After a batch completes (all steps in the batch passed all phases), handle git a
 Use Claude Code's Agent tool to dispatch subagents. Reference `references/subagent-prompts.md` for the exact prompt templates. Substitute placeholders with actual values before dispatching.
 
 **Build subagent dispatch:**
+- Pass the step's objective text verbatim from the plan into `{{STEP_OBJECTIVE}}`.
+- Pass the step's acceptance criteria list verbatim from the plan into `{{ACCEPTANCE_CRITERIA}}`.
 - Pass the step's Phase 1 instructions verbatim from the plan into `{{PHASE_1_INSTRUCTIONS}}`.
 - The build subagent has full filesystem access to read and write files.
 - Capture the structured build summary from the subagent's response.
@@ -148,7 +149,7 @@ The verification subagent runs real commands. It does not estimate whether tests
 
 **No AI attribution.** In skill-managed git mode, commit messages never contain Claude Code attribution, co-authored-by lines, bot signatures, or any indication that an AI produced the code. Commits look like normal developer commits.
 
-**Adversarial review.** The review phase exists to catch mistakes, not to confirm the build succeeded. The review subagent actively tries to find flaws. It reads files independently rather than trusting the build summary. A review that finds nothing blocking is a genuine signal, not a rubber stamp. If the review consistently finds zero issues across many steps, that is not cause for concern — it means the build subagent is performing well, not that the review is too lenient.
+**Adversarial review.** The review phase is a thorough, critical code review — not just a check that acceptance criteria were met. The review subagent actively tries to find flaws in correctness, security, test quality, and codebase integration. It reads files beyond the immediate changes to assess whether the new code fits naturally within the existing application. A change that meets its acceptance criteria but clashes with established patterns, breaks surrounding code, or introduces inconsistency is a blocking finding. The goal is to eliminate all issues introduced by the build phase before proceeding.
 
 **Verification is execution.** The verification phase runs actual tools. It does not read code and guess whether tests would pass. It executes the test suite, the linter, the type checker, and any other configured tools. A passing verification means the tools actually ran and reported success. A failing verification includes the actual error output so the user can diagnose the problem without re-running the tools manually.
 

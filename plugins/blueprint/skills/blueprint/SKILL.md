@@ -5,19 +5,18 @@ description: >
   "blueprint this feature", "plan this implementation", "make a plan",
   "create an implementation plan", "design the architecture",
   "break this down into steps", or needs a structured plan with
-  build-review-verify cycles. Produces plan artifacts with a 3-phase
-  cycle per step.
+  build-review-verify cycles.
 ---
 
 # Blueprint Skill
 
 ## Purpose
 
-Produce collaborative implementation plans as written artifacts, where every step follows a build-review-verify cycle. Transform vague feature requests, architectural changes, or refactoring goals into concrete, sequenced plans that a human or agent can execute step by step. Treat planning as a dialogue — ask questions, discover the project's tooling, assess complexity, then generate the plan.
+Produce collaborative implementation plans as written artifacts, where every step follows a build-review-verify cycle. Transform vague feature requests, architectural changes, or refactoring goals into concrete, sequenced plans that a human or agent can execute step by step. Treat planning as a dialogue — explore the codebase, discover tooling, ask questions, assess complexity, then generate the plan.
 
 ## Effort Level
 
-Apply maximum effort. Explore the codebase exhaustively before generating any plan. Read existing code, configuration, tests, and CI pipelines to understand the current architecture, conventions, and constraints. Never plan in a vacuum — every step must account for the real state of the project.
+Scale exploration depth to the complexity of the task, but always err on the side of more thoroughness, not less. Even for a seemingly simple change, investigate its context — what it touches, what depends on it, what patterns surround it. A small refactoring doesn't need full-project archaeology, but it does need enough context to produce a plan that accounts for ripple effects. The goal is a plan so thorough that execution surfaces zero surprises. Read broadly before narrowing. Understand the surrounding architecture before planning a change to one piece of it. When in doubt, explore more rather than less.
 
 ## Design Principles
 
@@ -40,6 +39,8 @@ Plan steps describe intent, behavior, and constraints in prose. Do not include c
 2. **Exact config keys** — when a configuration shape must match a specific external contract.
 3. **Schema shapes** — when a data schema (database columns, API response shape, message format) is the primary deliverable of the step.
 
+Tool commands in Phase 3 verification checklists (e.g., `pytest tests/ -x -q`, `ruff check .`) are not violations of prose-over-code — they are operational instructions, not implementation details.
+
 Everything else stays in prose. If a step feels like it needs code to be clear, that signals the step is too large or too implementation-focused. Split it or raise the abstraction level.
 
 ### Adaptive Complexity
@@ -53,7 +54,7 @@ Not every plan needs the same structure. Apply these heuristics to choose the ou
 
 ## Workflow
 
-### 1. Understand the Task
+### 1. Understand the Task and Discover Tooling
 
 Begin by reading the codebase broadly. Examine:
 
@@ -64,6 +65,13 @@ Begin by reading the codebase broadly. Examine:
 - Existing tests (test structure, fixtures, factories, coverage).
 - Documentation (architecture docs, ADRs, READMEs with setup instructions).
 
+**While exploring, discover project tooling.** Tool discovery is not a separate phase — it happens naturally during codebase exploration. As configuration files, CI pipelines, and lock files are encountered, record the tools they imply:
+
+1. **Scan config files**: `pyproject.toml` (`[tool.*]` sections), `package.json` (`scripts`, `devDependencies`), `Cargo.toml`, `go.mod`, `Makefile`/`justfile` targets. See `references/tool-discovery.md` for the full per-language lookup table.
+2. **Check CI pipelines**: `.github/workflows/*.yml`, `.gitlab-ci.yml`, `.circleci/config.yml`. Extract the shell commands that validate code quality (test, lint, format, type-check). CI commands take precedence over config file commands when they conflict.
+3. **Note lock files**: They confirm the package manager (`uv.lock` → uv, `yarn.lock` → yarn, etc.).
+4. **Check for script conventions**: `npm scripts`, `Makefile` targets, `scripts/` directory executables.
+
 Then ask clarifying questions. Focus on:
 
 - What the user actually wants (not what they said — these sometimes differ).
@@ -73,24 +81,25 @@ Then ask clarifying questions. Focus on:
 
 Iterate on understanding. Summarize what has been gathered so far, identify gaps, and ask follow-up questions. Two to three rounds of clarification is normal for non-trivial plans. For simple, well-defined tasks, one round may suffice.
 
-Do not proceed to tool discovery until the task is understood well enough to enumerate the areas of the codebase that will be touched.
+**Required deliverable before proceeding**: Present the discovered tool chain to the user for confirmation. Format it as a numbered list with the source of each discovery in parentheses. The user may confirm, add, remove, or reorder tools. Do not proceed to step 2 until the tool chain is confirmed. Example:
 
-### 2. Discover Project Tooling
+```
+Discovered tools for this project:
 
-Detect the project's test runner, linter, formatter, type checker, and other quality tools by following the process defined in `references/tool-discovery.md`.
+1. Package manager: uv (from uv.lock)
+2. Test runner: pytest (from pyproject.toml [tool.pytest])
+3. Linter: ruff check . (from pyproject.toml [tool.ruff])
+4. Formatter: ruff format --check . (from pyproject.toml [tool.ruff.format])
+5. Type checker: mypy . (from pyproject.toml [tool.mypy])
 
-Present the discovered tools to the user for confirmation. The user may:
+Add, remove, or reorder? (or confirm to proceed)
+```
 
-- **Confirm**: Proceed with the discovered tools.
-- **Add**: Include tools not detected (custom scripts, manual review steps, deployment checks).
-- **Remove**: Exclude tools that are not relevant to this plan.
-- **Reorder**: Change the verification sequence.
+**Fast-path for small plans**: If the user's request is narrowly scoped (e.g., a config change, single-file refactoring, or other small task that will clearly result in 3 or fewer steps), discover tools as normal but present them inline with the generated plan rather than as a separate confirmation gate. Still include the tool chain table in the plan header. For multi-step or architecturally significant plans, keep the separate confirmation step described above.
 
-Store the confirmed tool chain. Embed the appropriate commands into Phase 3 of every step.
+### 2. Assess Complexity
 
-### 3. Assess Complexity
-
-With the task understood and tools discovered, determine the plan's scope:
+With the task understood and tool chain confirmed, determine the plan's scope:
 
 - Count the anticipated steps. Each step should represent one logical unit of work — something that can be built, reviewed, and verified independently.
 - Evaluate whether natural milestones exist (e.g., "data layer first, then API, then UI").
@@ -99,12 +108,12 @@ With the task understood and tools discovered, determine the plan's scope:
 
 **Step sizing guidance**:
 
-- A step should take between 15 minutes and 2 hours to execute. Shorter than 15 minutes means it should be merged with an adjacent step. Longer than 2 hours means it should be split.
+- A step should represent a single logical unit of work — larger than a trivial config change, smaller than a full feature. If it can be described in one sentence, merge it with an adjacent step. If it needs its own sub-plan, split it.
 - Each step must be independently verifiable — all its tests pass without depending on future steps being complete.
 - Steps should build on each other sequentially. Later steps may depend on earlier steps, but not the reverse.
 - Avoid steps that are purely structural ("set up the directory") unless the project has no existing structure. Structural work should be folded into the first functional step.
 
-### 4. Generate the Plan
+### 3. Generate the Plan
 
 Write the plan artifact(s) following the structure defined in `references/step-template.md`. Every step includes all three phases: Build, Adversarial Review, and Verification.
 
@@ -136,7 +145,7 @@ Write the plan artifact(s) following the structure defined in `references/step-t
 - Write clear, specific titles that describe the deliverable ("Add user authentication endpoint"), not the activity ("Work on authentication").
 - Write acceptance criteria that are concrete and testable. Avoid vague criteria like "code is clean" or "performance is good." Use measurable conditions: "Response time under 200ms for 95th percentile," "All validation errors return 422 with field-level messages."
 - In Phase 1 (Build), describe intent per the prose-first approach. Specify what to create, modify, and test. Reference existing code patterns where applicable ("Follow the same repository pattern used in `src/repos/product_repo.py`").
-- In Phase 2 (Adversarial Review), write step-specific review questions. Target the most likely failure modes for what was just built. Do not use generic checklists — every review question should be relevant to the specific step.
+- In Phase 2 (Adversarial Review), write step-specific review questions targeting the most likely failure modes, but also include broader integration questions: Does this change fit naturally in the existing codebase? Does it follow established conventions and patterns? Could it break or degrade anything outside its immediate scope? The review is a thorough, critical code review of the work done — not just an acceptance criteria checklist. The goal is to eliminate all issues introduced by the build phase before proceeding.
 - In Phase 3 (Verification), include the full checklist with tool commands from the confirmed tool chain. Add step-specific verification items beyond the standard checks.
 
 **Dependency tracking**: If a step depends on artifacts from a previous step, state the dependency explicitly in the objective. Example: "Depends on Step 2 (user repository). Uses the `UserRepository` interface defined there."
@@ -218,4 +227,4 @@ If the execute skill is not available, follow this fallback:
 Refer to the following reference files for detailed guidance:
 
 - **`references/step-template.md`** — Full step template with phase-by-phase guidance and a complete example step. Use this as the structural reference for every step in every plan.
-- **`references/tool-discovery.md`** — Comprehensive guide to detecting project tooling across languages and ecosystems. Follow this during the tool discovery phase of every plan.
+- **`references/tool-discovery.md`** — Per-language lookup tables for detecting project tooling across ecosystems. Use as a reference during codebase exploration in step 1.
