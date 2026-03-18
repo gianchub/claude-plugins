@@ -21,6 +21,14 @@ Collaborative implementation planning and execution with build-review-verify cyc
 | `blueprint` | Produces structured implementation plans through codebase exploration, tool discovery, and iterative clarification | "create a blueprint", "make a plan", "design the architecture" |
 | `execute` | Drives blueprint plans through their build-review-verify cycles using subagents, with configurable git handling | "execute this blueprint", "run the plan", "start building from the plan" |
 
+**Commands:**
+
+| Command | Description |
+| --- | --- |
+| `/blueprint:setup` | Set blueprint as the default planning skill for the current project |
+
+The `setup` command saves a preference to Claude's project memory so that generic planning requests ("make a plan", "execute the plan") route to the blueprint plugin instead of other skills with overlapping triggers (e.g. superpowers). Run it once per project. You can still invoke other planning skills explicitly by name when needed.
+
 ### Code Audit
 
 Language-agnostic codebase auditing with structured severity-ranked reports.
