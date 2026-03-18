@@ -6,27 +6,36 @@ A collection of Claude Code plugins for planning, auditing, and more.
 
 ### Blueprint
 
-Collaborative implementation planning and execution with build-review-verify cycles per step.
+Collaborative implementation planning and execution with build-review-verify cycles.
+
+- **Dialogue-first planning** — asks clarifying questions and explores the codebase exhaustively before writing a single plan step. Never plans in a vacuum.
+- **Automatic tool discovery** — detects your project's test runner, linter, formatter, and type checker from config files and CI pipelines, then embeds the exact verification commands into every step.
+- **Build-review-verify cycle** — every step goes through three phases: build the thing, adversarial review targeting likely failure modes, then run the full tool chain to verify.
+- **Adaptive format** — produces a single plan document for small tasks or a milestone folder structure for larger efforts, based on complexity.
+- **Subagent execution** — the `execute` skill drives plans step-by-step using dedicated subagents for each phase, with git handling (manual or automatic) and batch progress tracking.
 
 **Skills:**
 
-
-| Skill       | Trigger phrases                                                                                                                                    |
-| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `blueprint` | "create a blueprint", "blueprint this feature", "plan this implementation", "make a plan", "design the architecture", "break this down into steps" |
-| `execute`   | "execute this blueprint", "run the plan", "execute the plan", "start building from the plan", "implement the blueprint"                            |
-
+| Skill | Description | Trigger with |
+| --- | --- | --- |
+| `blueprint` | Produces structured implementation plans through codebase exploration, tool discovery, and iterative clarification | "create a blueprint", "make a plan", "design the architecture" |
+| `execute` | Drives blueprint plans through their build-review-verify cycles using subagents, with configurable git handling | "execute this blueprint", "run the plan", "start building from the plan" |
 
 ### Code Audit
 
 Language-agnostic codebase auditing with structured severity-ranked reports.
 
+- **Exhaustive analysis** — reads every line of in-scope code. No skimming, no sampling.
+- **Cross-file tracing** — traces data flows from entry points through processing layers to outputs, catching issues that only manifest through component interaction.
+- **Seven audit categories** — security vulnerabilities, race conditions, dead code, anti-patterns, performance, correctness, and error handling gaps. Categories are configurable per audit.
+- **Severity-ranked output** — produces a deduplicated Markdown report at the project root with findings ranked by severity, each with file path, line number, impact, and a concrete recommendation.
+- **Parallel subagents** — for large codebases, splits the audit across parallel subagents by module, then merges and deduplicates findings.
+
 **Skills:**
 
-
-| Skill   | Trigger phrases                                                                                                                          |
-| ------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| `audit` | "audit this codebase", "security audit", "code audit", "find vulnerabilities", "check for bugs", "review code quality", "find dead code" |
+| Skill | Description | Trigger with |
+| --- | --- | --- |
+| `audit` | Performs a thorough code audit producing a structured, severity-ranked report covering security, correctness, performance, and more | "audit this codebase", "security audit", "find vulnerabilities" |
 
 
 ## Installation
