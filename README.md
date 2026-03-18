@@ -76,8 +76,8 @@ claude plugin marketplace remove gianchub-plugins
 With auto-update enabled, plugins update automatically on session start. To manually trigger an update:
 
 ```sh
-claude plugin update blueprint
-claude plugin update code-audit
+claude plugin update blueprint@gianchub-plugins
+claude plugin update code-audit@gianchub-plugins
 ```
 
 ## License
