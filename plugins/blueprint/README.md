@@ -17,7 +17,7 @@ Add the marketplace, then install:
 
 ### blueprint
 
-Transforms a task into a structured implementation plan through a collaborative dialogue. The skill explores the codebase to understand project structure and discover tooling (test runners, linters, type checkers, formatters), then asks clarifying questions to nail down scope and constraints before generating the plan. Plans adapt to complexity -- small changes get a single document, larger efforts get milestone folders with multiple files. Every step is written in prose (not code) and includes three phases: build instructions, adversarial review questions, and a verification checklist with concrete tool commands.
+Transforms a task into a structured implementation plan through a collaborative dialogue. The skill explores the codebase to understand project structure and discover tooling (test runners, linters, type checkers, formatters), then asks clarifying questions to nail down scope and constraints before generating the plan. Plans adapt to complexity -- small changes get a single document, larger efforts get milestone folders with multiple files. Every step is written in prose (not code) and includes three phases: build instructions, adversarial review questions, and a verification checklist with concrete tool commands. After generation, an adversarial plan review subagent reads the plan cold and evaluates it for gaps, dependency issues, and architectural flaws before the user approves it for execution.
 
 Trigger with: "create a blueprint", "plan this implementation", "make a plan", "break this down into steps"
 

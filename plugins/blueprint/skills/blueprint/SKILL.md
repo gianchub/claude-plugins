@@ -95,7 +95,7 @@ Discovered tools for this project:
 Add, remove, or reorder? (or confirm to proceed)
 ```
 
-**Fast-path for small plans**: If the user's request is narrowly scoped (e.g., a config change, single-file refactoring, or other small task that will clearly result in 3 or fewer steps), discover tools as normal but present them inline with the generated plan rather than as a separate confirmation gate. Still include the tool chain table in the plan header. For multi-step or architecturally significant plans, keep the separate confirmation step described above.
+**Fast-path for small plans**: If the user's request is narrowly scoped (e.g., a config change, single-file refactoring, or other small task that will clearly result in 2 or fewer steps), discover tools as normal but present them inline with the generated plan rather than as a separate confirmation gate. Still include the tool chain table in the plan header. For plans with 3 or more steps, or architecturally significant plans, keep the separate confirmation step described above.
 
 ### 2. Assess Complexity
 
@@ -165,7 +165,13 @@ After writing the plan to disk, dispatch a subagent to perform an adversarial re
 
 **Fast-path for small plans**: If the plan has 2 or fewer steps and covers a narrowly scoped change (e.g., a config change, a single-file refactoring, a straightforward addition), skip the subagent dispatch. Instead, perform a quick self-review checking for obvious gaps in acceptance criteria, missing verification items, and dependency issues. Present the plan to the user and ask if they want to start execution. For plans with 3 or more steps, or any plan that touches architecture, multiple modules, or cross-cutting concerns, always dispatch the subagent — no exceptions.
 
-**Dispatching the review subagent**: Use Claude Code's Agent tool to dispatch the plan review subagent. Reference `references/plan-review-subagent.md` for the exact prompt template. Substitute `{{PLAN_PATH}}` with the absolute path to the plan file (or milestone folder) and `{{PROJECT_ROOT}}` with the project root before dispatching. The subagent prompt contains the full review methodology — the categories below are a summary for orientation, not a replacement for the prompt template.
+**Dispatching the review subagent**: Use Claude Code's Agent tool to dispatch the plan review subagent. Reference `references/plan-review-subagent.md` for the exact prompt template. Substitute placeholders before dispatching:
+
+- `{{PLAN_PATH}}` — absolute path to the plan file or milestone folder.
+- `{{PROJECT_ROOT}}` — absolute path to the project root.
+- `{{PLANNING_CONTEXT}}` — compose a brief summary (5-10 sentences) of: what the user originally asked for, key constraints and decisions from the clarification rounds, agreed scope boundaries, and any explicit exclusions ("we agreed not to handle X"). This gives the subagent enough context to verify the plan addresses the user's full intent, not just what the Goal header captured.
+
+The subagent prompt contains the full review methodology — the categories below are a summary for orientation, not a replacement for the prompt template.
 
 **Review categories** (detailed instructions in the subagent prompt):
 
