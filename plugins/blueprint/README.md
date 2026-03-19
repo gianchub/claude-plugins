@@ -2,7 +2,7 @@
 
 Collaborative implementation planning and execution with build-review-verify cycles per step.
 
-Blueprint turns vague feature requests, architectural changes, and refactoring goals into structured, sequenced plans -- then executes them with dedicated subagents for each phase. Every step passes through a build, adversarial review, and tool-based verification cycle before it is marked complete, ensuring production-ready output with no silent failures.
+Blueprint turns vague feature requests, architectural changes, and refactoring goals into structured, sequenced plans, reviews them adversarially for gaps and weaknesses, then executes them with dedicated subagents for each phase. Every step passes through a build, adversarial review, and tool-based verification cycle before it is marked complete, ensuring production-ready output with no silent failures.
 
 ## Installation
 
@@ -45,6 +45,7 @@ One-time setup command that saves a preference to use blueprint skills as the de
    - **Phase 1 -- Build**: Prose instructions describing what to implement, with acceptance criteria and test expectations
    - **Phase 2 -- Adversarial Review**: Step-specific review questions targeting failure modes, codebase integration, and consistency with established patterns
    - **Phase 3 -- Verification**: Checklist with tool commands from the discovered tool chain, plus step-specific verification items
+6. Dispatches an adversarial plan review subagent that reads the plan fresh from disk with no planning context, evaluating completeness, step ordering, acceptance criteria quality, architectural coherence, and risk -- then presents findings to the user for approval before execution can begin
 
 ### Execution (execute skill)
 

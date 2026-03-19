@@ -159,32 +159,33 @@ Write the plan artifact(s) following the structure defined in `references/step-t
 
 ### 4. Adversarial Plan Review
 
-After writing the plan to disk, dispatch a **subagent** to perform an adversarial review of the entire plan. The subagent reads the plan fresh from disk with no anchoring to the planning context — it acts as a critical second pair of eyes whose sole purpose is to find weaknesses before execution begins.
+After writing the plan to disk, dispatch a subagent to perform an adversarial review of the entire plan. The subagent reads the plan fresh from disk with no anchoring to the planning context — it acts as a critical second pair of eyes whose sole purpose is to find weaknesses before execution begins.
 
 **Why a subagent**: The agent that wrote the plan is anchored to its own reasoning. A fresh subagent with no prior context reads the plan as an executor would — spotting ambiguities, gaps, and logical flaws that the author is blind to.
 
-**Dispatch the plan review subagent** using the prompt template in `references/plan-review-subagent.md`. Pass the plan file path (or milestone folder path) and the project root as placeholders.
+**Fast-path for small plans**: If the plan has 2 or fewer steps and covers a narrowly scoped change (e.g., a config change, a single-file refactoring, a straightforward addition), skip the subagent dispatch. Instead, perform a quick self-review checking for obvious gaps in acceptance criteria, missing verification items, and dependency issues. Present the plan to the user and ask if they want to start execution. For plans with 3 or more steps, or any plan that touches architecture, multiple modules, or cross-cutting concerns, always dispatch the subagent — no exceptions.
 
-**What the review covers**:
+**Dispatching the review subagent**: Use Claude Code's Agent tool to dispatch the plan review subagent. Reference `references/plan-review-subagent.md` for the exact prompt template. Substitute `{{PLAN_PATH}}` with the absolute path to the plan file (or milestone folder) and `{{PROJECT_ROOT}}` with the project root before dispatching. The subagent prompt contains the full review methodology — the categories below are a summary for orientation, not a replacement for the prompt template.
 
-- **Completeness**: Are there gaps between steps where work would fall through the cracks? Does the plan cover the full scope of the user's request, or does it silently omit edge cases?
-- **Step ordering and dependencies**: Are steps sequenced correctly? Could a step fail because an earlier step hasn't produced what it needs? Are dependencies stated explicitly or left implicit?
-- **Step sizing**: Is any step too large (should be split) or too trivial (should be merged)? Can each step be independently built, reviewed, and verified?
-- **Acceptance criteria quality**: Is every criterion concrete and testable? Are there vague criteria ("code is clean", "performance is good") that would be impossible to verify?
-- **Phase 2 review questions**: Are the adversarial review questions specific to the step's failure modes, or are they generic boilerplate? Do they cover integration with the existing codebase?
-- **Phase 3 verification**: Does every step include the full tool chain commands? Are there step-specific checks beyond the standard checklist?
-- **Prose-over-code compliance**: Does the plan contain code blocks outside the three permitted exceptions?
-- **Architectural coherence**: Does the overall plan make architectural sense? Is the chosen approach sound given the codebase context? Are there better alternatives the plan ignores?
-- **Risk and edge cases**: What could go wrong that the plan doesn't account for? Are there failure modes, concurrency issues, or data migration risks left unaddressed?
+**Review categories** (detailed instructions in the subagent prompt):
+
+- Completeness — gaps between steps, omitted scope, missing edge cases.
+- Step ordering and dependencies — sequencing, explicit vs implicit dependencies.
+- Step sizing — steps too large or too trivial for independent build-review-verify.
+- Acceptance criteria quality — vague, untestable, or missing criteria.
+- Phase 2 and Phase 3 quality — generic boilerplate vs step-specific content.
+- Prose-over-code compliance — code blocks outside the three permitted exceptions.
+- Architectural coherence — approach soundness, unnecessary complexity.
+- Risk and edge cases — unaddressed failure modes, migration risks, rollback gaps.
 
 **After the subagent returns**:
 
 - If the review finds **no issues**: Inform the user the plan passed adversarial review and ask if they want to start execution.
 - If the review finds **issues**: Present all findings to the user with the subagent's full report. The user decides whether changes are needed or the plan is acceptable as-is.
-  - If the user wants changes: make the requested modifications to the plan, then ask if they want to start execution.
+  - If the user wants changes: make the requested modifications to the plan, then offer to re-run the adversarial review on the updated plan. The user may accept another review round or decline and proceed to execution. Repeat this review-modify cycle until the user is satisfied.
   - If the user says the plan is fine: proceed to ask if they want to start execution.
 
-Do not skip the plan review. Do not auto-resolve findings without user input. The plan review is a hard gate — the plan is not considered complete until it has passed this step.
+Do not skip the plan review (except via the fast-path above). Do not auto-resolve findings without user input. The plan review is a hard gate — the plan is not considered complete until it has passed this step.
 
 ## Output Formats
 
