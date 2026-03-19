@@ -45,7 +45,7 @@ One-time setup command that saves a preference to use blueprint skills as the de
    - **Phase 1 -- Build**: Prose instructions describing what to implement, with acceptance criteria and test expectations
    - **Phase 2 -- Adversarial Review**: Step-specific review questions targeting failure modes, codebase integration, and consistency with established patterns
    - **Phase 3 -- Verification**: Checklist with tool commands from the discovered tool chain, plus step-specific verification items
-6. Dispatches an adversarial plan review subagent that reads the plan fresh from disk with no planning context, evaluating completeness, step ordering, acceptance criteria quality, architectural coherence, and risk -- then presents findings to the user for approval before execution can begin
+6. Dispatches an adversarial plan review subagent that reads the plan fresh from disk with only a brief scope summary (not the full planning conversation), evaluating completeness, step ordering, acceptance criteria quality, architectural coherence, and risk -- then presents findings to the user for approval before execution can begin
 
 ### Execution (execute skill)
 

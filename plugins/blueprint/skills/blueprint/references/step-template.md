@@ -157,17 +157,17 @@ Create the authentication endpoint in the API layer.
 
 #### Phase 3 — Verification
 
-1. [ ] All new and modified code has corresponding tests.
-2. [ ] All tests pass: `pytest tests/ -x -q`
-3. [ ] Test coverage is adequate: `pytest --cov=src/auth --cov-report=term-missing`
-4. [ ] Linter passes: `ruff check src/ tests/`
-5. [ ] Type checker passes: `mypy src/`
-6. [ ] Acceptance criteria check:
-   - [ ] POST /auth/login accepts email + password → verified by test_successful_login
-   - [ ] 200 + JWT on valid credentials → verified by test_successful_login, test_jwt_claims
-   - [ ] 401 on invalid credentials (generic message) → verified by test_wrong_password, test_nonexistent_email
-   - [ ] 422 on bad input → verified by test_missing_email, test_missing_password, test_malformed_email
-   - [ ] Rate limited at 10/min/IP → verified by test_rate_limit
-   - [ ] Constant-time comparison → verified by code review in Phase 2 item 2
-7. [ ] Rate limiter configuration is documented in the project's settings reference.
+- [ ] All new and modified code has corresponding tests.
+- [ ] All tests pass: `pytest tests/ -x -q`
+- [ ] Test coverage is adequate: `pytest --cov=src/auth --cov-report=term-missing`
+- [ ] Linter passes: `ruff check src/ tests/`
+- [ ] Type checker passes: `mypy src/`
+- [ ] Acceptance criteria check:
+  - [ ] POST /auth/login accepts email + password → verified by test_successful_login
+  - [ ] 200 + JWT on valid credentials → verified by test_successful_login, test_jwt_claims
+  - [ ] 401 on invalid credentials (generic message) → verified by test_wrong_password, test_nonexistent_email
+  - [ ] 422 on bad input → verified by test_missing_email, test_missing_password, test_malformed_email
+  - [ ] Rate limited at 10/min/IP → verified by test_rate_limit
+  - [ ] Constant-time comparison → verified by code review in Phase 2 item 2
+- [ ] Rate limiter configuration is documented in the project's settings reference.
 ```

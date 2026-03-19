@@ -9,6 +9,7 @@ Scan the project root (and common subdirectories) for configuration files. Each 
 ### Python
 - **pyproject.toml**: Parse `[tool.*]` sections.
   - `[tool.ruff]` or `[tool.ruff.lint]` → linter: `ruff check .`
+  - `[tool.ruff.format]` or `[tool.ruff]` with format config → formatter: `ruff format --check .`
   - `[tool.mypy]` → type checker: `mypy .`
   - `[tool.pytest]` or `[tool.pytest.ini_options]` → test runner: `pytest`
   - `[tool.black]` → formatter: `black --check .`
@@ -73,6 +74,7 @@ Lock files confirm the language ecosystem and package manager.
 | `package-lock.json` | Node.js | npm |
 | `yarn.lock` | Node.js | yarn |
 | `pnpm-lock.yaml` | Node.js | pnpm |
+| `bun.lockb` / `bun.lock` | Node.js | bun |
 | `Cargo.lock` | Rust | cargo |
 | `go.sum` | Go | go modules |
 | `Gemfile.lock` | Ruby | bundler |

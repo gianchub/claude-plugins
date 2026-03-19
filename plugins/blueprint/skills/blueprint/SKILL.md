@@ -161,7 +161,7 @@ Write the plan artifact(s) following the structure defined in `references/step-t
 
 After writing the plan to disk, dispatch a subagent to perform an adversarial review of the entire plan. The subagent reads the plan fresh from disk with no anchoring to the planning context — it acts as a critical second pair of eyes whose sole purpose is to find weaknesses before execution begins.
 
-**Why a subagent**: The agent that wrote the plan is anchored to its own reasoning. A fresh subagent with no prior context reads the plan as an executor would — spotting ambiguities, gaps, and logical flaws that the author is blind to.
+**Why a subagent**: The agent that wrote the plan is anchored to its own reasoning. A fresh subagent without the full planning conversation history reads the plan as an executor would — spotting ambiguities, gaps, and logical flaws that the author is blind to. The subagent receives only a brief scope summary (see `{{PLANNING_CONTEXT}}` below) to verify the plan addresses the user's full intent, not the entire planning dialogue.
 
 **Fast-path for small plans**: If the plan has 2 or fewer steps and covers a narrowly scoped change (e.g., a config change, a single-file refactoring, a straightforward addition), skip the subagent dispatch. Instead, perform a quick self-review checking for obvious gaps in acceptance criteria, missing verification items, and dependency issues. Present the plan to the user and ask if they want to start execution. For plans with 3 or more steps, or any plan that touches architecture, multiple modules, or cross-cutting concerns, always dispatch the subagent — no exceptions.
 
