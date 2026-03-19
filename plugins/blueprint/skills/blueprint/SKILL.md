@@ -95,7 +95,7 @@ Discovered tools for this project:
 Add, remove, or reorder? (or confirm to proceed)
 ```
 
-**Fast-path for small plans**: If the user's request is narrowly scoped (e.g., a config change, single-file refactoring, or other small task that will clearly result in 3 or fewer steps), discover tools as normal but present them inline with the generated plan rather than as a separate confirmation gate. Still include the tool chain table in the plan header. For multi-step or architecturally significant plans, keep the separate confirmation step described above.
+**Fast-path for small plans**: If the user's request is narrowly scoped (e.g., a config change, single-file refactoring, or other small task that will clearly result in 2 or fewer steps), discover tools as normal but present them inline with the generated plan rather than as a separate confirmation gate. Still include the tool chain table in the plan header. For plans with 3 or more steps, or architecturally significant plans, keep the separate confirmation step described above.
 
 ### 2. Assess Complexity
 
@@ -156,6 +156,42 @@ Write the plan artifact(s) following the structure defined in `references/step-t
 - Each milestone file follows the same structure (header, tool chain, steps).
 - Add a root `README.md` in the plan folder that lists milestones in order with one-sentence descriptions.
 - Keep milestones to 3-5 steps each. If a milestone has more, split it.
+
+### 4. Adversarial Plan Review
+
+After writing the plan to disk, dispatch a subagent to perform an adversarial review of the entire plan. The subagent reads the plan fresh from disk with no anchoring to the planning context — it acts as a critical second pair of eyes whose sole purpose is to find weaknesses before execution begins.
+
+**Why a subagent**: The agent that wrote the plan is anchored to its own reasoning. A fresh subagent without the full planning conversation history reads the plan as an executor would — spotting ambiguities, gaps, and logical flaws that the author is blind to. The subagent receives only a brief scope summary (see `{{PLANNING_CONTEXT}}` below) to verify the plan addresses the user's full intent, not the entire planning dialogue.
+
+**Fast-path for small plans**: If the plan has 2 or fewer steps and covers a narrowly scoped change (e.g., a config change, a single-file refactoring, a straightforward addition), skip the subagent dispatch. Instead, perform a quick self-review checking for obvious gaps in acceptance criteria, missing verification items, and dependency issues. Present the plan to the user and ask if they want to start execution. For plans with 3 or more steps, or any plan that touches architecture, multiple modules, or cross-cutting concerns, always dispatch the subagent — no exceptions.
+
+**Dispatching the review subagent**: Use Claude Code's Agent tool to dispatch the plan review subagent. Reference `references/plan-review-subagent.md` for the exact prompt template. Substitute placeholders before dispatching:
+
+- `{{PLAN_PATH}}` — absolute path to the plan file or milestone folder.
+- `{{PROJECT_ROOT}}` — absolute path to the project root.
+- `{{PLANNING_CONTEXT}}` — compose a brief summary (5-10 sentences) of: what the user originally asked for, key constraints and decisions from the clarification rounds, agreed scope boundaries, and any explicit exclusions ("we agreed not to handle X"). This gives the subagent enough context to verify the plan addresses the user's full intent, not just what the Goal header captured.
+
+The subagent prompt contains the full review methodology — the categories below are a summary for orientation, not a replacement for the prompt template.
+
+**Review categories** (detailed instructions in the subagent prompt):
+
+- Completeness — gaps between steps, omitted scope, missing edge cases.
+- Step ordering and dependencies — sequencing, explicit vs implicit dependencies.
+- Step sizing — steps too large or too trivial for independent build-review-verify.
+- Acceptance criteria quality — vague, untestable, or missing criteria.
+- Phase 2 and Phase 3 quality — generic boilerplate vs step-specific content.
+- Prose-over-code compliance — code blocks outside the three permitted exceptions.
+- Architectural coherence — approach soundness, unnecessary complexity.
+- Risk and edge cases — unaddressed failure modes, migration risks, rollback gaps.
+
+**After the subagent returns**:
+
+- If the review finds **no issues**: Inform the user the plan passed adversarial review and ask if they want to start execution.
+- If the review finds **issues**: Present all findings to the user with the subagent's full report. The user decides whether changes are needed or the plan is acceptable as-is.
+  - If the user wants changes: make the requested modifications to the plan, then offer to re-run the adversarial review on the updated plan. The user may accept another review round or decline and proceed to execution. Repeat this review-modify cycle until the user is satisfied.
+  - If the user says the plan is fine: proceed to ask if they want to start execution.
+
+Do not skip the plan review (except via the fast-path above). Do not auto-resolve findings without user input. The plan review is a hard gate — the plan is not considered complete until it has passed this step.
 
 ## Output Formats
 
@@ -228,3 +264,4 @@ Refer to the following reference files for detailed guidance:
 
 - **`references/step-template.md`** — Full step template with phase-by-phase guidance and a complete example step. Use this as the structural reference for every step in every plan.
 - **`references/tool-discovery.md`** — Per-language lookup tables for detecting project tooling across ecosystems. Use as a reference during codebase exploration in step 1.
+- **`references/plan-review-subagent.md`** — Prompt template for the adversarial plan review subagent dispatched in step 4. Use this verbatim when dispatching the review subagent after plan generation.

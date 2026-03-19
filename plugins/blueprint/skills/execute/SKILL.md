@@ -34,7 +34,7 @@ Before executing the first step, ask the user which git mode to use. Present exa
 - The user inspects changes, stages files, and commits at their discretion.
 - Do not create any commits automatically.
 - Do not resume execution until the user explicitly says to continue.
-- Even when steps are batched, pause after each individual step within the batch.
+- Even when steps are batched, pause after each individual step within the batch. The batch boundary serves as a cumulative progress checkpoint — present a batch summary after the final step in the batch, but the user has already had the opportunity to review after each step.
 
 **Skill-managed mode:**
 - After each individual step passes all three phases, create a commit automatically.
@@ -69,6 +69,7 @@ Use Claude Code's Agent tool to dispatch subagents. Reference `references/subage
 - Capture the structured build summary from the subagent's response.
 
 **Review subagent dispatch:**
+- Pass the step's acceptance criteria list verbatim from the plan into `{{ACCEPTANCE_CRITERIA}}`.
 - Pass the captured build summary into `{{BUILD_SUMMARY}}`.
 - Pass the step's Phase 2 instructions verbatim from the plan into `{{PHASE_2_INSTRUCTIONS}}`.
 - The review subagent reads files independently from disk — the build summary is provided for orientation and focus, not as a trusted source of truth.
@@ -76,7 +77,7 @@ Use Claude Code's Agent tool to dispatch subagents. Reference `references/subage
 
 **Verification subagent dispatch:**
 - Pass the step's Phase 3 checklist verbatim from the plan into `{{PHASE_3_CHECKLIST}}`.
-- Pass the project's tool chain configuration (test runner, linter, type checker commands) into `{{TOOL_CHAIN_CONFIG}}`. Detect tool chain configuration from the project's config files (pyproject.toml, package.json, Makefile, etc.) before the first verification dispatch. Cache the detected configuration and reuse it for subsequent verification dispatches unless the plan explicitly changes tool chain requirements.
+- Pass the project's tool chain configuration (test runner, linter, type checker commands) into `{{TOOL_CHAIN_CONFIG}}`. Extract the tool chain from the plan's Tool Chain table — it was confirmed by the user during planning and is the authoritative source. If the plan has no Tool Chain table, detect from the project's config files (pyproject.toml, package.json, Makefile, etc.) as a fallback. Cache the resolved configuration and reuse it for subsequent verification dispatches unless the plan explicitly changes tool chain requirements.
 - The verification subagent runs actual tools and reports pass/fail per checklist item.
 - Parse the verification response to identify any failures. A single failed check means the entire verification phase fails.
 
@@ -121,7 +122,7 @@ Accept the plan as-is at resume time. Do not warn about or question changes unle
 | Phase | Receives | Does |
 |-------|----------|------|
 | Build | Phase 1 instructions (verbatim from plan); full filesystem access | Read context, implement changes, write tests, return structured summary listing files changed with intent, key decisions, and any deviations |
-| Review | Build summary (structured, for orientation) + Phase 2 instructions (verbatim from plan) | Read all changed files fresh from disk, perform adversarial review, return findings categorized as blocking or advisory with file:line references |
+| Review | Acceptance criteria (verbatim from plan) + build summary (structured, for orientation) + Phase 2 instructions (verbatim from plan) | Read all changed files fresh from disk, verify each acceptance criterion is met, perform adversarial review, return findings categorized as blocking or advisory with file:line references |
 | Verification | Phase 3 checklist (verbatim from plan, includes acceptance criteria) + tool chain configuration | Execute each check using actual tools, return pass/fail per checklist item with full error output on failure |
 
 The review subagent reads files independently from disk. The build summary tells it where to look and what was intended, but the review subagent verifies everything by reading actual file contents. This prevents a build subagent from misrepresenting its own output.

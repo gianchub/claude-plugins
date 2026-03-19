@@ -71,6 +71,7 @@ RETURN FORMAT (respond with exactly this structure):
 ## Review Subagent
 
 **Placeholders:**
+- `{{ACCEPTANCE_CRITERIA}}` — the step's acceptance criteria list, copied verbatim from the plan
 - `{{BUILD_SUMMARY}}` — the structured summary returned by the build subagent
 - `{{PHASE_2_INSTRUCTIONS}}` — the step's Phase 2 instructions, copied verbatim from the plan
 - `{{PROJECT_ROOT}}` — absolute path to the project root
@@ -83,6 +84,9 @@ You are a review subagent performing an adversarial code review of a just-comple
 
 STEP: {{STEP_LABEL}}
 PROJECT ROOT: {{PROJECT_ROOT}}
+
+ACCEPTANCE CRITERIA (verify each is met):
+{{ACCEPTANCE_CRITERIA}}
 
 BUILD SUMMARY (for orientation only — do NOT trust as source of truth):
 {{BUILD_SUMMARY}}
@@ -97,7 +101,7 @@ PROCESS:
    - Correctness bugs (logic errors, off-by-one, race conditions, unhandled edge cases)
    - Security issues (injection, auth bypass, secrets in code, unsafe deserialization)
    - Missing or inadequate tests (untested branches, missing edge cases, tests that pass vacuously)
-   - Acceptance criteria not met (compare implementation against the step's stated goals)
+   - Acceptance criteria not met (compare implementation against each criterion listed above)
    - Integration issues (broken imports, incompatible interfaces, missing migrations)
    - Error handling gaps (bare excepts, swallowed errors, missing validation)
 4. Also note non-blocking observations worth mentioning.
