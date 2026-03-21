@@ -39,15 +39,6 @@ Continue the clarification cycle until the task is solid enough to plan. State w
 
 Plan steps describe intent in prose. Do not include code blocks except for interface signatures, config keys, and schema shapes (full policy in `references/step-template.md`). Tool commands in Phase 3 checklists are operational instructions, not code — they are always permitted.
 
-### Adaptive Complexity
-
-Not every plan needs the same structure. Apply these heuristics to choose the output format:
-
-- **5 or fewer steps, single concern**: Generate a single plan document. No grouping or milestones needed.
-- **6-8 steps, still a single concern**: Generate a single plan document with steps grouped under headings if natural groupings exist.
-- **Distinct phases or more than 8 steps**: Generate a milestone folder with one file per milestone, each containing a subset of steps.
-- **When in doubt**: Ask the user. Present the tradeoff: "This could be a single document with 7 steps or split into 2 milestones — preference?"
-
 ## Workflow
 
 ```dot
@@ -70,9 +61,9 @@ digraph blueprint {
     passed    [label="Review\npassed?", shape=diamond]
     done      [label="Plan ready\nfor execution", shape=doublecircle]
 
-    explore  -> confirm
-    confirm  -> clarify
-    clarify  -> gate
+    explore  -> clarify
+    clarify  -> confirm
+    confirm  -> gate
     gate     -> fastappr  [label="yes"]
     gate     -> clarify   [label="no — gaps remain"]
     fastappr -> assess    [label="yes — single\nobvious strategy"]
@@ -90,7 +81,7 @@ digraph blueprint {
 ```
 
 <PLANNING-GATE>
-Do not begin plan generation until: (1) the user has confirmed the discovered tool chain, and (2) all critical ambiguities surfaced during clarification have been resolved. Proceeding without both produces plans built on guesswork.
+Do not begin plan generation until: (1) the user has confirmed the discovered tool chain, and (2) all critical ambiguities surfaced during clarification have been resolved. An ambiguity is critical if resolving it differently would change the plan's structure, step count, or chosen approach. Proceeding without both produces plans built on guesswork.
 </PLANNING-GATE>
 
 ### 1. Understand the Task and Discover Tooling
@@ -120,8 +111,6 @@ Then ask clarifying questions. Focus on:
 
 Iterate on understanding. Summarize what has been gathered so far, identify gaps, and ask follow-up questions. Two to three rounds of clarification is normal for non-trivial plans. For simple, well-defined tasks, one round may suffice.
 
-**Visual companion (optional):** If the `superpowers:brainstorming` skill is available, its visual companion can present architecture diagrams and approach comparisons in a browser during planning. When architectural decisions would benefit from visual treatment, offer the companion following that skill's guide. Without superpowers, proceed with terminal-only planning.
-
 **Required deliverable before proceeding**: Present the discovered tool chain to the user for confirmation. Format it as a numbered list with the source of each discovery in parentheses. The user may confirm, add, remove, or reorder tools. Do not proceed to step 2 until the tool chain is confirmed. Example:
 
 ```
@@ -144,18 +133,21 @@ Once the task is understood and tooling confirmed, outline 2-3 candidate impleme
 
 **Fast-path**: When the task is narrowly scoped and only one credible strategy exists, state it briefly and move on — inventing artificial alternatives wastes time and muddies the conversation.
 
+**Visual companion (optional):** If the `superpowers:brainstorming` skill is available, its visual companion can present architecture diagrams and approach comparisons in a browser. When comparing approaches visually would help, offer the companion following that skill's guide. Without superpowers, proceed with terminal-only planning.
+
 ### 3. Assess Complexity
 
-With the task understood and tool chain confirmed, determine the plan's scope:
+With the approach selected, determine the plan's scope:
 
-- Count the anticipated steps. Each step should represent one logical unit of work — something that can be built, reviewed, and verified independently.
+- Count the anticipated steps. Each step should represent a single logical unit of work — larger than a trivial config change, smaller than a full feature. If it can be described in one sentence, merge it with an adjacent step. If it needs its own sub-plan, split it.
 - Evaluate whether natural milestones exist (e.g., "data layer first, then API, then UI").
-- Apply the adaptive complexity heuristics from the Design Principles section to choose single-doc or milestone-folder format.
-- If the choice is ambiguous, ask the user.
+- Choose the output format based on step count:
+  - **5 or fewer steps, single concern**: single plan document.
+  - **6-8 steps, single concern**: single document with grouped headings.
+  - **Distinct phases or more than 8 steps**: milestone folder with one file per milestone.
+  - **Ambiguous**: ask the user.
 
 **Step sizing guidance**:
-
-- A step should represent a single logical unit of work — larger than a trivial config change, smaller than a full feature. If it can be described in one sentence, merge it with an adjacent step. If it needs its own sub-plan, split it.
 - Each step must be independently verifiable — all its tests pass without depending on future steps being complete.
 - Steps should build on each other sequentially. Later steps may depend on earlier steps, but not the reverse.
 - Avoid steps that are purely structural ("set up the directory") unless the project has no existing structure. Structural work should be folded into the first functional step.
@@ -228,6 +220,8 @@ The subagent prompt in `references/plan-review-subagent.md` contains the full re
   - If the user says the plan is fine: proceed to ask if they want to start execution.
 
 Do not skip the plan review (except via the fast-path above). Do not auto-resolve findings without user input. The plan review is a hard gate — the plan is not considered complete until it has passed this step.
+
+**After approval**: Commit the plan file to git so it persists across sessions and supports checkmark-based progress tracking.
 
 ## Output Formats
 
