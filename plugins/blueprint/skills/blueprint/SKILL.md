@@ -50,6 +50,45 @@ Not every plan needs the same structure. Apply these heuristics to choose the ou
 
 ## Workflow
 
+```dot
+digraph blueprint {
+    rankdir=TB
+    node [shape=box, style=rounded, fontname="Helvetica", fontsize=10]
+    edge [fontname="Helvetica", fontsize=9]
+
+    explore   [label="Explore codebase\n& discover tools"]
+    confirm   [label="Confirm tool chain\nwith user"]
+    clarify   [label="Clarify requirements"]
+    gate      [label="Planning gate\nready?", shape=diamond]
+    fastappr  [label="Fast-path\napproach?", shape=diamond]
+    propose   [label="Propose 2-3\napproaches"]
+    pick      [label="User picks\napproach"]
+    assess    [label="Assess complexity"]
+    generate  [label="Generate plan"]
+    fastrev   [label="Fast-path\nreview?", shape=diamond]
+    review    [label="Adversarial review\n(subagent)"]
+    passed    [label="Review\npassed?", shape=diamond]
+    done      [label="Plan ready\nfor execution", shape=doublecircle]
+
+    explore  -> confirm
+    confirm  -> clarify
+    clarify  -> gate
+    gate     -> fastappr  [label="yes"]
+    gate     -> clarify   [label="no — gaps remain"]
+    fastappr -> assess    [label="yes — single\nobvious strategy"]
+    fastappr -> propose   [label="no"]
+    propose  -> pick
+    pick     -> assess
+    assess   -> generate
+    generate -> fastrev
+    fastrev  -> done      [label="≤2 steps"]
+    fastrev  -> review    [label=">2 steps"]
+    review   -> passed
+    passed   -> done      [label="yes"]
+    passed   -> generate  [label="no — fix issues"]
+}
+```
+
 <PLANNING-GATE>
 Do not begin plan generation until: (1) the user has confirmed the discovered tool chain, and (2) all critical ambiguities surfaced during clarification have been resolved. Proceeding without both produces plans built on guesswork.
 </PLANNING-GATE>
