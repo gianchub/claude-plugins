@@ -120,7 +120,7 @@ Then ask clarifying questions. Focus on:
 
 Iterate on understanding. Summarize what has been gathered so far, identify gaps, and ask follow-up questions. Two to three rounds of clarification is normal for non-trivial plans. For simple, well-defined tasks, one round may suffice.
 
-**Visual companion (optional):** When planning involves architectural decisions that benefit from diagrams or visual comparison of approaches, a browser-based companion can present these visually. See `references/visual-companion.md` for when and how to offer it.
+**Visual companion (optional):** If the `superpowers:brainstorming` skill is available, its visual companion can present architecture diagrams and approach comparisons in a browser during planning. When architectural decisions would benefit from visual treatment, offer the companion following that skill's guide. Without superpowers, proceed with terminal-only planning.
 
 **Required deliverable before proceeding**: Present the discovered tool chain to the user for confirmation. Format it as a numbered list with the source of each discovery in parentheses. The user may confirm, add, remove, or reorder tools. Do not proceed to step 2 until the tool chain is confirmed. Example:
 
@@ -274,4 +274,3 @@ Refer to the following reference files for detailed guidance:
 - **`references/step-template.md`** — Full step template with phase-by-phase guidance and a complete example step. Use this as the structural reference for every step in every plan.
 - **`references/tool-discovery.md`** — Per-language lookup tables for detecting project tooling across ecosystems. Use as a reference during codebase exploration in step 1.
 - **`references/plan-review-subagent.md`** — Prompt template for the adversarial plan review subagent dispatched in step 5. Use this verbatim when dispatching the review subagent after plan generation.
-- **`references/visual-companion.md`** — When and how to use browser-based visualization for architecture diagrams and approach comparisons during planning.
