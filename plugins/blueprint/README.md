@@ -17,7 +17,7 @@ Add the marketplace, then install:
 
 ### blueprint
 
-Transforms a task into a structured implementation plan through a collaborative dialogue. The skill explores the codebase to understand project structure and discover tooling (test runners, linters, type checkers, formatters), then asks clarifying questions to nail down scope and constraints before generating the plan. Plans adapt to complexity -- small changes get a single document, larger efforts get milestone folders with multiple files. Every step is written in prose (not code) and includes three phases: build instructions, adversarial review questions, and a verification checklist with concrete tool commands. After generation, an adversarial plan review subagent reads the plan cold and evaluates it for gaps, dependency issues, and architectural flaws before the user approves it for execution.
+Transforms a task into a structured implementation plan through a collaborative dialogue. The skill explores the codebase to understand project structure and discover tooling (test runners, linters, type checkers, formatters), asks clarifying questions to nail down scope and constraints, then proposes 2-3 implementation approaches with trade-offs before generating the plan. Plans adapt to complexity -- small changes get a single document, larger efforts get milestone folders with multiple files. Every step is written in prose (not code) and includes three phases: build instructions, adversarial review questions, and a verification checklist with concrete tool commands. After generation, an adversarial plan review subagent reads the plan cold and evaluates it for gaps, dependency issues, and architectural flaws before the user approves it for execution.
 
 Trigger with: "create a blueprint", "plan this implementation", "make a plan", "break this down into steps"
 
@@ -39,13 +39,14 @@ One-time setup command that saves a preference to use blueprint skills as the de
 
 1. Explores the codebase to understand project structure, entry points, data layer, configuration, tests, and documentation
 2. Discovers project tooling by scanning config files, CI pipelines, lock files, and script conventions -- then presents the tool chain to the user for confirmation
-3. Asks clarifying questions across multiple rounds to understand scope, constraints, and definition of done
-4. Assesses complexity and chooses the output format (single document for up to 8 steps, milestone folder for larger efforts)
-5. Generates a structured plan where every step has three phases:
+3. Asks clarifying questions across multiple rounds to understand scope, constraints, and definition of done -- a planning gate prevents plan generation until tool chain is confirmed and critical ambiguities are resolved
+4. Proposes 2-3 implementation approaches with trade-offs and a recommendation, then waits for the user to choose before proceeding (fast-path: single obvious approach stated briefly)
+5. Assesses complexity and chooses the output format (single document for up to 8 steps, milestone folder for larger efforts)
+6. Generates a structured plan where every step has three phases:
    - **Phase 1 -- Build**: Prose instructions describing what to implement, with acceptance criteria and test expectations
    - **Phase 2 -- Adversarial Review**: Step-specific review questions targeting failure modes, codebase integration, and consistency with established patterns
    - **Phase 3 -- Verification**: Checklist with tool commands from the discovered tool chain, plus step-specific verification items
-6. Dispatches an adversarial plan review subagent that reads the plan fresh from disk with only a brief scope summary (not the full planning conversation), evaluating completeness, step ordering, acceptance criteria quality, architectural coherence, and risk -- then presents findings to the user for approval before execution can begin
+7. Dispatches an adversarial plan review subagent that reads the plan fresh from disk with only a brief scope summary (not the full planning conversation), evaluating completeness, step ordering, acceptance criteria quality, architectural coherence, and risk -- then presents findings to the user for approval before execution can begin
 
 ### Execution (execute skill)
 
