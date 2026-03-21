@@ -18,6 +18,10 @@ Produce collaborative implementation plans as written artifacts, where every ste
 
 Scale exploration depth to the complexity of the task, but always err on the side of more thoroughness, not less. Even for a seemingly simple change, investigate its context — what it touches, what depends on it, what patterns surround it. A small refactoring doesn't need full-project archaeology, but it does need enough context to produce a plan that accounts for ripple effects. The goal is a plan so thorough that execution surfaces zero surprises. Read broadly before narrowing. Understand the surrounding architecture before planning a change to one piece of it. When in doubt, explore more rather than less.
 
+## Anti-Pattern: "Too Simple to Plan"
+
+Even a one-line change benefits from the build-review-verify structure. "Simple" tasks are precisely where unexamined assumptions lead to wasted rework — no test written, no edge case considered, no verification run. A plan can be a single step; the fast-path for small plans (≤2 steps) already keeps overhead minimal. The anti-pattern is skipping planning entirely, not producing heavyweight plans for trivial work.
+
 ## Design Principles
 
 ### Collaborative: Ask, Don't Assume
@@ -45,6 +49,10 @@ Not every plan needs the same structure. Apply these heuristics to choose the ou
 - **When in doubt**: Ask the user. Present the tradeoff: "This could be a single document with 7 steps or split into 2 milestones — preference?"
 
 ## Workflow
+
+<PLANNING-GATE>
+Do not begin plan generation until: (1) the user has confirmed the discovered tool chain, and (2) all critical ambiguities surfaced during clarification have been resolved. Proceeding without both produces plans built on guesswork.
+</PLANNING-GATE>
 
 ### 1. Understand the Task and Discover Tooling
 
