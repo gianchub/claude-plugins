@@ -51,6 +51,11 @@ Everything else stays in prose. If the instruction feels like it needs code to b
 - Error scenarios to handle ("return 409 on duplicate email", "retry transient failures up to 3 times").
 - What tests to write and what they cover.
 
+**What not to include in Phase 1**:
+- **Implementation details that go stale**: Algorithm pseudocode, variable names, internal data structure choices. These belong in the code, not in the plan.
+- **Generic advice**: "Write clean code," "follow best practices," "handle errors properly." Every instruction must be specific to the step.
+- **Premature optimization notes**: Unless performance is an acceptance criterion for the step, defer optimization concerns.
+
 ---
 
 ## Phase 2 — Adversarial Review: Guidance
