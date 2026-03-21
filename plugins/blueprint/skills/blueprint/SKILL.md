@@ -12,7 +12,7 @@ description: >
 
 ## Purpose
 
-Produce collaborative implementation plans as written artifacts, where every step follows a build-review-verify cycle. Transform vague feature requests, architectural changes, or refactoring goals into concrete, sequenced plans that a human or agent can execute step by step. Treat planning as a dialogue — explore the codebase, discover tooling, ask questions, assess complexity, then generate the plan.
+Produce collaborative implementation plans as written artifacts, where every step follows a build-review-verify cycle. Transform vague feature requests, architectural changes, or refactoring goals into concrete, sequenced plans that a human or agent can execute step by step. Treat planning as a dialogue — explore the codebase, discover tooling, ask questions, compare approaches, assess complexity, then generate the plan.
 
 ## Effort Level
 
@@ -95,12 +95,7 @@ Begin by reading the codebase broadly. Examine:
 - Existing tests (test structure, fixtures, factories, coverage).
 - Documentation (architecture docs, ADRs, READMEs with setup instructions).
 
-**While exploring, discover project tooling.** Tool discovery is not a separate phase — it happens naturally during codebase exploration. As configuration files, CI pipelines, and lock files are encountered, record the tools they imply:
-
-1. **Scan config files**: `pyproject.toml` (`[tool.*]` sections), `package.json` (`scripts`, `devDependencies`), `Cargo.toml`, `go.mod`, `Makefile`/`justfile` targets. See `references/tool-discovery.md` for the full per-language lookup table.
-2. **Check CI pipelines**: `.github/workflows/*.yml`, `.gitlab-ci.yml`, `.circleci/config.yml`. Extract the shell commands that validate code quality (test, lint, format, type-check). CI commands take precedence over config file commands when they conflict.
-3. **Note lock files**: They confirm the package manager (`uv.lock` → uv, `yarn.lock` → yarn, etc.).
-4. **Check for script conventions**: `npm scripts`, `Makefile` targets, `scripts/` directory executables.
+**While exploring, discover project tooling.** Tool discovery is not a separate phase — it happens naturally during codebase exploration. As configuration files, CI pipelines, and lock files are encountered, record the test runner, linter, formatter, type checker, and package manager they imply. See `references/tool-discovery.md` for the full per-language lookup table and detection methodology. When CI pipeline commands conflict with config file commands, prefer the CI commands — they reflect what actually runs.
 
 Then ask clarifying questions. Focus on:
 
@@ -168,10 +163,10 @@ Write the plan artifact(s) following the structure defined in `references/step-t
 
 | Category | Tool | Command |
 |---|---|---|
-| Test runner | pytest | `pytest tests/ -x -q` |
-| Linter | ruff | `ruff check .` |
-| Type checker | mypy | `mypy src/` |
-| Formatter | ruff | `ruff format --check .` |
+| Test runner | [discovered] | `[test command]` |
+| Linter | [discovered] | `[lint command]` |
+| Type checker | [discovered] | `[type-check command]` |
+| Formatter | [discovered] | `[format command]` |
 
 ## Steps
 
@@ -225,17 +220,15 @@ Do not skip the plan review (except via the fast-path above). Do not auto-resolv
 
 ## Output Formats
 
-### Single Document
+See Section 3 (Assess Complexity) for which format to choose based on step count.
 
-Use for plans with 5 or fewer steps, or up to 8 steps with a single concern.
+### Single Document
 
 **Path**: `docs/plans/YYYY-MM-DD-<topic>-plan.md`
 
 Example: `docs/plans/2026-03-15-user-auth-plan.md`
 
 ### Milestone Folder
-
-Use for plans with distinct phases or more than 8 steps.
 
 **Path**: `docs/plans/YYYY-MM-DD-<topic>/`
 
