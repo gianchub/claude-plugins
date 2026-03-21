@@ -35,7 +35,7 @@ Language-agnostic codebase auditing with structured severity-ranked reports.
 
 - **Exhaustive analysis** — reads every line of in-scope code. No skimming, no sampling.
 - **Cross-file tracing** — traces data flows from entry points through processing layers to outputs, catching issues that only manifest through component interaction.
-- **Seven audit categories** — security vulnerabilities, race conditions, dead code, anti-patterns, performance, correctness, and error handling gaps. Categories are configurable per audit.
+- **Eight audit categories** — security vulnerabilities, race conditions, dead code, anti-patterns, performance, correctness, error handling gaps, and test quality. Categories are configurable per audit.
 - **Severity-ranked output** — produces a deduplicated Markdown report at the project root with findings ranked by severity, each with file path, line number, impact, and a concrete recommendation.
 - **Parallel subagents** — for large codebases, splits the audit across parallel subagents by module, then merges and deduplicates findings.
 
