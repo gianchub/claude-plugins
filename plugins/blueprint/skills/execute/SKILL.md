@@ -1,10 +1,9 @@
 ---
 name: execute
 description: >
-  This skill should be used when the user asks to "execute this blueprint",
-  "run the plan", "execute the plan", "start building from the plan",
-  "implement the blueprint", "execute 01_milestone_name.md",
-  or wants to drive a blueprint plan through its build-review-verify cycles.
+  Use when the user asks to "execute this blueprint", "run the plan",
+  "execute the plan", "start building from the plan",
+  "implement the blueprint", or "execute 01_milestone_name.md".
 ---
 
 # Execute
@@ -15,7 +14,7 @@ Execute blueprint plans by driving each step through a strict build, review, and
 
 ## Effort Level
 
-Treat each phase as if it were the only chance to get it right. Builds should be complete, well-tested implementations — not drafts to be cleaned up later. Reviews should be genuinely adversarial — actively searching for flaws, not confirming success. Verifications should run every tool and inspect every result. Never rubber-stamp a phase. The standard is: after all three phases pass, the step's code should be production-ready with no known issues.
+Treat each phase as the only chance to get it right. Builds should be complete implementations, not drafts. Reviews should be genuinely adversarial. Verifications must run every tool and inspect every result. After all three phases pass, the step's code should be production-ready.
 
 ## Workflow
 
@@ -139,20 +138,6 @@ The verification subagent runs real commands. It does not estimate whether tests
 - If a step fails within a batch, the remaining steps in that batch do not execute. Present the failure and wait for guidance.
 - A batch never crosses milestone boundaries. If the current milestone has 2 remaining steps and the next milestone has steps, the current batch contains only those 2 steps.
 - If the plan has fewer remaining steps than the batch size, the batch contains only the remaining steps.
-
-## Design Principles
-
-**User stays in control.** Every failure surfaces to the user with full details. No auto-retry, no auto-fix, no silent skipping. The user decides how to handle every problem.
-
-**Context preservation.** Subagents handle the heavy work (reading dozens of files, running commands, writing implementations). The main conversation stays focused on orchestration, decisions, and progress reporting. This keeps the main conversation context clean and prevents it from filling up with implementation details.
-
-**Resumable execution.** Checkmarks in the plan file make progress durable. If the conversation ends, a new session picks up from the first unmarked step. The plan file on disk is the source of truth for progress.
-
-**No AI attribution.** In skill-managed git mode, commit messages never contain Claude Code attribution, co-authored-by lines, bot signatures, or any indication that an AI produced the code. Commits look like normal developer commits.
-
-**Adversarial review.** The review phase is a thorough, critical code review — not just a check that acceptance criteria were met. The review subagent actively tries to find flaws in correctness, security, test quality, and codebase integration. It reads files beyond the immediate changes to assess whether the new code fits naturally within the existing application. A change that meets its acceptance criteria but clashes with established patterns, breaks surrounding code, or introduces inconsistency is a blocking finding. The goal is to eliminate all issues introduced by the build phase before proceeding.
-
-**Verification is execution.** The verification phase runs actual tools. It does not read code and guess whether tests would pass. It executes the test suite, the linter, the type checker, and any other configured tools. A passing verification means the tools actually ran and reported success. A failing verification includes the actual error output so the user can diagnose the problem without re-running the tools manually.
 
 ## Step Reporting
 

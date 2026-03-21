@@ -142,12 +142,9 @@ Run the full verification checklist. Every item must pass before the step is con
 1. Does the export module use the QueryEngine interface from Step 1, or does it bypass it?
 2. Is file existence checked before any write attempt, or could a partial write corrupt an existing file?
 3. Are CSV fields properly escaped (values containing commas, quotes, newlines)?
-4. Does the `--overwrite` flag only affect file existence — not silently change other behavior?
-5. Do error messages avoid exposing internal paths or implementation details?
-6. Do tests verify actual file contents (read back and compare), not just exit codes?
-7. Is the CSV formatting separated from file I/O so each is independently testable?
-8. Does the new command follow the same patterns as existing subcommands (argument parsing style, error reporting, exit codes)?
-9. Could the new module introduce import cycles or unwanted coupling with the query engine internals?
+4. Do error messages avoid exposing internal paths or implementation details?
+5. Do tests verify actual file contents (read back and compare), not just exit codes?
+6. Does the new command follow the same patterns as existing subcommands (argument parsing style, error reporting, exit codes)?
 
 #### Phase 3 — Verification
 

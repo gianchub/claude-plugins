@@ -1,11 +1,10 @@
 ---
 name: audit
 description: >
-  This skill should be used when the user asks to "audit this codebase",
-  "audit this code", "security audit", "code audit", "find vulnerabilities",
-  "check for bugs", "review code quality", "find dead code",
-  "check for anti-patterns", "performance audit", or mentions wanting a
-  comprehensive code quality analysis.
+  Use when the user asks to "audit this codebase", "audit this code",
+  "security audit", "code audit", "find vulnerabilities", "check for bugs",
+  "review code quality", "find dead code", "check for anti-patterns",
+  "performance audit", or "check for code smells".
 ---
 
 # Code Audit Skill
@@ -109,45 +108,9 @@ Generate the final report following the structure and formatting rules defined i
 
 After saving the report, state the file path and a brief summary of the results to the user.
 
-## Severity Classification Guide
+## Severity Classification
 
-Use the following criteria to assign severity levels. When a finding could fit multiple levels, choose the higher severity and note the reasoning.
-
-### Critical
-
-Reserve for findings that represent an immediate, exploitable threat or a near-certain path to significant damage:
-
-- Remotely exploitable security vulnerabilities (injection, auth bypass, SSRF with internal network access).
-- Direct paths to data loss or corruption (unprotected destructive operations, missing transaction safety on critical writes).
-- Hardcoded production credentials or secrets committed to version control.
-- Privilege escalation that grants administrative access to unauthorized users.
-
-### High
-
-Assign to findings that are likely to cause real-world bugs, outages, or security degradation under normal operating conditions:
-
-- Correctness bugs that produce wrong results or crash the application for common inputs.
-- Race conditions on data structures or resources accessed in production paths.
-- Missing authorization checks on sensitive but non-critical endpoints.
-- Error handling gaps that cause cascading failures (e.g., unhandled exceptions in request middleware that crash the entire process).
-
-### Medium
-
-Assign to findings that degrade quality, maintainability, or performance but are unlikely to cause immediate failures:
-
-- Performance issues that cause slowdowns under realistic load (N+1 queries, blocking in async contexts, O(n^2) algorithms on growing datasets).
-- Anti-patterns that make the code significantly harder to maintain or extend (god objects, deep nesting, SRP violations).
-- Missing input validation on internal APIs where the blast radius is limited.
-- Insecure defaults that are partially mitigated by other layers (e.g., missing CORS headers behind an API gateway that enforces its own).
-
-### Low
-
-Assign to findings that represent minor quality issues with limited practical impact:
-
-- Dead code (unused imports, unreachable branches, orphaned tests) that adds noise but does not affect runtime behavior.
-- Minor code smells (magic numbers in non-critical paths, slightly duplicated code blocks).
-- Commented-out code that should be cleaned up.
-- Missing pagination on endpoints with currently small datasets but potential future growth.
+Use the criteria in `references/severity-guide.md` to assign severity levels (Critical, High, Medium, Low). When a finding could fit multiple levels, choose the higher severity.
 
 ## Additional Resources
 
@@ -155,3 +118,4 @@ Refer to the following reference files during the audit:
 
 - **`references/categories.md`** — Detailed per-category checklists. Use these as the systematic basis for file-level analysis in Step 3, Phase A. Skip items that do not apply to the languages and frameworks in scope.
 - **`references/report-template.md`** — Report structure, filename conventions, identifier numbering, and zero-findings format. Follow this template exactly when generating the output report in Step 5.
+- **`references/severity-guide.md`** — Severity classification criteria (Critical, High, Medium, Low). Use these definitions when assigning severity to findings in Step 3.

@@ -1,11 +1,9 @@
 ---
 name: blueprint
 description: >
-  This skill should be used when the user asks to "create a blueprint",
-  "blueprint this feature", "plan this implementation", "make a plan",
-  "create an implementation plan", "design the architecture",
-  "break this down into steps", or needs a structured plan with
-  build-review-verify cycles.
+  Use when the user asks to "create a blueprint", "blueprint this feature",
+  "plan this implementation", "make a plan", "create an implementation plan",
+  "design the architecture", or "break this down into steps".
 ---
 
 # Blueprint Skill
@@ -16,24 +14,9 @@ Produce collaborative implementation plans as written artifacts, where every ste
 
 ## Effort Level
 
-Scale exploration depth to the complexity of the task, but always err on the side of more thoroughness, not less. Even for a seemingly simple change, investigate its context — what it touches, what depends on it, what patterns surround it. A small refactoring doesn't need full-project archaeology, but it does need enough context to produce a plan that accounts for ripple effects. The goal is a plan so thorough that execution surfaces zero surprises. Read broadly before narrowing. Understand the surrounding architecture before planning a change to one piece of it. When in doubt, explore more rather than less.
-
-## Anti-Pattern: "Too Simple to Plan"
-
-Even a one-line change benefits from the build-review-verify structure. "Simple" tasks are precisely where unexamined assumptions lead to wasted rework — no test written, no edge case considered, no verification run. A plan can be a single step; the fast-path for small plans (≤2 steps) already keeps overhead minimal. The anti-pattern is skipping planning entirely, not producing heavyweight plans for trivial work.
+Scale exploration depth to task complexity, but always err toward more thoroughness. Read broadly before narrowing — the goal is a plan that surfaces zero surprises during execution.
 
 ## Design Principles
-
-### Collaborative: Ask, Don't Assume
-
-Never guess at requirements, constraints, or preferences. When uncertainty exists, ask. Two to three clarifying questions per turn is fine — avoid overwhelming the user with a wall of questions, but also avoid proceeding with unvalidated assumptions. Common things to ask about:
-
-- Scope boundaries: "Should this cover admin users too, or just regular users for now?"
-- Existing patterns: "I see two different patterns for error handling in the codebase — which one to follow?"
-- Priority tradeoffs: "This could be done with a simple approach now or a more flexible one that takes longer — which do you prefer?"
-- Non-obvious constraints: "Is there a latency budget for this endpoint?"
-
-Continue the clarification cycle until the task is solid enough to plan. State what is understood so far and what remains unclear. Do not proceed to plan generation while critical ambiguities remain.
 
 ### Prose Over Code
 
@@ -127,8 +110,6 @@ Add, remove, or reorder? (or confirm to proceed)
 Once the task is understood and tooling confirmed, outline 2-3 candidate implementation strategies before locking in a plan structure. For each, describe the approach in a sentence or two and call out its key trade-offs — what it optimizes for, what it sacrifices, and where it carries risk. Open with the strategy you recommend and explain the reasoning; then present the alternatives so the user can make an informed choice. Wait for the user to select an approach before moving to complexity assessment and plan generation.
 
 **Fast-path**: When the task is narrowly scoped and only one credible strategy exists, state it briefly and move on — inventing artificial alternatives wastes time and muddies the conversation.
-
-**Visual companion (optional):** If the `superpowers:brainstorming` skill is available, its visual companion can present architecture diagrams and approach comparisons in a browser. When comparing approaches visually would help, offer the companion following that skill's guide. Without superpowers, proceed with terminal-only planning.
 
 ### 3. Assess Complexity
 
@@ -246,13 +227,6 @@ The `README.md` provides an ordered list of milestones with summaries, the confi
 ## Handling Plan Execution
 
 When the user asks to execute, invoke `blueprint:execute` — it provides full subagent orchestration with batching, git handling, and progress tracking. If unavailable, work through steps one at a time completing all three phases before advancing. Mark completed steps with a checkmark in the plan heading and tick Phase 3 checkboxes for cross-session resumability. See `references/step-template.md` for what belongs in each phase of a plan step.
-
-## Handling Ambiguity and Scope Changes
-
-- If the request is too vague, ask for specifics. A clear problem statement is a prerequisite.
-- If scope changes invalidate more than half the plan, recommend starting fresh.
-- If new steps are needed during execution, propose them with the same 3-phase structure.
-- If conflicting requirements surface, flag immediately with a recommended resolution.
 
 ## Additional Resources
 
