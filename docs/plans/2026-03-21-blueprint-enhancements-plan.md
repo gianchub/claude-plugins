@@ -232,7 +232,7 @@ Do NOT create a `references/visual-companion.md` file. Do NOT add an entry to "A
 
 ---
 
-### Step 6: Final Review and Version Bump
+### ✅ Step 6: Final Review and Version Bump
 
 **Objective**: Verify the complete SKILL.md reads coherently after all changes, check word count targets, and bump the plugin version.
 
@@ -260,9 +260,9 @@ Do NOT create a `references/visual-companion.md` file. Do NOT add an entry to "A
 
 #### Phase 3 — Verification
 
-- [ ] Word count: `wc -w plugins/blueprint/skills/blueprint/SKILL.md` — between 2,200 and 2,500.
-- [ ] All references in Additional Resources point to existing files.
-- [ ] Plugin version is `1.2.0` in `plugins/blueprint/.claude-plugin/plugin.json`.
-- [ ] `grep -r "Do NOT invoke" plugins/blueprint/` returns zero hits (no copied gate language).
-- [ ] `grep -r "turn ideas into" plugins/blueprint/` returns zero hits (no copied brainstorming phrasing).
-- [ ] Full read-through of SKILL.md confirms coherent flow.
+- [x] Word count: `wc -w plugins/blueprint/skills/blueprint/SKILL.md` — between 2,200 and 2,500.
+- [x] All references in Additional Resources point to existing files.
+- [x] Plugin version is `1.2.0` in `plugins/blueprint/.claude-plugin/plugin.json`.
+- [x] `grep -r "Do NOT invoke" plugins/blueprint/` returns zero hits (no copied gate language).
+- [x] `grep -r "turn ideas into" plugins/blueprint/` returns zero hits (no copied brainstorming phrasing).
+- [x] Full read-through of SKILL.md confirms coherent flow.

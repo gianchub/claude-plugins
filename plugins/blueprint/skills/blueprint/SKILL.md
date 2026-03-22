@@ -207,7 +207,7 @@ Do not skip the plan review (except via the fast-path above). Do not auto-resolv
 
 ## Output Formats
 
-See Section 3 (Assess Complexity) for which format to choose based on step count.
+See Step 3 (Assess Complexity) for which format to choose based on step count.
 
 ### Single Document
 
