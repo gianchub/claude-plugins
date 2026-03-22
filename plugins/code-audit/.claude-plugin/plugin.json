@@ -1,7 +1,12 @@
 {
   "name": "code-audit",
+  "version": "1.0.1",
   "description": "Language-agnostic codebase auditing with structured severity-ranked reports",
   "author": {
-    "name": "fab"
-  }
+    "name": "Fabrizio Romano",
+    "url": "https://github.com/gianchub"
+  },
+  "repository": "https://github.com/gianchub/claude-plugins",
+  "license": "MIT",
+  "keywords": ["audit", "security", "code-quality", "review", "vulnerabilities"]
 }

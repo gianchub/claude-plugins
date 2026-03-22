@@ -1,11 +1,9 @@
 ---
 name: execute
 description: >
-  This skill should be used when the user asks to "execute this blueprint",
-  "run the plan", "execute the plan", "start building from the plan",
-  "implement the blueprint", "execute 01_milestone_name.md",
-  or wants to drive a blueprint plan through its build-review-verify cycles.
-  Orchestrates plan execution using subagents for each phase.
+  Use when the user asks to "execute this blueprint", "run the plan",
+  "execute the plan", "start building from the plan",
+  "implement the blueprint", or "execute 01_milestone_name.md".
 ---
 
 # Execute
@@ -16,7 +14,7 @@ Execute blueprint plans by driving each step through a strict build, review, and
 
 ## Effort Level
 
-Apply maximum effort to every phase. Treat each build as a real implementation, each review as an adversarial audit, and each verification as a gate that must actually pass. Never rubber-stamp a phase. Never skip checks. Never assume a step succeeded without evidence.
+Treat each phase as the only chance to get it right. Builds should be complete implementations, not drafts. Reviews should be genuinely adversarial. Verifications must run every tool and inspect every result. After all three phases pass, the step's code should be production-ready.
 
 ## Workflow
 
@@ -35,10 +33,11 @@ Before executing the first step, ask the user which git mode to use. Present exa
 - The user inspects changes, stages files, and commits at their discretion.
 - Do not create any commits automatically.
 - Do not resume execution until the user explicitly says to continue.
-- Even when steps are batched, pause after each individual step within the batch.
+- Even when steps are batched, pause after each individual step within the batch. The batch boundary serves as a cumulative progress checkpoint — present a batch summary after the final step in the batch, but the user has already had the opportunity to review after each step.
 
 **Skill-managed mode:**
 - After each individual step passes all three phases, create a commit automatically.
+- Include the plan file's progress updates (✅ heading prefix and ticked checkboxes) in the same commit as the step's implementation changes — do not create a separate commit for plan progress.
 - Use a clear, descriptive commit message in conventional commits format referencing the step.
 - Never include Claude Code or AI attribution in commit messages. No co-authored-by lines, no bot signatures, no AI references of any kind.
 - After committing, proceed to the next step without pausing (unless the batch boundary is reached).
@@ -62,11 +61,14 @@ After a batch completes (all steps in the batch passed all phases), handle git a
 Use Claude Code's Agent tool to dispatch subagents. Reference `references/subagent-prompts.md` for the exact prompt templates. Substitute placeholders with actual values before dispatching.
 
 **Build subagent dispatch:**
+- Pass the step's objective text verbatim from the plan into `{{STEP_OBJECTIVE}}`.
+- Pass the step's acceptance criteria list verbatim from the plan into `{{ACCEPTANCE_CRITERIA}}`.
 - Pass the step's Phase 1 instructions verbatim from the plan into `{{PHASE_1_INSTRUCTIONS}}`.
 - The build subagent has full filesystem access to read and write files.
 - Capture the structured build summary from the subagent's response.
 
 **Review subagent dispatch:**
+- Pass the step's acceptance criteria list verbatim from the plan into `{{ACCEPTANCE_CRITERIA}}`.
 - Pass the captured build summary into `{{BUILD_SUMMARY}}`.
 - Pass the step's Phase 2 instructions verbatim from the plan into `{{PHASE_2_INSTRUCTIONS}}`.
 - The review subagent reads files independently from disk — the build summary is provided for orientation and focus, not as a trusted source of truth.
@@ -74,7 +76,7 @@ Use Claude Code's Agent tool to dispatch subagents. Reference `references/subage
 
 **Verification subagent dispatch:**
 - Pass the step's Phase 3 checklist verbatim from the plan into `{{PHASE_3_CHECKLIST}}`.
-- Pass the project's tool chain configuration (test runner, linter, type checker commands) into `{{TOOL_CHAIN_CONFIG}}`. Detect tool chain configuration from the project's config files (pyproject.toml, package.json, Makefile, etc.) before the first verification dispatch. Cache the detected configuration and reuse it for subsequent verification dispatches unless the plan explicitly changes tool chain requirements.
+- Pass the project's tool chain configuration (test runner, linter, type checker commands) into `{{TOOL_CHAIN_CONFIG}}`. Extract the tool chain from the plan's Tool Chain table — it was confirmed by the user during planning and is the authoritative source. If the plan has no Tool Chain table, detect from the project's config files (pyproject.toml, package.json, Makefile, etc.) as a fallback. Cache the resolved configuration and reuse it for subsequent verification dispatches unless the plan explicitly changes tool chain requirements.
 - The verification subagent runs actual tools and reports pass/fail per checklist item.
 - Parse the verification response to identify any failures. A single failed check means the entire verification phase fails.
 
@@ -94,19 +96,12 @@ Steps that have already passed all three phases and been marked complete retain 
 
 ### Progress Tracking
 
-Immediately after a step passes all three phases (build, review, verify), mark it complete in the plan file by prepending a checkmark to the step heading. For example, transform:
+Immediately after a step passes all three phases (build, review, verify), mark it complete in the plan file with two updates:
 
-```
-### Step 1: Auth middleware
-```
+1. Prepend a checkmark to the step heading. For example, transform `### Step 1: Auth middleware` into `### ✅ Step 1: Auth middleware`.
+2. Tick all markdown checkboxes within the completed step by changing `- [ ]` to `- [x]` for every checkbox in that step's Phase 3 verification checklist (and any other checkboxes within the step).
 
-into:
-
-```
-### ✅ Step 1: Auth middleware
-```
-
-Write this change to the plan file on disk so progress persists across sessions. On resume, scan the plan file for the first step heading that does not have a ✅ prefix and begin execution from that step.
+Write both changes to the plan file on disk so progress persists across sessions. On resume, scan the plan file for the first step heading that does not have a ✅ prefix and begin execution from that step.
 
 If the user previously paused execution (user-managed git mode), re-read the entire plan file before resuming. The user may have edited the plan during the pause — added steps, removed steps, reordered steps, or modified instructions. Honor whatever the plan file contains at resume time.
 
@@ -126,7 +121,7 @@ Accept the plan as-is at resume time. Do not warn about or question changes unle
 | Phase | Receives | Does |
 |-------|----------|------|
 | Build | Phase 1 instructions (verbatim from plan); full filesystem access | Read context, implement changes, write tests, return structured summary listing files changed with intent, key decisions, and any deviations |
-| Review | Build summary (structured, for orientation) + Phase 2 instructions (verbatim from plan) | Read all changed files fresh from disk, perform adversarial review, return findings categorized as blocking or advisory with file:line references |
+| Review | Acceptance criteria (verbatim from plan) + build summary (structured, for orientation) + Phase 2 instructions (verbatim from plan) | Read all changed files fresh from disk, verify each acceptance criterion is met, perform adversarial review, return findings categorized as blocking or advisory with file:line references |
 | Verification | Phase 3 checklist (verbatim from plan, includes acceptance criteria) + tool chain configuration | Execute each check using actual tools, return pass/fail per checklist item with full error output on failure |
 
 The review subagent reads files independently from disk. The build summary tells it where to look and what was intended, but the review subagent verifies everything by reading actual file contents. This prevents a build subagent from misrepresenting its own output.
@@ -143,20 +138,6 @@ The verification subagent runs real commands. It does not estimate whether tests
 - If a step fails within a batch, the remaining steps in that batch do not execute. Present the failure and wait for guidance.
 - A batch never crosses milestone boundaries. If the current milestone has 2 remaining steps and the next milestone has steps, the current batch contains only those 2 steps.
 - If the plan has fewer remaining steps than the batch size, the batch contains only the remaining steps.
-
-## Design Principles
-
-**User stays in control.** Every failure surfaces to the user with full details. No auto-retry, no auto-fix, no silent skipping. The user decides how to handle every problem.
-
-**Context preservation.** Subagents handle the heavy work (reading dozens of files, running commands, writing implementations). The main conversation stays focused on orchestration, decisions, and progress reporting. This keeps the main conversation context clean and prevents it from filling up with implementation details.
-
-**Resumable execution.** Checkmarks in the plan file make progress durable. If the conversation ends, a new session picks up from the first unmarked step. The plan file on disk is the source of truth for progress.
-
-**No AI attribution.** In skill-managed git mode, commit messages never contain Claude Code attribution, co-authored-by lines, bot signatures, or any indication that an AI produced the code. Commits look like normal developer commits.
-
-**Adversarial review.** The review phase exists to catch mistakes, not to confirm the build succeeded. The review subagent actively tries to find flaws. It reads files independently rather than trusting the build summary. A review that finds nothing blocking is a genuine signal, not a rubber stamp. If the review consistently finds zero issues across many steps, that is not cause for concern — it means the build subagent is performing well, not that the review is too lenient.
-
-**Verification is execution.** The verification phase runs actual tools. It does not read code and guess whether tests would pass. It executes the test suite, the linter, the type checker, and any other configured tools. A passing verification means the tools actually ran and reported success. A failing verification includes the actual error output so the user can diagnose the problem without re-running the tools manually.
 
 ## Step Reporting
 
