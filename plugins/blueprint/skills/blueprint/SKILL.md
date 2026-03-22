@@ -118,7 +118,7 @@ Once the task is understood and tooling confirmed, outline 2-3 candidate impleme
 
 **Fast-path**: When the task is narrowly scoped and only one credible strategy exists, state it briefly and move on — inventing artificial alternatives wastes time and muddies the conversation.
 
-### 3. Assess Complexity
+### 2. Assess Complexity
 
 With the approach selected, determine the plan's scope:
 
@@ -135,7 +135,7 @@ With the approach selected, determine the plan's scope:
 - Steps should build on each other sequentially. Later steps may depend on earlier steps, but not the reverse.
 - Avoid steps that are purely structural ("set up the directory") unless the project has no existing structure. Structural work should be folded into the first functional step.
 
-### 4. Generate the Plan
+### 3. Generate the Plan
 
 Write the plan artifact(s) following the structure defined in `references/step-template.md`. Every step includes all three phases: Build, Adversarial Review, and Verification.
 
