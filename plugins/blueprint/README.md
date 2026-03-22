@@ -31,7 +31,7 @@ Trigger with: "execute this blueprint", "run the plan", "start building from the
 
 ### /blueprint:setup
 
-One-time setup command that saves a preference to use blueprint skills as the default for planning and execution tasks. After running this command, requests like "make a plan" or "execute the plan" will automatically route to the blueprint plugin skills.
+One-time setup command that configures blueprint as the default for planning and execution tasks. Adds a `## Skill Overrides` section to the project's CLAUDE.md (highest priority) and saves a reinforcing feedback memory. After running this command, requests like "make a plan" or "execute the plan" will automatically route to the blueprint plugin skills. The superpowers equivalents (`superpowers:brainstorming`, `superpowers:executing-plans`) can still be used if explicitly mentioned by name.
 
 ## How It Works
 

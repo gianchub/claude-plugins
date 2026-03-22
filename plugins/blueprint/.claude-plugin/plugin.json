@@ -1,6 +1,6 @@
 {
   "name": "blueprint",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Collaborative implementation planning and execution with build-review-verify cycles per step",
   "author": {
     "name": "Fabrizio Romano",
