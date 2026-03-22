@@ -16,6 +16,10 @@ Produce collaborative implementation plans as written artifacts, where every ste
 
 Scale exploration depth to task complexity, but always err toward more thoroughness. Read broadly before narrowing — the goal is a plan that surfaces zero surprises during execution.
 
+## Anti-pattern: "Too Simple to Plan"
+
+Even a one-line change carries assumptions about where it goes, what it affects, and how it gets verified. "Simple" tasks are precisely where unexamined assumptions cause wasted rework — the build-review-verify structure catches those before they compound. A plan can be a single step with one acceptance criterion; the fast-path for small plans (≤2 steps) already keeps overhead minimal. The anti-pattern is skipping planning entirely, not the plan's size.
+
 ## Design Principles
 
 ### Prose Over Code
@@ -88,6 +92,8 @@ Then ask clarifying questions. Focus on:
 - Whether there are related changes planned that this should accommodate.
 
 Iterate on understanding. Summarize what has been gathered so far, identify gaps, and ask follow-up questions. Two to three rounds of clarification is normal for non-trivial plans. For simple, well-defined tasks, one round may suffice.
+
+When planning involves architectural decisions that benefit from diagrams or visual comparison of approaches, the superpowers plugin's visual companion can render these in a browser. This capability requires the superpowers plugin to be installed; no fallback is provided if it is absent.
 
 **Required deliverable before proceeding**: Present the discovered tool chain to the user for confirmation. Format it as a numbered list with the source of each discovery in parentheses. The user may confirm, add, remove, or reorder tools. Do not proceed to step 2 until the tool chain is confirmed. Example:
 

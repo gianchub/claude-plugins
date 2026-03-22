@@ -197,7 +197,7 @@ Place the diagram right after `## Workflow` heading, before the planning gate (a
 
 ---
 
-### Step 5: Add Visual Companion Integration
+### ✅ Step 5: Add Visual Companion Integration
 
 **Objective**: Add a brief section to SKILL.md that delegates visual planning aid to superpowers' visual companion when the superpowers plugin is installed. No standalone reference file, no fallback mechanism — if superpowers is not present, visual aid is simply not available.
 
@@ -224,11 +224,11 @@ Do NOT create a `references/visual-companion.md` file. Do NOT add an entry to "A
 
 #### Phase 3 — Verification
 
-- [ ] No file exists at `plugins/blueprint/skills/blueprint/references/visual-companion.md`.
-- [ ] SKILL.md references visual companion in the workflow section.
-- [ ] Addition is under 60 words.
-- [ ] No verbatim copying from superpowers:brainstorming.
-- [ ] Read the SKILL.md addition — it should feel native to blueprint's voice.
+- [x] No file exists at `plugins/blueprint/skills/blueprint/references/visual-companion.md`.
+- [x] SKILL.md references visual companion in the workflow section.
+- [x] Addition is under 60 words.
+- [x] No verbatim copying from superpowers:brainstorming.
+- [x] Read the SKILL.md addition — it should feel native to blueprint's voice.
 
 ---
 
