@@ -47,6 +47,25 @@ Scan the project root (and common subdirectories) for configuration files. Each 
   - `rspec` in Gemfile → test runner: `bundle exec rspec`
   - `minitest` → test runner: `bundle exec rake test`
 
+### PHP
+- **composer.json**: Parse `"scripts"` and `"require-dev"`.
+  - `phpunit/phpunit` in require-dev → test runner: `./vendor/bin/phpunit`
+  - `phpstan/phpstan` in require-dev → static analysis: `./vendor/bin/phpstan analyse`
+  - `squizlabs/php_codesniffer` in require-dev → linter: `./vendor/bin/phpcs`
+  - `friendsofphp/php-cs-fixer` in require-dev → formatter: `./vendor/bin/php-cs-fixer fix --dry-run`
+- **phpunit.xml** / **phpunit.xml.dist**: Confirms PHPUnit test runner.
+- **phpstan.neon** / **phpstan.neon.dist**: Confirms PHPStan static analysis.
+
+### Swift
+- **Package.swift**: Swift Package Manager project confirmed.
+  - Test runner: `swift test`
+  - Build: `swift build`
+- **Xcode project** (`*.xcodeproj` / `*.xcworkspace`): Xcode-managed project.
+  - Test runner: `xcodebuild test -scheme <scheme>`
+  - Build: `xcodebuild build -scheme <scheme>`
+- Check for `swiftlint` binary or `.swiftlint.yml` → linter: `swiftlint`
+- Check for `swiftformat` binary or `.swiftformat` → formatter: `swiftformat --lint .`
+
 ### Java / Kotlin
 - **pom.xml**: Maven project.
   - Test runner: `mvn test`
@@ -79,6 +98,7 @@ Lock files confirm the language ecosystem and package manager.
 | `go.sum` | Go | go modules |
 | `Gemfile.lock` | Ruby | bundler |
 | `composer.lock` | PHP | composer |
+| `Package.resolved` | Swift | swift package manager |
 
 ## CI Configuration
 

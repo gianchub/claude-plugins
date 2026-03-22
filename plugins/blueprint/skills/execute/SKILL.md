@@ -1,9 +1,10 @@
 ---
 name: execute
 description: >
-  Use when the user asks to "execute this blueprint", "run the plan",
-  "execute the plan", "start building from the plan",
-  "implement the blueprint", or "execute 01_milestone_name.md".
+  This skill should be used when the user asks to "execute this blueprint",
+  "run the plan", "execute the plan", "start building from the plan",
+  "implement the blueprint", "implement the plan", "continue the plan",
+  "resume execution", or "execute 01_milestone_name.md".
 ---
 
 # Execute
@@ -23,6 +24,8 @@ Treat each phase as the only chance to get it right. Builds should be complete i
 Scan `docs/plans/` for plan files. If a single plan file exists, use it. If multiple plan files or milestone folders exist, present the list to the user and ask which to execute. For milestone folders containing numbered step files, start from the first step that is not marked with a checkmark. If the plan file is specified directly in the user's request (e.g., "execute 01_milestone_name.md"), use that file without asking.
 
 Read the entire plan file into context before beginning execution. Identify all step headings, their phase instructions (Phase 1 build, Phase 2 review, Phase 3 verification), and any dependencies between steps. Count the total number of steps and report to the user how many steps the plan contains and how many are already marked complete before asking to proceed.
+
+If the user requests executing only specific steps (e.g., "execute steps 3-5" or "skip step 2"), honor the request — execute only the specified steps in order, skipping others. Warn if skipped steps contain dependencies required by the requested steps.
 
 ### Git Handling
 

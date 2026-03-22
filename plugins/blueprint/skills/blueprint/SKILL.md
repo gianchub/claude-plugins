@@ -1,9 +1,10 @@
 ---
 name: blueprint
 description: >
-  Use when the user asks to "create a blueprint", "blueprint this feature",
-  "plan this implementation", "make a plan", "create an implementation plan",
-  "design the architecture", or "break this down into steps".
+  This skill should be used when the user asks to "create a blueprint",
+  "blueprint this feature", "plan this implementation", "make a plan",
+  "create an implementation plan", "design the architecture",
+  "design this feature", or "break this down into steps".
 ---
 
 # Blueprint Skill
@@ -233,6 +234,11 @@ The `README.md` provides an ordered list of milestones with summaries, the confi
 ## Handling Plan Execution
 
 When the user asks to execute, invoke `blueprint:execute` — it provides full subagent orchestration with batching, git handling, and progress tracking. If unavailable, work through steps one at a time completing all three phases before advancing. Mark completed steps with a checkmark in the plan heading and tick Phase 3 checkboxes for cross-session resumability. See `references/step-template.md` for what belongs in each phase of a plan step.
+
+## Handling Scope Changes
+
+- If scope changes during execution invalidate more than half the remaining plan, recommend starting fresh rather than patching a plan built on outdated assumptions.
+- If new steps are needed during execution, propose them with the same 3-phase structure (build, adversarial review, verification) and insert them at the appropriate position in the plan.
 
 ## Additional Resources
 

@@ -1,10 +1,11 @@
 ---
 name: audit
 description: >
-  Use when the user asks to "audit this codebase", "audit this code",
-  "security audit", "code audit", "find vulnerabilities", "check for bugs",
-  "review code quality", "find dead code", "check for anti-patterns",
-  "performance audit", or "check for code smells".
+  This skill should be used when the user asks to "audit this codebase",
+  "audit this code", "security audit", "code audit", "find vulnerabilities",
+  "check for bugs", "review code quality", "find dead code",
+  "check for anti-patterns", "performance audit", "check for code smells",
+  "technical debt", or "code health check".
 ---
 
 # Code Audit Skill
@@ -29,6 +30,8 @@ Determine the audit scope from the user's prompt. The user may specify:
 - A functional area described in natural language (e.g., "the authentication flow").
 
 If the prompt does not contain enough information to determine scope, ask a single clarifying question before proceeding. Do not guess at scope — an audit with unclear boundaries produces unreliable results.
+
+If a previous audit report exists in the project and the user requests a re-audit, default to auditing only files that had findings in the prior report unless the user specifies a broader scope.
 
 Once scope is established, enumerate all files that fall within it. Exclude generated files (e.g., lock files, compiled output, vendored dependencies, minified bundles) unless the user explicitly includes them. State the resolved scope back to the user before continuing.
 
