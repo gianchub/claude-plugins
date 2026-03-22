@@ -22,7 +22,7 @@
 
 ## Steps
 
-### Step 1: Trim Redundant Content from SKILL.md
+### ✅ Step 1: Trim Redundant Content from SKILL.md
 
 **Objective**: Reduce blueprint/SKILL.md word count by ~400-500 words by removing content duplicated in reference files. Currently 2,983 words — target ~2,500 before new content is added.
 
@@ -65,16 +65,16 @@ For the adversarial review section, remove the categories bullet list and replac
 
 #### Phase 3 — Verification
 
-- [ ] "Do not include" items migrated to `references/step-template.md` — verify with `grep "go stale" plugins/blueprint/skills/blueprint/references/step-template.md`.
-- [ ] All trimmed content has a corresponding source in reference files.
-- [ ] SKILL.md word count: `wc -w plugins/blueprint/skills/blueprint/SKILL.md` — target under 2,600.
-- [ ] No broken internal references — `grep -n "What Belongs" plugins/blueprint/skills/blueprint/SKILL.md` returns zero hits.
-- [ ] No verbatim copying from superpowers:brainstorming.
-- [ ] Read the full SKILL.md end-to-end — it should flow naturally with no gaps.
+- [x] "Do not include" items migrated to `references/step-template.md` — verify with `grep "go stale" plugins/blueprint/skills/blueprint/references/step-template.md`.
+- [x] All trimmed content has a corresponding source in reference files.
+- [x] SKILL.md word count: `wc -w plugins/blueprint/skills/blueprint/SKILL.md` — target under 2,600.
+- [x] No broken internal references — `grep -n "What Belongs" plugins/blueprint/skills/blueprint/SKILL.md` returns zero hits.
+- [x] No verbatim copying from superpowers:brainstorming.
+- [x] Read the full SKILL.md end-to-end — it should flow naturally with no gaps.
 
 ---
 
-### Step 2: Add Hard Gate and Anti-Pattern Section
+### ✅ Step 2: Add Hard Gate and Anti-Pattern Section
 
 **Objective**: Add an explicit gate preventing plan generation before clarification is complete and tool chain is confirmed. Add an anti-pattern section addressing the "too simple to plan" failure mode. The gate goes at the top of the Workflow section (before step 1) where the process it controls is defined. The anti-pattern goes after Effort Level and before Design Principles, as a top-level concern.
 
@@ -101,15 +101,15 @@ Add two sections in different locations:
 
 #### Phase 3 — Verification
 
-- [ ] Gate section exists with `<PLANNING-GATE>` tags.
-- [ ] Anti-pattern section exists, under 80 words.
-- [ ] No verbatim copying from superpowers:brainstorming — compare against brainstorming's `<HARD-GATE>` and "Anti-Pattern" sections.
-- [ ] Fast-path for small plans is still honored (the anti-pattern says plans can be short, not that every plan needs 10 steps).
-- [ ] SKILL.md reads naturally with the new sections in place.
+- [x] Gate section exists with `<PLANNING-GATE>` tags.
+- [x] Anti-pattern section exists, under 80 words.
+- [x] No verbatim copying from superpowers:brainstorming — compare against brainstorming's `<HARD-GATE>` and "Anti-Pattern" sections.
+- [x] Fast-path for small plans is still honored (the anti-pattern says plans can be short, not that every plan needs 10 steps).
+- [x] SKILL.md reads naturally with the new sections in place.
 
 ---
 
-### Step 3: Add "Propose Approaches" Step to Workflow
+### ✅ Step 3: Add "Propose Approaches" Step to Workflow
 
 **Objective**: Insert a new workflow step between "Understand the Task" and "Assess Complexity" where 2-3 implementation approaches are proposed with trade-offs before committing to a plan structure. Currently the workflow jumps from clarification to complexity assessment with an implicit single approach.
 
@@ -144,16 +144,16 @@ Renumber subsequent sections (2→3, 3→4, 4→5).
 
 #### Phase 3 — Verification
 
-- [ ] New section exists at position 2 in the Workflow.
-- [ ] All subsequent sections renumbered correctly.
-- [ ] Any references to "step 2", "step 3", "step 4" elsewhere in SKILL.md updated — check Additional Resources section and `references/plan-review-subagent.md` for stale step numbers.
-- [ ] Fast-path for trivial tasks is included.
-- [ ] Section word count under 150.
-- [ ] No verbatim copying from brainstorming's "Exploring approaches" section.
+- [x] New section exists at position 2 in the Workflow.
+- [x] All subsequent sections renumbered correctly.
+- [x] Any references to "step 2", "step 3", "step 4" elsewhere in SKILL.md updated — check Additional Resources section and `references/plan-review-subagent.md` for stale step numbers.
+- [x] Fast-path for trivial tasks is included.
+- [x] Section word count under 150.
+- [x] No verbatim copying from brainstorming's "Exploring approaches" section.
 
 ---
 
-### Step 4: Add Process Flow Digraph
+### ✅ Step 4: Add Process Flow Digraph
 
 **Objective**: Add a dot-notation process flow diagram to SKILL.md that makes the full workflow visually scannable. Place it after the Workflow heading and before the first workflow step.
 
@@ -188,68 +188,47 @@ Place the diagram right after `## Workflow` heading, before the planning gate (a
 
 #### Phase 3 — Verification
 
-- [ ] Dot code block exists in SKILL.md after `## Workflow`.
-- [ ] All 5 workflow steps represented.
-- [ ] Decision diamonds for: planning gate, fast-path approach, fast-path review, review verdict.
-- [ ] Terminal state is double-circle.
-- [ ] Diagram is original (not copied from brainstorming's digraph).
-- [ ] Read the dot source and mentally trace the flow — it should match the prose.
+- [x] Dot code block exists in SKILL.md after `## Workflow`.
+- [x] All 5 workflow steps represented.
+- [x] Decision diamonds for: planning gate, fast-path approach, fast-path review, review verdict.
+- [x] Terminal state is double-circle.
+- [x] Diagram is original (not copied from brainstorming's digraph).
+- [x] Read the dot source and mentally trace the flow — it should match the prose.
 
 ---
 
 ### Step 5: Add Visual Companion Integration
 
-**Objective**: Create a `references/visual-companion.md` that describes how to use browser-based visualization during blueprint planning for architecture diagrams, data flow, and approach comparisons. Add a brief section in SKILL.md referencing it.
+**Objective**: Add a brief section to SKILL.md that delegates visual planning aid to superpowers' visual companion when the superpowers plugin is installed. No standalone reference file, no fallback mechanism — if superpowers is not present, visual aid is simply not available.
 
 **Acceptance criteria**:
-- New file `references/visual-companion.md` exists.
-- File describes the concept of using a browser-based companion for visual content during planning (architecture diagrams, data flow, approach comparisons).
-- File is written in blueprint's voice — focused on planning visualization, not general brainstorming mockups.
-- File explains: when to use vs terminal (planning-specific decision criteria), how to offer it to the user, per-question decision framework.
-- File is under 400 words — it's a reference, not a tutorial. It points to the tooling scripts rather than re-documenting them.
-- SKILL.md has a brief addition (under 80 words) in the clarification section noting the visual companion is available and referencing the file.
-- SKILL.md's "Additional Resources" section lists the new file.
-- No server scripts, HTML templates, or client-side code is copied — this references the existing infrastructure without bundling it.
+- No new `references/visual-companion.md` file is created.
+- SKILL.md has a brief addition (under 60 words) in the "1. Understand the Task" section noting that if superpowers is installed, its visual companion can be used for architecture diagrams and approach comparisons during planning.
+- The addition makes clear this is optional and depends on superpowers being installed.
+- No server scripts, HTML templates, or fallback mechanisms are introduced.
 
 #### Phase 1 — Build
 
-Create `references/visual-companion.md` covering:
+Add to SKILL.md in section "1. Understand the Task", after the clarification paragraph:
 
-1. **Purpose**: During planning, some decisions benefit from visual presentation — architecture diagrams, data flow comparisons, side-by-side approach layouts. The visual companion makes these available in a browser.
+> **Visual companion (optional):** When planning involves architectural decisions that benefit from diagrams or visual comparison of approaches, the superpowers plugin's visual companion can present these in a browser. This requires the superpowers plugin to be installed — no fallback is provided.
 
-2. **When to use vs terminal**: Use the browser for architecture diagrams, component relationship maps, data flow visualization, and side-by-side approach comparisons. Use the terminal for requirement questions, scope decisions, tool chain confirmation, trade-off lists. The test: would the user understand this better by seeing it than reading about it?
-
-3. **Offering it**: When anticipating visual planning questions, offer the companion once for consent. This is a tool, not a mode — accepting it means it's available, not that every question goes through the browser.
-
-4. **Per-question decision**: Even after acceptance, decide for each question whether browser or terminal is more appropriate. Architecture and data flow → browser. Scope and requirements → terminal.
-
-5. **Tooling**: Describe two concrete options for serving visual content: (a) If the superpowers plugin is installed, use its brainstorming server (`scripts/start-server.sh`) which provides interactive selection, theming, and event capture. (b) Without superpowers, write HTML files to a temporary directory and use `python3 -m http.server` or similar — this lacks interactivity but works for static architecture diagrams and data flow visualizations.
-
-Then add to SKILL.md in section "1. Understand the Task", after the clarification paragraph:
-
-> **Visual companion (optional):** When planning involves architectural decisions that benefit from diagrams or visual comparison of approaches, a browser-based companion can present these visually. See `references/visual-companion.md` for when and how to offer it.
-
-And add to the "Additional Resources" section at the bottom:
-
-> - **`references/visual-companion.md`** — When and how to use browser-based visualization for architecture diagrams and approach comparisons during planning.
+Do NOT create a `references/visual-companion.md` file. Do NOT add an entry to "Additional Resources" for visual companion.
 
 #### Phase 2 — Adversarial Review
 
-1. Does the visual companion reference file stand on its own without requiring superpowers to be installed?
-2. Is the "when to use" guidance specific to planning (not generic brainstorming advice)?
-3. Does the SKILL.md addition integrate naturally without disrupting the existing flow?
+1. Does the SKILL.md addition integrate naturally without disrupting the existing flow?
+2. Is it clear that this is optional and depends on superpowers?
+3. Is the addition under 60 words?
 4. Is there any verbatim text from brainstorming's visual-companion.md?
-5. Is 400 words sufficient to convey the concept without being too sparse?
-6. Does the reference avoid re-documenting server scripts, HTML templates, or WebSocket protocol that belongs to the brainstorming skill?
 
 #### Phase 3 — Verification
 
-- [ ] File exists: `plugins/blueprint/skills/blueprint/references/visual-companion.md`
-- [ ] File word count: `wc -w` — target under 400.
-- [ ] SKILL.md references the file in both the workflow section and Additional Resources.
-- [ ] No verbatim copying from `superpowers/5.0.5/skills/brainstorming/visual-companion.md`.
-- [ ] File is useful without superpowers installed (mentions alternative servers).
-- [ ] Read both the reference and the SKILL.md additions — they should feel native to blueprint's voice.
+- [ ] No file exists at `plugins/blueprint/skills/blueprint/references/visual-companion.md`.
+- [ ] SKILL.md references visual companion in the workflow section.
+- [ ] Addition is under 60 words.
+- [ ] No verbatim copying from superpowers:brainstorming.
+- [ ] Read the SKILL.md addition — it should feel native to blueprint's voice.
 
 ---
 
@@ -258,7 +237,7 @@ And add to the "Additional Resources" section at the bottom:
 **Objective**: Verify the complete SKILL.md reads coherently after all changes, check word count targets, and bump the plugin version.
 
 **Acceptance criteria**:
-- SKILL.md word count is between 2,500 and 2,950 (trimmed ~400 words, added ~350-400 words of new content including digraph — net reduction of ~50 words). Must stay under 3,000 words per skill-development guidelines.
+- SKILL.md word count is between 2,200 and 2,500. Must stay under 3,000 words per skill-development guidelines.
 - The document flows naturally from top to bottom with no jarring transitions.
 - All internal references (section numbers, file references) are consistent.
 - Plugin version bumped from 1.1.0 to 1.2.0 in plugin.json.
@@ -268,7 +247,7 @@ And add to the "Additional Resources" section at the bottom:
 
 1. Read the complete SKILL.md end-to-end. Fix any flow issues, inconsistent numbering, or awkward transitions introduced by the changes.
 2. Verify all file references in "Additional Resources" point to files that exist.
-3. Update `plugins/blueprint/.claude-plugin/plugin.json` version from `1.1.0` to `1.2.0`.
+3. Verify `plugins/blueprint/.claude-plugin/plugin.json` version is already `1.2.0` (bumped in prior session).
 4. Run a final word count check.
 
 #### Phase 2 — Adversarial Review
@@ -281,7 +260,7 @@ And add to the "Additional Resources" section at the bottom:
 
 #### Phase 3 — Verification
 
-- [ ] Word count: `wc -w plugins/blueprint/skills/blueprint/SKILL.md` — between 2,500 and 2,950.
+- [ ] Word count: `wc -w plugins/blueprint/skills/blueprint/SKILL.md` — between 2,200 and 2,500.
 - [ ] All references in Additional Resources point to existing files.
 - [ ] Plugin version is `1.2.0` in `plugins/blueprint/.claude-plugin/plugin.json`.
 - [ ] `grep -r "Do NOT invoke" plugins/blueprint/` returns zero hits (no copied gate language).
