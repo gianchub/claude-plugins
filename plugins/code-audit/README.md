@@ -19,11 +19,11 @@ Add the marketplace, then install:
 
 Performs a comprehensive codebase audit covering security vulnerabilities, concurrency issues, dead code, anti-patterns, performance problems, correctness bugs, error handling gaps, and test quality. The skill intelligently selects which audit categories to apply based on your request and the codebase under review, confirms the plan with you, then executes a systematic two-phase analysis producing a structured `AUDIT-REPORT-YYYY-MM-DD.md` file at the project root.
 
-Trigger with: "audit this codebase", "security audit", "code audit", "find vulnerabilities", "check for bugs", "review code quality", "find dead code", "check for anti-patterns", "performance audit"
+Trigger with: "audit this codebase", "security audit", "code audit", "find vulnerabilities", "check for bugs", "review code quality", "find dead code", "check for anti-patterns", "performance audit", "technical debt", "code health check"
 
 ## How It Works
 
-1. **Resolve scope** -- determines which files and directories to audit based on the request, excluding generated files, lock files, and vendored dependencies unless explicitly included
+1. **Resolve scope** -- determines which files and directories to audit based on the request, excluding generated files, lock files, and vendored dependencies unless explicitly included. Supports incremental re-audits -- if a previous audit report exists, defaults to re-auditing only files with prior findings
 2. **Select categories** -- analyzes the request and codebase to select relevant audit categories (e.g., concurrency checks are included automatically if async patterns are detected), then confirms the selection with the user
 3. **Systematic analysis** -- two-phase analysis:
    - File-level: reads every line of every in-scope file, walking through category checklists item by item

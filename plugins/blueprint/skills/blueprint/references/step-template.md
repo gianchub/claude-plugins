@@ -51,6 +51,11 @@ Everything else stays in prose. If the instruction feels like it needs code to b
 - Error scenarios to handle ("return 409 on duplicate email", "retry transient failures up to 3 times").
 - What tests to write and what they cover.
 
+**What not to include in Phase 1**:
+- **Implementation details that go stale**: Algorithm pseudocode, variable names, internal data structure choices. These belong in the code, not in the plan.
+- **Generic advice**: "Write clean code," "follow best practices," "handle errors properly." Every instruction must be specific to the step.
+- **Premature optimization notes**: Unless performance is an acceptance criterion for the step, defer optimization concerns.
+
 ---
 
 ## Phase 2 — Adversarial Review: Guidance
@@ -104,70 +109,56 @@ Run the full verification checklist. Every item must pass before the step is con
 ## Example: Complete Step
 
 ```markdown
-### Step 3: Add User Authentication Endpoint
+### Step 2: Add CSV Export Command
 
-**Objective**: Provide a POST /auth/login endpoint that accepts email and password, validates credentials against the user store, and returns a signed JWT on success. This unblocks all subsequent steps that require authenticated requests.
+**Objective**: Add an `export` subcommand that writes query results to a CSV file. Depends on Step 1 (query engine). Uses the `QueryEngine` interface defined there.
 
 **Acceptance criteria**:
-- POST /auth/login accepts JSON body with `email` and `password` fields.
-- Valid credentials return 200 with a JSON body containing `access_token` (JWT, 15-minute expiry) and `token_type: "bearer"`.
-- Invalid credentials return 401 with a generic error message that does not reveal whether the email exists.
-- Missing or malformed request body returns 422 with field-level validation errors.
-- The endpoint is rate-limited to 10 attempts per IP per minute.
-- All passwords are compared using constant-time comparison.
+- `app export --query "..." --output path.csv` writes results as CSV with a header row.
+- Column order matches the query's field order.
+- If the output file already exists, abort with an error unless `--overwrite` is passed.
+- Empty result sets produce a file with only the header row.
+- Non-zero exit code and a descriptive message on any failure (bad query, I/O error, permission denied).
 
 #### Phase 1 — Build
 
-Create the authentication endpoint in the API layer.
+**CLI wiring**: Register a new `export` subcommand with three arguments: `--query` (required, the query string), `--output` (required, file path), and `--overwrite` (optional flag, defaults to false). Follow the existing subcommand registration pattern established in Step 1.
 
-**Router and handler**: Add a new route module for authentication. The login handler receives the request body, delegates credential validation to the auth service, and returns the appropriate response. Keep the handler thin — it should only parse input, call the service, and format output.
+**Export logic**: Create an export module responsible for executing the query via the QueryEngine, transforming results into CSV rows, and writing to the target path. Separate the CSV formatting from file I/O so each can be tested independently. Check for file existence before writing and raise a clear error if the file exists and `--overwrite` is not set.
 
-**Auth service**: Create a service that encapsulates authentication logic. It looks up the user by email via the user repository, compares the submitted password against the stored hash using constant-time comparison, and generates a JWT on success. If the user is not found or the password is wrong, raise the same error — do not distinguish between "user not found" and "wrong password" to avoid user enumeration.
-
-**JWT generation**: Use the project's existing JWT configuration (secret key, algorithm from settings). Set the token expiry to 15 minutes. Include the user ID and email in the token payload.
-
-**Rate limiting**: Apply rate limiting middleware to the login route only. Configure 10 requests per IP per minute. Return 429 with a `Retry-After` header when the limit is exceeded.
-
-**Request validation**: Define the request schema requiring `email` (valid email format) and `password` (non-empty string). Return 422 with per-field errors on validation failure.
+**Error handling**: Catch query errors, I/O errors, and permission errors. Map each to a descriptive user-facing message and a non-zero exit code. Do not expose stack traces or internal paths in error output.
 
 **Tests to write**:
-- Successful login returns 200 with valid JWT.
-- Wrong password returns 401 with generic message.
-- Non-existent email returns 401 with the same generic message as wrong password.
-- Missing email field returns 422.
-- Missing password field returns 422.
-- Malformed email returns 422.
-- Rate limit triggers after 10 rapid requests, returns 429 with Retry-After header.
-- JWT contains expected claims (user ID, email, expiry).
+- Valid query produces correct CSV with header and data rows.
+- Column order matches query field order.
+- Empty result set produces header-only file.
+- Existing file without `--overwrite` exits with error, does not modify the file.
+- Existing file with `--overwrite` replaces the file.
+- Invalid query exits with non-zero code and descriptive message.
+- Unwritable path (permission denied) exits with non-zero code and descriptive message.
 
 #### Phase 2 — Adversarial Review
 
-1. Does the 401 response for wrong password look identical to the 401 for non-existent user (same status, same body, same timing)?
-2. Is password comparison using constant-time comparison (not `==`)?
-3. Does the JWT expiry match the 15-minute requirement, not some default?
-4. Are the JWT secret and algorithm sourced from configuration, not hard-coded?
-5. Does the rate limiter key on IP address, and does it handle `X-Forwarded-For` correctly for proxied deployments?
-6. Does the 429 response include a `Retry-After` header with the correct value?
-7. Do validation error messages avoid leaking internal field names or schema details?
-8. Are tests asserting on specific status codes and response shapes, not just "request succeeded"?
-9. Is there a test that verifies the timing side-channel is mitigated (same response time for valid vs invalid email)?
-10. Does the login handler avoid logging the submitted password, even at debug level?
-11. Does the authentication module follow the same patterns used elsewhere in the codebase (error response format, middleware registration, service instantiation)?
-12. Could the new auth routes or middleware interfere with existing routes or middleware in the application?
+1. Does the export module use the QueryEngine interface from Step 1, or does it bypass it?
+2. Is file existence checked before any write attempt, or could a partial write corrupt an existing file?
+3. Are CSV fields properly escaped (values containing commas, quotes, newlines)?
+4. Do error messages avoid exposing internal paths or implementation details?
+5. Do tests verify actual file contents (read back and compare), not just exit codes?
+6. Does the new command follow the same patterns as existing subcommands (argument parsing style, error reporting, exit codes)?
 
 #### Phase 3 — Verification
 
 - [ ] All new and modified code has corresponding tests.
-- [ ] All tests pass: `pytest tests/ -x -q`
-- [ ] Test coverage is adequate: `pytest --cov=src/auth --cov-report=term-missing`
-- [ ] Linter passes: `ruff check src/ tests/`
-- [ ] Type checker passes: `mypy src/`
+- [ ] All tests pass: `[test command]`
+- [ ] Test coverage is adequate — no untested branches in new code.
+- [ ] Linter passes: `[lint command]`
+- [ ] Type checker passes: `[type-check command]`
 - [ ] Acceptance criteria check:
-  - [ ] POST /auth/login accepts email + password → verified by test_successful_login
-  - [ ] 200 + JWT on valid credentials → verified by test_successful_login, test_jwt_claims
-  - [ ] 401 on invalid credentials (generic message) → verified by test_wrong_password, test_nonexistent_email
-  - [ ] 422 on bad input → verified by test_missing_email, test_missing_password, test_malformed_email
-  - [ ] Rate limited at 10/min/IP → verified by test_rate_limit
-  - [ ] Constant-time comparison → verified by code review in Phase 2 item 2
-- [ ] Rate limiter configuration is documented in the project's settings reference.
+  - [ ] `export --query --output` produces valid CSV → verified by test_valid_export
+  - [ ] Column order matches field order → verified by test_column_order
+  - [ ] Empty result → header-only file → verified by test_empty_results
+  - [ ] Existing file without --overwrite → error → verified by test_no_overwrite
+  - [ ] --overwrite replaces file → verified by test_overwrite
+  - [ ] Bad query → non-zero exit + message → verified by test_invalid_query
+  - [ ] Permission denied → non-zero exit + message → verified by test_unwritable_path
 ```

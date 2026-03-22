@@ -4,55 +4,73 @@ description: >
   This skill should be used when the user asks to "create a blueprint",
   "blueprint this feature", "plan this implementation", "make a plan",
   "create an implementation plan", "design the architecture",
-  "break this down into steps", or needs a structured plan with
-  build-review-verify cycles.
+  "design this feature", or "break this down into steps".
 ---
 
 # Blueprint Skill
 
 ## Purpose
 
-Produce collaborative implementation plans as written artifacts, where every step follows a build-review-verify cycle. Transform vague feature requests, architectural changes, or refactoring goals into concrete, sequenced plans that a human or agent can execute step by step. Treat planning as a dialogue — explore the codebase, discover tooling, ask questions, assess complexity, then generate the plan.
+Produce collaborative implementation plans as written artifacts, where every step follows a build-review-verify cycle. Transform vague feature requests, architectural changes, or refactoring goals into concrete, sequenced plans that a human or agent can execute step by step. Treat planning as a dialogue — explore the codebase, discover tooling, ask questions, compare approaches, assess complexity, then generate the plan.
 
 ## Effort Level
 
-Scale exploration depth to the complexity of the task, but always err on the side of more thoroughness, not less. Even for a seemingly simple change, investigate its context — what it touches, what depends on it, what patterns surround it. A small refactoring doesn't need full-project archaeology, but it does need enough context to produce a plan that accounts for ripple effects. The goal is a plan so thorough that execution surfaces zero surprises. Read broadly before narrowing. Understand the surrounding architecture before planning a change to one piece of it. When in doubt, explore more rather than less.
+Scale exploration depth to task complexity, but always err toward more thoroughness. Read broadly before narrowing — the goal is a plan that surfaces zero surprises during execution.
+
+## Anti-pattern: "Too Simple to Plan"
+
+Even a one-line change carries assumptions about where it goes, what it affects, and how it gets verified. "Simple" tasks are precisely where unexamined assumptions cause wasted rework — the build-review-verify structure catches those before they compound. A plan can be a single step with one acceptance criterion; the fast-path for small plans (≤2 steps) already keeps overhead minimal. The anti-pattern is skipping planning entirely, not the plan's size.
 
 ## Design Principles
 
-### Collaborative: Ask, Don't Assume
-
-Never guess at requirements, constraints, or preferences. When uncertainty exists, ask. Two to three clarifying questions per turn is fine — avoid overwhelming the user with a wall of questions, but also avoid proceeding with unvalidated assumptions. Common things to ask about:
-
-- Scope boundaries: "Should this cover admin users too, or just regular users for now?"
-- Existing patterns: "I see two different patterns for error handling in the codebase — which one to follow?"
-- Priority tradeoffs: "This could be done with a simple approach now or a more flexible one that takes longer — which do you prefer?"
-- Non-obvious constraints: "Is there a latency budget for this endpoint?"
-
-Continue the clarification cycle until the task is solid enough to plan. State what is understood so far and what remains unclear. Do not proceed to plan generation while critical ambiguities remain.
-
 ### Prose Over Code
 
-Plan steps describe intent, behavior, and constraints in prose. Do not include code blocks in plan steps except for the three permitted exceptions:
-
-1. **Interface signatures** — when an exact function, method, or API signature is critical for cross-step compatibility.
-2. **Exact config keys** — when a configuration shape must match a specific external contract.
-3. **Schema shapes** — when a data schema (database columns, API response shape, message format) is the primary deliverable of the step.
-
-Tool commands in Phase 3 verification checklists (e.g., `pytest tests/ -x -q`, `ruff check .`) are not violations of prose-over-code — they are operational instructions, not implementation details.
-
-Everything else stays in prose. If a step feels like it needs code to be clear, that signals the step is too large or too implementation-focused. Split it or raise the abstraction level.
-
-### Adaptive Complexity
-
-Not every plan needs the same structure. Apply these heuristics to choose the output format:
-
-- **5 or fewer steps, single concern**: Generate a single plan document. No grouping or milestones needed.
-- **6-8 steps, still a single concern**: Generate a single plan document with steps grouped under headings if natural groupings exist.
-- **Distinct phases or more than 8 steps**: Generate a milestone folder with one file per milestone, each containing a subset of steps.
-- **When in doubt**: Ask the user. Present the tradeoff: "This could be a single document with 7 steps or split into 2 milestones — preference?"
+Plan steps describe intent in prose. Do not include code blocks except for interface signatures, config keys, and schema shapes (full policy in `references/step-template.md`). Tool commands in Phase 3 checklists are operational instructions, not code — they are always permitted.
 
 ## Workflow
+
+```dot
+digraph blueprint {
+    rankdir=TB
+    node [shape=box, style=rounded, fontname="Helvetica", fontsize=10]
+    edge [fontname="Helvetica", fontsize=9]
+
+    explore   [label="Explore codebase\n& discover tools"]
+    confirm   [label="Confirm tool chain\nwith user"]
+    clarify   [label="Clarify requirements"]
+    gate      [label="Planning gate\nready?", shape=diamond]
+    fastappr  [label="Fast-path\napproach?", shape=diamond]
+    propose   [label="Propose 2-3\napproaches"]
+    pick      [label="User picks\napproach"]
+    assess    [label="Assess complexity"]
+    generate  [label="Generate plan"]
+    fastrev   [label="Fast-path\nreview?", shape=diamond]
+    review    [label="Adversarial review\n(subagent)"]
+    passed    [label="Review\npassed?", shape=diamond]
+    done      [label="Plan ready\nfor execution", shape=doublecircle]
+
+    explore  -> clarify
+    clarify  -> confirm
+    confirm  -> gate
+    gate     -> fastappr  [label="yes"]
+    gate     -> clarify   [label="no — gaps remain"]
+    fastappr -> assess    [label="yes — single\nobvious strategy"]
+    fastappr -> propose   [label="no"]
+    propose  -> pick
+    pick     -> assess
+    assess   -> generate
+    generate -> fastrev
+    fastrev  -> done      [label="≤2 steps"]
+    fastrev  -> review    [label=">2 steps"]
+    review   -> passed
+    passed   -> done      [label="yes"]
+    passed   -> generate  [label="no — fix issues"]
+}
+```
+
+<PLANNING-GATE>
+Do not begin plan generation until: (1) the user has confirmed the discovered tool chain, and (2) all critical ambiguities surfaced during clarification have been resolved. An ambiguity is critical if resolving it differently would change the plan's structure, step count, or chosen approach. Proceeding without both produces plans built on guesswork.
+</PLANNING-GATE>
 
 ### 1. Understand the Task and Discover Tooling
 
@@ -65,12 +83,7 @@ Begin by reading the codebase broadly. Examine:
 - Existing tests (test structure, fixtures, factories, coverage).
 - Documentation (architecture docs, ADRs, READMEs with setup instructions).
 
-**While exploring, discover project tooling.** Tool discovery is not a separate phase — it happens naturally during codebase exploration. As configuration files, CI pipelines, and lock files are encountered, record the tools they imply:
-
-1. **Scan config files**: `pyproject.toml` (`[tool.*]` sections), `package.json` (`scripts`, `devDependencies`), `Cargo.toml`, `go.mod`, `Makefile`/`justfile` targets. See `references/tool-discovery.md` for the full per-language lookup table.
-2. **Check CI pipelines**: `.github/workflows/*.yml`, `.gitlab-ci.yml`, `.circleci/config.yml`. Extract the shell commands that validate code quality (test, lint, format, type-check). CI commands take precedence over config file commands when they conflict.
-3. **Note lock files**: They confirm the package manager (`uv.lock` → uv, `yarn.lock` → yarn, etc.).
-4. **Check for script conventions**: `npm scripts`, `Makefile` targets, `scripts/` directory executables.
+**While exploring, discover project tooling.** Tool discovery is not a separate phase — it happens naturally during codebase exploration. As configuration files, CI pipelines, and lock files are encountered, record the test runner, linter, formatter, type checker, and package manager they imply. See `references/tool-discovery.md` for the full per-language lookup table and detection methodology. When CI pipeline commands conflict with config file commands, prefer the CI commands — they reflect what actually runs.
 
 Then ask clarifying questions. Focus on:
 
@@ -80,6 +93,8 @@ Then ask clarifying questions. Focus on:
 - Whether there are related changes planned that this should accommodate.
 
 Iterate on understanding. Summarize what has been gathered so far, identify gaps, and ask follow-up questions. Two to three rounds of clarification is normal for non-trivial plans. For simple, well-defined tasks, one round may suffice.
+
+When planning involves architectural decisions that benefit from diagrams or visual comparison of approaches, the superpowers plugin's visual companion can render these in a browser. This capability requires the superpowers plugin to be installed; no fallback is provided if it is absent.
 
 **Required deliverable before proceeding**: Present the discovered tool chain to the user for confirmation. Format it as a numbered list with the source of each discovery in parentheses. The user may confirm, add, remove, or reorder tools. Do not proceed to step 2 until the tool chain is confirmed. Example:
 
@@ -97,18 +112,25 @@ Add, remove, or reorder? (or confirm to proceed)
 
 **Fast-path for small plans**: If the user's request is narrowly scoped (e.g., a config change, single-file refactoring, or other small task that will clearly result in 2 or fewer steps), discover tools as normal but present them inline with the generated plan rather than as a separate confirmation gate. Still include the tool chain table in the plan header. For plans with 3 or more steps, or architecturally significant plans, keep the separate confirmation step described above.
 
+### 2. Propose Approaches
+
+Once the task is understood and tooling confirmed, outline 2-3 candidate implementation strategies before locking in a plan structure. For each, describe the approach in a sentence or two and call out its key trade-offs — what it optimizes for, what it sacrifices, and where it carries risk. Open with the strategy you recommend and explain the reasoning; then present the alternatives so the user can make an informed choice. Wait for the user to select an approach before moving to complexity assessment and plan generation.
+
+**Fast-path**: When the task is narrowly scoped and only one credible strategy exists, state it briefly and move on — inventing artificial alternatives wastes time and muddies the conversation.
+
 ### 2. Assess Complexity
 
-With the task understood and tool chain confirmed, determine the plan's scope:
+With the approach selected, determine the plan's scope:
 
-- Count the anticipated steps. Each step should represent one logical unit of work — something that can be built, reviewed, and verified independently.
+- Count the anticipated steps. Each step should represent a single logical unit of work — larger than a trivial config change, smaller than a full feature. If it can be described in one sentence, merge it with an adjacent step. If it needs its own sub-plan, split it.
 - Evaluate whether natural milestones exist (e.g., "data layer first, then API, then UI").
-- Apply the adaptive complexity heuristics from the Design Principles section to choose single-doc or milestone-folder format.
-- If the choice is ambiguous, ask the user.
+- Choose the output format based on step count:
+  - **5 or fewer steps, single concern**: single plan document.
+  - **6-8 steps, single concern**: single document with grouped headings.
+  - **Distinct phases or more than 8 steps**: milestone folder with one file per milestone.
+  - **Ambiguous**: ask the user.
 
 **Step sizing guidance**:
-
-- A step should represent a single logical unit of work — larger than a trivial config change, smaller than a full feature. If it can be described in one sentence, merge it with an adjacent step. If it needs its own sub-plan, split it.
 - Each step must be independently verifiable — all its tests pass without depending on future steps being complete.
 - Steps should build on each other sequentially. Later steps may depend on earlier steps, but not the reverse.
 - Avoid steps that are purely structural ("set up the directory") unless the project has no existing structure. Structural work should be folded into the first functional step.
@@ -129,10 +151,10 @@ Write the plan artifact(s) following the structure defined in `references/step-t
 
 | Category | Tool | Command |
 |---|---|---|
-| Test runner | pytest | `pytest tests/ -x -q` |
-| Linter | ruff | `ruff check .` |
-| Type checker | mypy | `mypy src/` |
-| Formatter | ruff | `ruff format --check .` |
+| Test runner | [discovered] | `[test command]` |
+| Linter | [discovered] | `[lint command]` |
+| Type checker | [discovered] | `[type-check command]` |
+| Formatter | [discovered] | `[format command]` |
 
 ## Steps
 
@@ -157,7 +179,7 @@ Write the plan artifact(s) following the structure defined in `references/step-t
 - Add a root `README.md` in the plan folder that lists milestones in order with one-sentence descriptions.
 - Keep milestones to 3-5 steps each. If a milestone has more, split it.
 
-### 4. Adversarial Plan Review
+### 5. Adversarial Plan Review
 
 After writing the plan to disk, dispatch a subagent to perform an adversarial review of the entire plan. The subagent reads the plan fresh from disk with no anchoring to the planning context — it acts as a critical second pair of eyes whose sole purpose is to find weaknesses before execution begins.
 
@@ -171,18 +193,7 @@ After writing the plan to disk, dispatch a subagent to perform an adversarial re
 - `{{PROJECT_ROOT}}` — absolute path to the project root.
 - `{{PLANNING_CONTEXT}}` — compose a brief summary (5-10 sentences) of: what the user originally asked for, key constraints and decisions from the clarification rounds, agreed scope boundaries, and any explicit exclusions ("we agreed not to handle X"). This gives the subagent enough context to verify the plan addresses the user's full intent, not just what the Goal header captured.
 
-The subagent prompt contains the full review methodology — the categories below are a summary for orientation, not a replacement for the prompt template.
-
-**Review categories** (detailed instructions in the subagent prompt):
-
-- Completeness — gaps between steps, omitted scope, missing edge cases.
-- Step ordering and dependencies — sequencing, explicit vs implicit dependencies.
-- Step sizing — steps too large or too trivial for independent build-review-verify.
-- Acceptance criteria quality — vague, untestable, or missing criteria.
-- Phase 2 and Phase 3 quality — generic boilerplate vs step-specific content.
-- Prose-over-code compliance — code blocks outside the three permitted exceptions.
-- Architectural coherence — approach soundness, unnecessary complexity.
-- Risk and edge cases — unaddressed failure modes, migration risks, rollback gaps.
+The subagent prompt in `references/plan-review-subagent.md` contains the full review methodology covering completeness, dependencies, sizing, criteria quality, phase quality, prose compliance, architecture, and risk.
 
 **After the subagent returns**:
 
@@ -193,19 +204,19 @@ The subagent prompt contains the full review methodology — the categories belo
 
 Do not skip the plan review (except via the fast-path above). Do not auto-resolve findings without user input. The plan review is a hard gate — the plan is not considered complete until it has passed this step.
 
+**After approval**: Commit the plan file to git so it persists across sessions and supports checkmark-based progress tracking.
+
 ## Output Formats
 
-### Single Document
+See Step 3 (Assess Complexity) for which format to choose based on step count.
 
-Use for plans with 5 or fewer steps, or up to 8 steps with a single concern.
+### Single Document
 
 **Path**: `docs/plans/YYYY-MM-DD-<topic>-plan.md`
 
 Example: `docs/plans/2026-03-15-user-auth-plan.md`
 
 ### Milestone Folder
-
-Use for plans with distinct phases or more than 8 steps.
 
 **Path**: `docs/plans/YYYY-MM-DD-<topic>/`
 
@@ -220,43 +231,14 @@ docs/plans/2026-03-15-user-auth/
 
 The `README.md` provides an ordered list of milestones with summaries, the confirmed tool chain, and any cross-cutting concerns that apply to all milestones.
 
-## What Belongs in a Plan Step
-
-Include:
-
-- **Prose intent**: What to build and why, described at the right abstraction level.
-- **Acceptance criteria**: Concrete, testable conditions for "done."
-- **What to test**: Which test cases to write, covering both happy paths and failure modes.
-- **What to review**: Step-specific review questions targeting likely failure modes.
-- **Verification commands**: Exact tool commands to run, populated from the discovered tool chain.
-- **Dependencies**: Which previous steps this one builds on and what artifacts it uses.
-
-Do not include:
-
-- **Code blocks** (except the three permitted exceptions: interface signatures, config keys, schema shapes).
-- **Implementation details that go stale**: Algorithm pseudocode, variable names, internal data structure choices. These belong in the code, not in the plan.
-- **Generic advice**: "Write clean code," "follow best practices," "handle errors properly." Every instruction must be specific to the step.
-- **Premature optimization notes**: Unless performance is an acceptance criterion for the step, defer optimization concerns.
-
 ## Handling Plan Execution
 
-When the user asks to execute a plan (or begins working through steps), shift into execution mode. **Preferred**: use the `blueprint:execute` skill (it ships with this plugin) — it provides full subagent-based orchestration with batching, git handling, and progress tracking. Always try to invoke `blueprint:execute` first.
+When the user asks to execute, invoke `blueprint:execute` — it provides full subagent orchestration with batching, git handling, and progress tracking. If unavailable, work through steps one at a time completing all three phases before advancing. Mark completed steps with a checkmark in the plan heading and tick Phase 3 checkboxes for cross-session resumability. See `references/step-template.md` for what belongs in each phase of a plan step.
 
-If the execute skill is not available, follow this fallback:
+## Handling Scope Changes
 
-- Work through one step at a time, completing all three phases before moving to the next. Never proceed to the next step until the current step's verification passes.
-- After Phase 3 verification passes, summarize what was completed and confirm readiness to proceed to the next step. Include a brief list of files changed and tests added.
-- If Phase 2 review or Phase 3 verification reveals issues, fix them within the current step before moving on. Surface blocking issues to the user rather than silently resolving them.
-- If execution reveals that a future step needs modification (scope changed, new constraint discovered), note the required adjustment and confirm with the user before modifying the plan.
-- For multi-session execution, mark completed steps with a ✅ checkmark in the plan file (e.g., `### Step 1: Auth` → `### ✅ Step 1: Auth`) and tick all markdown checkboxes within the completed step (`- [ ]` → `- [x]`). On resume, find the first unmarked step and continue from there.
-
-## Handling Ambiguity and Scope Changes
-
-- If the user's request is too vague to plan ("make the app better"), ask for specifics. Do not generate a plan from vague input. Push back respectfully — a clear problem statement is a prerequisite for a useful plan.
-- If the user changes scope mid-planning, acknowledge the change, assess its impact on the current plan state, and either adjust or restart as appropriate. If the change invalidates more than half the existing plan, recommend starting fresh rather than patching.
-- If a step proves unnecessary during execution, skip it explicitly — do not silently omit it. Note why it was skipped and confirm with the user.
-- If new steps are needed during execution, propose them with the same 3-phase structure and get user confirmation before adding them to the plan.
-- If conflicting requirements surface during planning, flag the conflict immediately. Present the tradeoff to the user with a recommended resolution rather than silently choosing one interpretation.
+- If scope changes during execution invalidate more than half the remaining plan, recommend starting fresh rather than patching a plan built on outdated assumptions.
+- If new steps are needed during execution, propose them with the same 3-phase structure (build, adversarial review, verification) and insert them at the appropriate position in the plan.
 
 ## Additional Resources
 
@@ -264,4 +246,4 @@ Refer to the following reference files for detailed guidance:
 
 - **`references/step-template.md`** — Full step template with phase-by-phase guidance and a complete example step. Use this as the structural reference for every step in every plan.
 - **`references/tool-discovery.md`** — Per-language lookup tables for detecting project tooling across ecosystems. Use as a reference during codebase exploration in step 1.
-- **`references/plan-review-subagent.md`** — Prompt template for the adversarial plan review subagent dispatched in step 4. Use this verbatim when dispatching the review subagent after plan generation.
+- **`references/plan-review-subagent.md`** — Prompt template for the adversarial plan review subagent dispatched in step 5. Use this verbatim when dispatching the review subagent after plan generation.
