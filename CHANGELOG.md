@@ -4,6 +4,16 @@ All notable changes to the claude-plugins project are documented in this file.
 
 Version numbers refer to the **blueprint** plugin version, which has been the primary driver of releases. The code-audit plugin version is noted where it differs.
 
+## [1.2.1] - 2026-03-23
+
+### Code Audit (1.1.0)
+
+- Add Step 3 — Discover Intent: scans codebase for documented design decisions, trade-offs, conventions, and known limitations before analysis begins, reducing false positives
+- Add three parallel discovery subagents: Documentation Scanner, Code Intent Scanner, History Scanner
+- Add `references/intent-discovery.md` with detailed subagent prompts and Intent Brief template
+- Add "Context & Intent" section to audit report template for transparency into what was considered
+- Update workflow from 5 steps to 6 steps with intent cross-referencing in analysis phases
+
 ## [1.2.1] - 2026-03-22
 
 ### Blueprint
