@@ -38,6 +38,12 @@ Use the current date at the time of report generation.
 
 ---
 
+## Context & Intent
+
+<Include the Intent Brief here using the structure from references/intent-discovery.md. Omit empty subsections. If no intent signals were discovered, write: "No documented intent signals were identified in the codebase.">
+
+---
+
 ## Critical
 
 ### AUDIT-001 — <Short title>
@@ -141,6 +147,18 @@ Assign `AUDIT-NNN` identifiers sequentially starting at `AUDIT-001`, ordered by 
 
 ---
 
+## Multi-Location Findings
+
+When a finding affects multiple locations (same root cause across files), use a comma-separated list in the Location field and list all locations in the Description:
+
+```markdown
+| **Location**     | `src/api/users.py:42`, `src/api/orders.py:87`, `src/api/products.py:31` |
+```
+
+For findings with many locations (>5), use the primary location in the field and list the full set in the Description body.
+
+---
+
 ## Zero-Findings Report
 
 When no issues are found, produce the full report structure with all counts set to 0. Replace each severity section body with:
@@ -149,34 +167,4 @@ When no issues are found, produce the full report structure with all counts set 
 No issues found.
 ```
 
-Example:
-
-```markdown
-## Summary
-
-| Field               | Value                        |
-|---------------------|------------------------------|
-| **Scope**           | src/                         |
-| **Categories**      | Security, Correctness, Error handling |
-| **Total findings**  | 0                            |
-| **Critical**        | 0                            |
-| **High**            | 0                            |
-| **Medium**          | 0                            |
-| **Low**             | 0                            |
-
-## Critical
-
-No issues found.
-
-## High
-
-No issues found.
-
-## Medium
-
-No issues found.
-
-## Low
-
-No issues found.
-```
+The "Context & Intent" section uses the fallback message: "No documented intent signals were identified in the codebase."

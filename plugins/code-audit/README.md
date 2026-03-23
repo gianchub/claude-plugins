@@ -23,13 +23,13 @@ Trigger with: "audit this codebase", "security audit", "code audit", "find vulne
 
 ## How It Works
 
-1. **Resolve scope** -- determines which files and directories to audit based on the request, excluding generated files, lock files, and vendored dependencies unless explicitly included. Supports incremental re-audits -- if a previous audit report exists, defaults to re-auditing only files with prior findings
-2. **Select categories** -- analyzes the request and codebase to select relevant audit categories (e.g., concurrency checks are included automatically if async patterns are detected), then confirms the selection with the user
-3. **Systematic analysis** -- two-phase analysis:
-   - File-level: reads every line of every in-scope file, walking through category checklists item by item
+1. **Resolve scope** -- determines which files and directories to audit based on the request, excluding generated files, lock files, and vendored dependencies unless explicitly included. Re-audits default to the full original scope
+2. **Select categories** -- analyzes the request and codebase to select relevant audit categories (e.g., concurrency checks are included automatically if async patterns are detected). For broad requests, defaults to all categories without asking
+3. **Discover intent** -- scans the codebase for documented design decisions, trade-offs, conventions, and known limitations before analysis begins. Three parallel subagents scan documentation files, rationale comments, and git history to produce an Intent Brief that prevents flagging deliberate choices as findings
+4. **Systematic analysis** -- two-phase analysis with automatic partitioning for large codebases (50+ files):
+   - File-level: reads every line of every in-scope file, walking through category checklists item by item, cross-referencing potential findings against the Intent Brief
    - Cross-file: traces data flows from entry points through processing layers to terminal operations, evaluating validation, authorization, error handling, and resource cleanup across module boundaries
-4. **Large codebase strategy** -- partitions work across parallel subagents for codebases with 50+ files or 10,000+ lines of code, splitting along architectural boundaries for meaningful cross-file analysis within each partition
-5. **Report generation** -- produces a structured `AUDIT-REPORT-YYYY-MM-DD.md` file with deduplicated findings ordered by severity, each including file location, category, description, impact assessment, and actionable recommendation
+5. **Report generation** -- produces a structured `AUDIT-REPORT-YYYY-MM-DD.md` file with deduplicated findings ordered by severity, each including file location, category, description, impact assessment, and actionable recommendation. Includes a "Context & Intent" section documenting what design decisions were considered
 
 ## Audit Categories
 

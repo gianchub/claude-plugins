@@ -1,6 +1,6 @@
 {
   "name": "code-audit",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "Language-agnostic codebase auditing with structured severity-ranked reports",
   "author": {
     "name": "Fabrizio Romano",
