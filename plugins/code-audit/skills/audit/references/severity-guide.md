@@ -2,6 +2,8 @@
 
 Use the following criteria to assign severity levels. When a finding could fit multiple levels, choose the higher severity and note the reasoning.
 
+**Intent-based downgrades:** When the Intent Brief provides general context justifying a pattern (but not an explicit per-instance acknowledgment), reduce severity by one level (e.g., High → Medium) and cite the intent source in the finding. Never downgrade Critical findings below High — Critical severity indicates risk significant enough that even documented intent warrants attention.
+
 ### Critical
 
 Reserve for findings that represent an immediate, exploitable threat or a near-certain path to significant damage:

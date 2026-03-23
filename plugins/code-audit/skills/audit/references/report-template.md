@@ -147,6 +147,18 @@ Assign `AUDIT-NNN` identifiers sequentially starting at `AUDIT-001`, ordered by 
 
 ---
 
+## Multi-Location Findings
+
+When a finding affects multiple locations (same root cause across files), use a comma-separated list in the Location field and list all locations in the Description:
+
+```markdown
+| **Location**     | `src/api/users.py:42`, `src/api/orders.py:87`, `src/api/products.py:31` |
+```
+
+For findings with many locations (>5), use the primary location in the field and list the full set in the Description body.
+
+---
+
 ## Zero-Findings Report
 
 When no issues are found, produce the full report structure with all counts set to 0. Replace each severity section body with:

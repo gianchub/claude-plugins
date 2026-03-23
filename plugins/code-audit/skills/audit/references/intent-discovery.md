@@ -110,7 +110,7 @@ Extract intent signals from git commit history for in-scope files. Identify comm
 
 ### Execution
 
-Run `git log` on in-scope files to retrieve commit messages. Use `--follow` for renamed files when practical.
+Run `git log` on in-scope files to retrieve commit messages. Limit to the most recent 200 commits per file (or use `--since="1 year ago"` for long-lived repositories) to avoid unbounded retrieval on large histories. Use `--follow` for renamed files when practical.
 
 ### Filtering
 

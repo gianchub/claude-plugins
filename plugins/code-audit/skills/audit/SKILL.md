@@ -16,11 +16,7 @@ Perform a thorough, language-agnostic audit of a codebase or subset of files, pr
 
 ## Effort Level
 
-Read every line of in-scope code. Do not skim, sample, or rely on heuristics to skip files. Trace data flows from external inputs through processing layers to outputs and storage. Follow call chains across module boundaries to detect issues that only manifest through component interaction.
-
-When the scope is large enough that thoroughness would suffer in a single pass, split work across parallel subagents by module or directory, then merge and deduplicate findings (see Step 4 for partitioning strategy).
-
-When even partitioned analysis cannot cover every line — due to context limits, codebase size, or unavailable subagents — prioritize depth on security-critical and correctness-critical paths: entry points, authentication/authorization flows, data persistence, and external API boundaries. For anti-patterns and dead code categories, a single-pass identification is sufficient without tracing multi-hop call chains.
+Read every line of in-scope code. Do not skim, sample, or rely on heuristics to skip files. Trace data flows from external inputs through processing layers to outputs and storage. Follow call chains across module boundaries to detect issues that only manifest through component interaction. When the scope is too large for a single pass, split work across parallel subagents (see Step 4 for partitioning strategy).
 
 ## Workflow
 
@@ -32,12 +28,15 @@ Determine the audit scope from the user's prompt. The user may specify:
 - One or more directories (e.g., `src/`, `lib/api/`).
 - A list of specific files.
 - A functional area described in natural language (e.g., "the authentication flow").
+- A specific function, class, or code region within a file. In this case, restrict analysis to the specified code and its immediate dependencies — do not audit the entire file.
+
+If the user specifies files or directories that do not exist, warn them about the missing paths and proceed with the files that do exist. If none of the specified paths exist, stop and ask for clarification.
 
 If the prompt does not contain enough information to determine scope, ask a single clarifying question before proceeding. Do not guess at scope — an audit with unclear boundaries produces unreliable results.
 
-If a previous audit report exists in the project and the user requests a re-audit, default to the same scope as the original audit. Offer to narrow to only files with prior findings if the user wants a faster pass, but do not narrow silently — new issues can appear in files that were previously clean.
+If a previous audit report exists in the project and the user requests a re-audit, default to the same scope as the original audit. Offer to narrow to only files with prior findings if the user wants a faster pass, but do not narrow silently — new issues can appear in files that were previously clean. When a prior report exists, note in the new report which previous findings have been resolved and which persist, so the user gets a delta view.
 
-Once scope is established, enumerate all files that fall within it. Exclude generated files (e.g., lock files, compiled output, vendored dependencies, minified bundles) unless the user explicitly includes them. While generated and vendored code is excluded from file-level analysis, cross-file analysis in Phase B should trace data flows into excluded code to determine whether it provides expected validation or safety guarantees. Report findings at the boundary, not within the excluded code.
+Once scope is established, enumerate all files that fall within it. Exclude generated files (e.g., lock files, compiled output, vendored dependencies, minified bundles) unless the user explicitly includes them. For source-committed generated code (protobuf stubs, OpenAPI clients, ORM models), check for modification markers — if files contain hand-written additions or a "DO NOT EDIT" header has been removed, treat them as in-scope. While generated and vendored code is excluded from file-level analysis, cross-file analysis in Phase B should trace data flows into excluded code to determine whether it provides expected validation or safety guarantees. Report findings at the boundary, not within the excluded code.
 
 State the resolved scope back to the user. If the scope is unambiguous, proceed immediately without waiting for confirmation.
 
@@ -58,7 +57,7 @@ Consider both what the user explicitly asked for and what the code naturally war
 
 For broad requests ("audit this codebase"), default to all categories and proceed without asking for confirmation. Only present the selected categories and ask for confirmation when the selection is non-obvious — when the agent has chosen a subset based on code analysis, or when the user's request is ambiguous about which categories apply.
 
-Use the checklists in `references/categories.md` as the basis for systematic analysis. Skip individual checklist items that do not apply to the languages, frameworks, or paradigms present in the codebase.
+Use the checklists in `references/categories.md` as the basis for systematic analysis. Skip individual checklist items that do not apply to the languages, frameworks, or paradigms present in the codebase. If the codebase contains no test files, report a single finding noting the absence of tests rather than evaluating individual Test Quality checklist items.
 
 ### Step 3 — Discover Intent
 
@@ -84,12 +83,12 @@ See `references/intent-discovery.md` for detailed subagent prompts, extraction r
 
 When the scope exceeds either 50 files or 10,000 lines of code (whichever is reached first), use parallel subagents to avoid superficial analysis:
 
-- Partition the scope into logical modules or directory subtrees. Aim for partitions of roughly equal size. Prefer boundaries that align with architectural layers (e.g., data access, business logic, API handlers) rather than arbitrary file count splits.
+- Partition the scope into logical modules or directory subtrees. Aim for partitions of roughly equal size. In monorepos with multiple independent services, partition by service first — service boundaries take precedence over layer boundaries. Within a single service, prefer boundaries that align with architectural layers (e.g., data access, business logic, API handlers) rather than arbitrary file count splits.
 - Assign one subagent per partition. Each subagent performs Phase A (file-level analysis) on its partition independently, following the same checklist and recording format. Provide each subagent with a brief description of the overall codebase architecture, the Intent Brief from Step 3, and the applicable checklists.
 - After all subagents complete, perform Phase B (cross-file analysis) on the merged set of findings, focusing on interactions between partitions. Pay special attention to trust boundaries — data flowing from one partition to another is a common source of missed validation and injection vulnerabilities.
 - Deduplicate findings that were independently discovered by multiple subagents operating on shared or overlapping code. Consolidate into the highest-severity version and list all affected locations.
 
-If subagents are not available or the scope is small enough, perform all phases sequentially as a single agent.
+If subagents are not available or the scope is small enough, perform all phases sequentially as a single agent. When even partitioned analysis cannot cover every line, prioritize depth on security-critical and correctness-critical paths: entry points, authentication/authorization flows, data persistence, and external API boundaries.
 
 #### Phase A — File-Level Analysis
 
@@ -102,8 +101,6 @@ Iterate through every in-scope file. For each file:
 - When a finding involves a data flow or call chain that exits the current file, mark it for cross-file follow-up in Phase B.
 
 Avoid recording the same logical issue multiple times when it appears in multiple files due to shared patterns (e.g., a utility function used everywhere). Instead, record it once and note all affected locations.
-
-Prioritize depth on security-critical and correctness-critical paths. For anti-patterns and dead code categories, a single-pass identification is sufficient — do not trace multi-hop call chains for Low-severity categories.
 
 #### Phase B — Cross-File Analysis
 
@@ -134,7 +131,6 @@ Generate the final report following the structure and formatting rules defined i
 - Include a "Context & Intent" section between the Summary table and the Critical severity section. This section summarizes the Intent Brief and lists key documented decisions that influenced the audit.
 - Assign sequential `AUDIT-NNN` identifiers starting at `AUDIT-001`. Order findings by severity (Critical first), then by category, then by file path within the same severity and category.
 - Write each finding with all required fields: identifier, short title, category, location (`file:line`), severity, description, impact, and recommendation.
-- When the audit produces zero findings, generate the full report structure with all counts at 0 and "No issues found." in each severity section.
 - Save the report at the project root using the filename convention in the template (`AUDIT-REPORT-YYYY-MM-DD.md`), incrementing the suffix if a file with that name already exists.
 
 After saving the report, state the file path and a brief summary of the results to the user.
