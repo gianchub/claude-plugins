@@ -38,6 +38,27 @@ Use the current date at the time of report generation.
 
 ---
 
+## Context & Intent
+
+The following documented decisions, trade-offs, and conventions were identified during the intent discovery phase and taken into account during analysis:
+
+### Architectural Decisions
+- <decision summary> (source: <file or commit>)
+
+### Deliberate Trade-offs
+- <trade-off summary> (source: <file or commit>)
+
+### Conventions & Standards
+- <convention summary> (source: <file or commit>)
+
+### Known Limitations & Technical Debt
+- <limitation summary> (source: <file or commit>)
+
+### Suppressed Warnings & Intentional Deviations
+- <deviation summary> (source: <file or commit>)
+
+---
+
 ## Critical
 
 ### AUDIT-001 — <Short title>
@@ -180,3 +201,9 @@ No issues found.
 
 No issues found.
 ```
+
+---
+
+## Context & Intent Section
+
+Empty subsections within Context & Intent are omitted from the report. If no intent signals were discovered, the entire section reads: "No documented intent signals were identified in the codebase."
