@@ -68,6 +68,8 @@ This step always executes regardless of codebase size. For large codebases that 
 
 The output is a structured Intent Brief organized by theme (Architectural Decisions, Deliberate Trade-offs, Conventions & Standards, Known Limitations & Technical Debt, Suppressed Warnings & Intentional Deviations) — not by source type. Target no more than 100 entries, prioritized by relevance to the confirmed audit categories.
 
+If intent discovery produces no entries, the Intent Brief is empty. Analysis proceeds normally without cross-referencing, and the report's "Context & Intent" section states that no documented intent signals were identified.
+
 Consult `references/intent-discovery.md` for detailed subagent prompts, extraction rules, and the Intent Brief template.
 
 ### Step 4 — Systematic Analysis
