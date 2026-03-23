@@ -12,7 +12,7 @@ Intent discovery runs three subagents in parallel: a Documentation Scanner, a Co
 
 ### Objective
 
-Discover and read all documentation files in scope. Extract intent signals: stated design decisions, trade-offs, constraints, conventions, and deliberate limitations.
+Discover and read all documentation files across the project. Scan project-wide regardless of the audit scope — a root-level `ARCHITECTURE.md` or a `docs/design-decisions.md` is relevant even when the audit targets a single subdirectory. Extract intent signals: stated design decisions, trade-offs, constraints, conventions, and deliberate limitations.
 
 ### File Discovery
 
@@ -60,7 +60,9 @@ Search in-scope source files for comments and annotations that express rationale
 
 Scan for comments containing these marker words (case-insensitive):
 
-`NOTE`, `HACK`, `WHY`, `DESIGN`, `TRADE-OFF`, `TRADEOFF`, `INTENTIONAL`, `DELIBERATE`, `BY DESIGN`, `RATIONALE`, `REASON`, `CAVEAT`, `WORKAROUND`
+`NOTE`, `HACK`, `WHY`, `DESIGN`, `TRADE-OFF`, `TRADEOFF`, `INTENTIONAL`, `DELIBERATE`, `BY DESIGN`, `RATIONALE`, `REASON`, `CAVEAT`, `WORKAROUND`, `TODO`, `FIXME`
+
+`TODO` and `FIXME` are weaker intent signals than explicit rationale markers like `DELIBERATE` or `BY DESIGN`, but they frequently indicate known limitations and acknowledged technical debt. Include them in the scan but weight them lower during Intent Brief compilation.
 
 ### Suppression Markers
 
@@ -80,7 +82,7 @@ This list is representative. Recognize language-specific equivalents for any lan
 
 ### Explanatory Block Comments
 
-Identify comments longer than one line that contain words suggesting rationale:
+Identify multi-sentence comments that contain words suggesting rationale:
 
 `because`, `trade-off`, `instead of`, `chosen`, `deliberately`, `intentionally`, `the reason`, `we decided`, `this approach`, `opted for`, `prefer`, `avoid`, `risk of`, `constraint`
 
