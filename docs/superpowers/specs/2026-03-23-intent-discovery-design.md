@@ -33,6 +33,8 @@ Add a new **Step 3 — Discover Intent** to the audit workflow, positioned after
 
 Scan the codebase for documented intent — the reasons behind design decisions, architectural trade-offs, known limitations, and deliberate choices. Produce an Intent Brief that the analysis phases use to reduce false positives.
 
+Step 3 always executes regardless of codebase size. For small codebases, its output feeds directly into Step 4 (Systematic Analysis). For large codebases, the same output is shared with all partition subagents in Step 5 — intent discovery is never repeated during partitioning.
+
 ### Three Discovery Subagents
 
 All three run in parallel after scope and categories are confirmed.
@@ -41,10 +43,11 @@ All three run in parallel after scope and categories are confirmed.
 
 Discovers and reads documentation files across the audit scope and repo root. Rather than looking for hardcoded paths, it:
 
-1. Scans the repo for all markdown (`.md`), text (`.txt`), reStructuredText (`.rst`), and AsciiDoc (`.adoc`) files.
-2. Identifies files whose names or content suggest documentation: anything containing words like "readme", "architecture", "design", "decision", "adr", "contributing", "changelog", "history", "conventions", "standards", "guide", "rationale".
-3. Checks for agent instruction files: `CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, `CURSORRULES`, `.windsurfrules`, and similar.
-4. Reads each discovered file and extracts intent signals: stated design decisions, trade-offs, constraints, conventions, deliberate limitations.
+1. Scans the repo for all markdown (`.md`), text (`.txt`), reStructuredText (`.rst`), AsciiDoc (`.adoc`), and Org-mode (`.org`) files.
+2. Checks for well-known extensionless documentation files: `ARCHITECTURE`, `DECISIONS`, `CONTRIBUTING`, `SECURITY`, `LICENSE`, and similar.
+3. Identifies files whose names or content suggest documentation: anything containing words like "readme", "architecture", "design", "decision", "adr", "contributing", "changelog", "history", "conventions", "standards", "guide", "rationale". This list is non-exhaustive — the scanner should recognize any file that appears to serve a documentation purpose.
+4. Checks for agent instruction files: `CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, `CURSORRULES`, `.windsurfrules`, and similar.
+5. Reads each discovered file and extracts intent signals: stated design decisions, trade-offs, constraints, conventions, deliberate limitations.
 
 Reports a list of intent entries, each with: the source file, a summary of the decision/convention, and a direct quote where useful.
 
@@ -53,7 +56,7 @@ Reports a list of intent entries, each with: the source file, a summary of the d
 Searches in-scope source files for comments that express rationale:
 
 - **Rationale markers**: `NOTE`, `HACK`, `WHY`, `DESIGN`, `TRADE-OFF`, `INTENTIONAL`, `DELIBERATE`, `BY DESIGN`, `RATIONALE`, `REASON`.
-- **Suppression markers**: `nolint`, `noqa`, `@SuppressWarnings`, `eslint-disable`, `type: ignore` — these signal intentional deviations.
+- **Suppression markers**: `nolint`, `noqa`, `@SuppressWarnings`, `eslint-disable`, `type: ignore`, `#[allow(...)]`, `# rubocop:disable`, `#pragma warning disable`, and language-specific equivalents appropriate to the languages found in scope. This list is representative, not exhaustive.
 - **Explanatory block comments**: Comments longer than one line containing words like "because", "trade-off", "instead of", "chosen", "deliberately", "intentionally" — comments that explain "why" rather than "what".
 - **Config file comments**: Rationale in `.env.example`, `Dockerfile`, CI configs, `Makefile`, etc.
 
@@ -67,6 +70,8 @@ Examines git history for in-scope files to surface design-shaping decisions:
 2. Filters for commits with substantive messages that explain *why* — excluding noise like "fix typo", "bump version".
 3. Identifies large refactors, architectural changes, or deliberate removals (commits that delete code with an explanation).
 4. Checks merge/PR commit messages, which often contain richer context.
+
+If no git history is available (fresh init, exported tarball, shallow clone with `--depth 1`, or the audit scope is outside a git repo), Subagent C reports "No meaningful git history available" and completes without error. The Intent Brief simply omits history-sourced entries.
 
 Reports significant history entries with: commit hash (short), date, message summary, and affected files.
 
@@ -95,11 +100,23 @@ After all three subagents complete, their findings are merged into a single Inte
 
 Empty sections are omitted.
 
+### Size and Prioritization
+
+To avoid consuming excessive context, the Intent Brief should target no more than 100 entries. Subagents should filter and rank their findings by relevance to the confirmed audit categories rather than dumping everything. Prioritize entries that directly relate to patterns the audit checklists would flag — an ADR explaining a deliberate security trade-off is high-value; a changelog entry about a version bump is not.
+
+For large codebases in the partitioned workflow, the full brief is shared with all partitions. If the brief is large, consider annotating entries with the files/modules they relate to so partition subagents can focus on relevant entries.
+
 ### How the Intent Brief Is Used
 
 - **Passed as context** to all analysis subagents (Phase A and Phase B) alongside the category checklists.
-- **During analysis**: Before recording a finding, the agent checks the Intent Brief for relevant entries. If a potential finding matches a documented intentional decision, it is either skipped entirely or downgraded with a note referencing the source.
+- **During analysis**: Before recording a finding, the agent checks the Intent Brief for relevant entries. If a potential finding matches a documented intentional decision, it is either skipped or downgraded:
+  - **Skip** when the Intent Brief entry directly and explicitly addresses the exact pattern flagged (e.g., a `# noqa: E501` on a long line, or an ADR that says "we intentionally use raw SQL here for performance").
+  - **Downgrade** (report at reduced severity with a note referencing the source) when the Intent Brief provides general context that explains the pattern but does not constitute an explicit per-instance acknowledgment (e.g., an architecture doc choosing a simpler design that the audit would otherwise flag as a missing abstraction).
 - **During deduplication**: The brief serves as an additional filter — findings that conflict with documented intent are flagged for review rather than reported as issues.
+
+### Re-audit Behavior
+
+The Intent Brief is always regenerated from scratch on each audit run. It is not persisted or reused between audits — the codebase's documentation and history may have changed since the last run.
 
 ## Changes to Existing Steps
 
@@ -122,12 +139,12 @@ Empty sections are omitted.
 
 ### Step 5 — Large Codebase Strategy (modifications)
 
-- Intent discovery runs once before partitioning.
+- Intent discovery (Step 3) has already completed before partitioning begins — it is not repeated.
 - The Intent Brief is passed to each partition's analysis subagent alongside the architecture description and checklists.
 
 ### Step 6 — Report Generation (modifications)
 
-- New "Context & Intent" section added to the report, between the Summary table and the Critical severity section.
+- New "Context & Intent" section added to the report, between the Summary table and the Critical severity section. The updated template skeleton is: Summary → Context & Intent → Critical → High → Medium → Low.
 - `references/report-template.md` updated with the new section template.
 
 ## New Files
@@ -175,3 +192,4 @@ Empty sections are omitted from the report. If no intent signals are discovered,
 8. A new `references/intent-discovery.md` file contains the detailed subagent prompts and Intent Brief template.
 9. For large codebases, intent discovery runs once before partitioning; the brief is shared with all partition subagents.
 10. The SKILL.md remains lean — detailed subagent instructions live in the reference file.
+11. When no intent signals are discovered, the Intent Brief is empty, the "Context & Intent" report section contains the fallback message ("No documented intent signals were identified in the codebase."), and analysis proceeds normally without cross-referencing.
