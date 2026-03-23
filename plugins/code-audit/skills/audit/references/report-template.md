@@ -185,6 +185,10 @@ Example:
 | **Medium**          | 0                            |
 | **Low**             | 0                            |
 
+## Context & Intent
+
+No documented intent signals were identified in the codebase.
+
 ## Critical
 
 No issues found.
