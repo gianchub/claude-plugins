@@ -40,22 +40,7 @@ Use the current date at the time of report generation.
 
 ## Context & Intent
 
-The following documented decisions, trade-offs, and conventions were identified during the intent discovery phase and taken into account during analysis:
-
-### Architectural Decisions
-- <decision summary> (source: <file or commit>)
-
-### Deliberate Trade-offs
-- <trade-off summary> (source: <file or commit>)
-
-### Conventions & Standards
-- <convention summary> (source: <file or commit>)
-
-### Known Limitations & Technical Debt
-- <limitation summary> (source: <file or commit>)
-
-### Suppressed Warnings & Intentional Deviations
-- <deviation summary> (source: <file or commit>)
+<Include the Intent Brief here using the structure from references/intent-discovery.md. Omit empty subsections. If no intent signals were discovered, write: "No documented intent signals were identified in the codebase.">
 
 ---
 
@@ -170,44 +155,4 @@ When no issues are found, produce the full report structure with all counts set 
 No issues found.
 ```
 
-Example:
-
-```markdown
-## Summary
-
-| Field               | Value                        |
-|---------------------|------------------------------|
-| **Scope**           | src/                         |
-| **Categories**      | Security, Correctness, Error handling |
-| **Total findings**  | 0                            |
-| **Critical**        | 0                            |
-| **High**            | 0                            |
-| **Medium**          | 0                            |
-| **Low**             | 0                            |
-
-## Context & Intent
-
-No documented intent signals were identified in the codebase.
-
-## Critical
-
-No issues found.
-
-## High
-
-No issues found.
-
-## Medium
-
-No issues found.
-
-## Low
-
-No issues found.
-```
-
----
-
-## Context & Intent Section
-
-Empty subsections within Context & Intent are omitted from the report. If no intent signals were discovered, the entire section reads: "No documented intent signals were identified in the codebase."
+The "Context & Intent" section uses the fallback message: "No documented intent signals were identified in the codebase."

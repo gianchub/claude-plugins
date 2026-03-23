@@ -2,9 +2,7 @@
 
 ## Purpose
 
-Scan the codebase for documented intent — design decisions, trade-offs, conventions, known limitations — before code analysis begins. The resulting Intent Brief provides context that prevents flagging deliberate choices as findings, reducing false positives and improving audit quality.
-
-Intent discovery runs three subagents in parallel: a Documentation Scanner, a Code Intent Scanner, and a History Scanner. Each produces a list of intent entries. The combined output is merged and deduplicated into an Intent Brief that accompanies the audit through all subsequent phases.
+Detailed subagent instructions for intent discovery (SKILL.md Step 3). Three subagents run in parallel; their combined output is merged into an Intent Brief. See SKILL.md Step 4 for how findings are cross-referenced against the Intent Brief during analysis.
 
 ---
 
@@ -176,20 +174,6 @@ Target no more than 100 entries in the Intent Brief. When raw entries exceed thi
 
 ---
 
-## How the Intent Brief Is Used
-
-Apply the Intent Brief during the analysis and deduplication phases of the audit:
-
-**Skip a finding** when an Intent Brief entry directly and explicitly addresses the exact pattern flagged at the exact location. Example: a `# noqa: E501` on a specific long line justifies skipping a line-length finding for that line.
-
-**Downgrade a finding** when an Intent Brief entry provides general context but not explicit per-instance acknowledgment. Report the finding at reduced severity and include a note referencing the intent source. Example: a documented decision to use global state justifies downgrading a mutable-global-state finding from Medium to Low, with a note citing the architecture document.
-
-**Intent-based deduplication** — when multiple findings stem from the same documented trade-off, consolidate them into a single finding that references the Intent Brief entry and lists all affected locations.
-
-Do not suppress findings based on vague or aspirational statements. The intent entry must demonstrate awareness of the specific pattern or risk being flagged.
-
----
-
 ## Re-audit Behavior
 
-Regenerate the Intent Brief from scratch on every audit run. Never persist or cache the Intent Brief between runs. The codebase and its documentation may have changed since the last audit; stale intent data would introduce blind spots.
+Regenerate the Intent Brief from scratch on every audit run. Never persist or cache the Intent Brief between runs.
