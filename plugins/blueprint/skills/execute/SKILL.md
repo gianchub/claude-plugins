@@ -43,9 +43,13 @@ Before executing the first step, ask the user which git mode to use. Present exa
 - Include the plan file's progress updates (✅ heading prefix and ticked checkboxes) in the same commit as the step's implementation changes — do not create a separate commit for plan progress.
 - Use a clear, descriptive commit message in conventional commits format referencing the step.
 - Never include Claude Code or AI attribution in commit messages. No co-authored-by lines, no bot signatures, no AI references of any kind.
-- After committing, proceed to the next step without pausing (unless the batch boundary is reached).
+- Pause cadence depends on plan complexity:
+  - **Simple plan (single document):** Execute all steps continuously without pausing. Present a final summary when the plan is complete.
+  - **Complex plan (multiple milestone documents):** After the user selects skill-managed mode, ask which pause cadence to use:
+    - **Milestone pauses** (default): Pause after each milestone document completes. Present a milestone summary and ask whether to continue to the next milestone. Within a milestone, execute all steps continuously without pausing at batch boundaries.
+    - **Full auto**: Execute the entire plan without pausing, even across milestone boundaries. Present a final summary when the plan is complete.
 
-Store the user's choice and apply it consistently for the remainder of the execution session. If the user wants to switch modes mid-session, they must say so explicitly. Default to asking every time — never assume a mode from a previous session.
+Store the user's choices (git mode and, for skill-managed complex plans, pause cadence) and apply them consistently for the remainder of the execution session. If the user wants to switch modes mid-session, they must say so explicitly. Default to asking every time — never assume a mode or pause cadence from a previous session.
 
 ### Step Execution
 
@@ -57,7 +61,7 @@ Group steps into batches of up to 3 steps maximum. Execute steps **strictly seri
 
 Never batch builds together. Never batch reviews together. Never batch verifications together. Never start Step B's build while Step A's review or verification is pending. Each phase gates the next phase. Each step gates the next step.
 
-After a batch completes (all steps in the batch passed all phases), handle git according to the chosen mode, then present a batch summary to the user showing which steps completed. Ask whether to proceed with the next batch.
+After a batch completes (all steps in the batch passed all phases), handle git according to the chosen mode, then present a batch summary to the user showing which steps completed. In user-managed mode, the user has already been paused after each step. In skill-managed mode, continue to the next batch without pausing unless a pause cadence boundary has been reached (milestone boundary for milestone pauses, or end of plan for simple plans and full auto).
 
 ### Subagent Dispatch
 
@@ -137,7 +141,10 @@ The verification subagent runs real commands. It does not estimate whether tests
 - Execution within a batch: strictly serial. Step N must pass build, review, and verify before Step N+1 begins.
 - After a batch completes:
   - **User-managed git mode**: pause and wait for the user. Present the batch summary. The user commits at their discretion.
-  - **Skill-managed git mode**: commits happen after each step within the batch. After the batch, present the batch summary and ask whether to continue.
+  - **Skill-managed git mode**: commits happen after each step within the batch. After the batch, present the batch summary. Pause behavior depends on the pause cadence:
+    - Simple plan (single document): never pause at batch boundaries. Continue until the plan is complete.
+    - Milestone pauses: pause only when the completed batch is the last batch in a milestone. Continue without pausing for mid-milestone batch boundaries.
+    - Full auto: never pause at batch boundaries. Continue until the entire plan is complete.
 - If a step fails within a batch, the remaining steps in that batch do not execute. Present the failure and wait for guidance.
 - A batch never crosses milestone boundaries. If the current milestone has 2 remaining steps and the next milestone has steps, the current batch contains only those 2 steps.
 - If the plan has fewer remaining steps than the batch size, the batch contains only the remaining steps.
