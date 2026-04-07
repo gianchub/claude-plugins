@@ -12,7 +12,7 @@ Collaborative implementation planning and execution with build-review-verify cyc
 - **Automatic tool discovery** — detects your project's test runner, linter, formatter, and type checker from config files and CI pipelines, then embeds the exact verification commands into every step.
 - **Build-review-verify cycle** — every step goes through three phases: build the thing, adversarial review targeting likely failure modes, then run the full tool chain to verify.
 - **Adaptive format** — produces a single plan document for small tasks or a milestone folder structure for larger efforts, based on complexity.
-- **Subagent execution** — the `execute` skill drives plans step-by-step using dedicated subagents for each phase, with git handling (manual or automatic) and batch progress tracking.
+- **Subagent execution** — the `execute` skill drives plans step-by-step using dedicated subagents for each phase, with git handling (manual or automatic with adaptive pause cadence) and progress tracking.
 
 **Skills:**
 
