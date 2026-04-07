@@ -17,7 +17,7 @@ Add the marketplace, then install:
 
 ### blueprint
 
-Transforms a task into a structured implementation plan through a collaborative dialogue. The skill explores the codebase to understand project structure and discover tooling (test runners, linters, type checkers, formatters), asks clarifying questions to nail down scope and constraints, then proposes 2-3 implementation approaches with trade-offs before generating the plan. Plans adapt to complexity -- small changes get a single document, larger efforts get milestone folders with multiple files. Every step is written in prose (not code) and includes three phases: build instructions, adversarial review questions, and a verification checklist with concrete tool commands. After generation, an adversarial plan review subagent reads the plan cold and evaluates it for gaps, dependency issues, and architectural flaws before the user approves it for execution.
+Transforms a task into a structured implementation plan through a collaborative dialogue. The skill explores the codebase to understand project structure and discover tooling (test runners, linters, type checkers, formatters), asks clarifying questions to nail down scope and constraints, then proposes 2-3 implementation approaches with trade-offs before generating the plan. Plans adapt to complexity -- small changes get a single document, larger efforts get milestone folders with multiple files. A fast-path for narrowly scoped changes (≤2 steps) streamlines tool confirmation, approach selection, and plan review. Every step is written in prose (not code) and includes three phases: build instructions, adversarial review questions, and a verification checklist with concrete tool commands. After generation, an adversarial plan review subagent reads the plan cold and evaluates it for gaps, dependency issues, and architectural flaws before the user approves it for execution.
 
 Trigger with: "create a blueprint", "plan this implementation", "make a plan", "design this feature", "break this down into steps"
 
@@ -59,7 +59,8 @@ One-time setup command that configures blueprint as the default for planning and
    - **Verification subagent**: Runs actual tools (test suite, linter, type checker, formatter) and reports pass/fail per checklist item
 4. Supports partial execution (specific step ranges) and warns about skipped dependencies
 5. Surfaces all failures to the user with full error output and file references -- no auto-fix, no auto-retry, no silent skipping
-6. Marks completed steps with checkmarks in the plan file and ticks verification checkboxes for cross-session resumability
+6. Adapts step reporting to the execution mode -- full reports in user-managed mode, condensed single-line reports in continuous modes with comprehensive summaries at pause points or run completion
+7. Marks completed steps with checkmarks in the plan file and ticks verification checkboxes for cross-session resumability
 
 ## Requirements
 

@@ -18,8 +18,8 @@ Collaborative implementation planning and execution with build-review-verify cyc
 
 | Skill | Description | Trigger with |
 | --- | --- | --- |
-| `blueprint` | Produces structured implementation plans through codebase exploration, tool discovery, iterative clarification, and approach comparison | "create a blueprint", "make a plan", "design the architecture" |
-| `execute` | Drives blueprint plans through their build-review-verify cycles using subagents, with configurable git handling | "execute this blueprint", "run the plan", "start building from the plan" |
+| `blueprint` | Produces structured implementation plans through codebase exploration, tool discovery, iterative clarification, and approach comparison. Fast-path for ≤2-step plans | "create a blueprint", "make a plan", "design the architecture" |
+| `execute` | Drives blueprint plans through their build-review-verify cycles using subagents, with adaptive pause cadence and git handling | "execute this blueprint", "run the plan", "start building from the plan" |
 
 **Commands:**
 
