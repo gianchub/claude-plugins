@@ -23,7 +23,7 @@ Trigger with: "create a blueprint", "plan this implementation", "make a plan", "
 
 ### execute
 
-Drives a blueprint plan through its build-review-verify cycles using dedicated subagents. Steps are executed strictly serially in batches of up to three. A build subagent implements the step, a review subagent performs an adversarial code review reading files independently from disk, and a verification subagent runs actual tools and reports pass/fail. All failures surface to the user with full error output -- nothing is auto-fixed or silently skipped. The skill supports two git modes (user-managed or skill-managed commits) and tracks progress with checkmarks in the plan file for cross-session resumability.
+Drives a blueprint plan through its build-review-verify cycles using dedicated subagents. Steps are executed strictly serially in batches of up to three. A build subagent implements the step, a review subagent performs an adversarial code review reading files independently from disk, and a verification subagent runs actual tools and reports pass/fail. All failures surface to the user with full error output -- nothing is auto-fixed or silently skipped. The skill supports two git modes: user-managed (pause after each step for manual commits) or skill-managed (automatic commits with adaptive pause cadence -- simple plans run straight through, complex multi-milestone plans pause at milestone boundaries by default with a full-auto option). Progress is tracked with checkmarks in the plan file for cross-session resumability.
 
 Trigger with: "execute this blueprint", "run the plan", "start building from the plan", "implement the plan", "continue the plan", "resume execution"
 
@@ -51,7 +51,7 @@ One-time setup command that configures blueprint as the default for planning and
 ### Execution (execute skill)
 
 1. Reads the plan file and identifies remaining steps by scanning for unmarked step headings
-2. Asks which git mode to use (user-managed pauses after each step, skill-managed commits automatically)
+2. Asks which git mode to use: user-managed (pauses after each step for manual commits) or skill-managed (commits automatically with adaptive pause cadence -- simple plans run without stopping, complex plans pause at milestone boundaries by default, full-auto option skips all pauses)
 3. Groups steps into batches of up to three and executes them strictly serially, dispatching subagents for each phase:
    - **Build subagent**: Implements the step with full filesystem access, returns a structured summary of changes
    - **Review subagent**: Reads all changed files fresh from disk and performs adversarial code review, categorizing findings as blocking or advisory
