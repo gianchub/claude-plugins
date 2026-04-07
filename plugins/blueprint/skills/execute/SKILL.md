@@ -140,7 +140,7 @@ The verification subagent runs real commands. It does not estimate whether tests
 - Maximum batch size: 3 steps.
 - Execution within a batch: strictly serial. Step N must pass build, review, and verify before Step N+1 begins.
 - After a batch completes:
-  - **User-managed git mode**: pause and wait for the user. Present the batch summary. The user commits at their discretion.
+  - **User-managed git mode**: the user has already paused after each step within the batch. Present the batch summary as cumulative context. The user commits at their discretion.
   - **Skill-managed git mode**: commits happen after each step within the batch. After the batch, present the batch summary. Pause behavior depends on the pause cadence:
     - Simple plan (single document): never pause at batch boundaries. Continue until the plan is complete.
     - Milestone pauses: pause only when the completed batch is the last batch in a milestone. Continue without pausing for mid-milestone batch boundaries.
@@ -151,12 +151,11 @@ The verification subagent runs real commands. It does not estimate whether tests
 
 ## Step Reporting
 
-After each step completes all three phases, present a concise step report to the user containing:
-- Step label and status (passed).
-- Count of files changed by the build subagent.
-- Count of blocking and advisory findings from the review (if any advisory findings exist, list them briefly).
-- Verification result summary (N/N checks passed).
-- Git action taken (committed with hash, or paused for user).
+After each step completes all three phases, present a step report. The level of detail depends on the execution mode:
+
+- **User-managed mode** (pauses after each step): Present a full step report containing the step label and status, count of files changed, count of blocking and advisory findings (list advisory findings briefly if any exist), verification result summary (N/N checks passed), and the git action taken (paused for user).
+- **Skill-managed continuous modes** (simple plans, or full auto): Condense each step report to a single line — step label, status, files changed, verification result, and commit hash. Present a comprehensive summary at the end of the run.
+- **Skill-managed milestone pauses**: Use the condensed single-line format for steps within a milestone. Present a full milestone summary at each pause point.
 
 After a batch completes, present a batch summary listing all steps that completed in the batch and cumulative statistics.
 

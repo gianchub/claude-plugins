@@ -47,6 +47,7 @@ One-time setup command that configures blueprint as the default for planning and
    - **Phase 2 -- Adversarial Review**: Step-specific review questions targeting failure modes, codebase integration, and consistency with established patterns
    - **Phase 3 -- Verification**: Checklist with tool commands from the discovered tool chain, plus step-specific verification items
 7. Dispatches an adversarial plan review subagent that reads the plan fresh from disk with only a brief scope summary (not the full planning conversation), evaluating completeness, step ordering, acceptance criteria quality, architectural coherence, and risk -- then presents findings to the user for approval before execution can begin
+8. Handles scope changes during execution -- recommends starting fresh if changes invalidate most of the plan, or inserts new steps with the same 3-phase structure
 
 ### Execution (execute skill)
 
@@ -59,7 +60,6 @@ One-time setup command that configures blueprint as the default for planning and
 4. Supports partial execution (specific step ranges) and warns about skipped dependencies
 5. Surfaces all failures to the user with full error output and file references -- no auto-fix, no auto-retry, no silent skipping
 6. Marks completed steps with checkmarks in the plan file and ticks verification checkboxes for cross-session resumability
-7. Handles scope changes during execution -- recommends starting fresh if changes invalidate most of the plan, or inserts new steps with the same 3-phase structure
 
 ## Requirements
 

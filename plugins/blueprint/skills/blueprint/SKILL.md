@@ -72,6 +72,16 @@ digraph blueprint {
 Do not begin plan generation until: (1) the user has confirmed the discovered tool chain, and (2) all critical ambiguities surfaced during clarification have been resolved. An ambiguity is critical if resolving it differently would change the plan's structure, step count, or chosen approach. Proceeding without both produces plans built on guesswork.
 </PLANNING-GATE>
 
+### Fast-path Rules
+
+Plans with ≤2 steps covering a narrowly scoped change (config change, single-file refactoring, straightforward addition) qualify for fast-path treatment:
+
+- **Tool discovery (Step 1):** Present discovered tools inline with the generated plan instead of as a separate confirmation gate. Still include the tool chain table in the plan header.
+- **Approach proposal (Step 2):** When only one credible strategy exists, state it briefly and move on — do not invent artificial alternatives.
+- **Plan review (Step 5):** Skip the subagent dispatch. Perform a quick self-review checking for gaps in acceptance criteria, missing verification items, and dependency issues. Present the plan directly and ask if the user wants to start execution.
+
+For plans with 3 or more steps, or any plan touching architecture, multiple modules, or cross-cutting concerns, follow the full workflow for all steps — no exceptions.
+
 ### 1. Understand the Task and Discover Tooling
 
 Begin by reading the codebase broadly. Examine:
@@ -110,15 +120,15 @@ Discovered tools for this project:
 Add, remove, or reorder? (or confirm to proceed)
 ```
 
-**Fast-path for small plans**: If the user's request is narrowly scoped (e.g., a config change, single-file refactoring, or other small task that will clearly result in 2 or fewer steps), discover tools as normal but present them inline with the generated plan rather than as a separate confirmation gate. Still include the tool chain table in the plan header. For plans with 3 or more steps, or architecturally significant plans, keep the separate confirmation step described above.
+**Fast-path:** For ≤2-step plans, present tools inline with the plan instead of as a separate confirmation gate (see Fast-path Rules).
 
 ### 2. Propose Approaches
 
 Once the task is understood and tooling confirmed, outline 2-3 candidate implementation strategies before locking in a plan structure. For each, describe the approach in a sentence or two and call out its key trade-offs — what it optimizes for, what it sacrifices, and where it carries risk. Open with the strategy you recommend and explain the reasoning; then present the alternatives so the user can make an informed choice. Wait for the user to select an approach before moving to complexity assessment and plan generation.
 
-**Fast-path**: When the task is narrowly scoped and only one credible strategy exists, state it briefly and move on — inventing artificial alternatives wastes time and muddies the conversation.
+**Fast-path:** If only one credible strategy exists, state it briefly and move on (see Fast-path Rules).
 
-### 2. Assess Complexity
+### 3. Assess Complexity
 
 With the approach selected, determine the plan's scope:
 
@@ -135,7 +145,7 @@ With the approach selected, determine the plan's scope:
 - Steps should build on each other sequentially. Later steps may depend on earlier steps, but not the reverse.
 - Avoid steps that are purely structural ("set up the directory") unless the project has no existing structure. Structural work should be folded into the first functional step.
 
-### 3. Generate the Plan
+### 4. Generate the Plan
 
 Write the plan artifact(s) following the structure defined in `references/step-template.md`. Every step includes all three phases: Build, Adversarial Review, and Verification.
 
@@ -185,7 +195,7 @@ After writing the plan to disk, dispatch a subagent to perform an adversarial re
 
 **Why a subagent**: The agent that wrote the plan is anchored to its own reasoning. A fresh subagent without the full planning conversation history reads the plan as an executor would — spotting ambiguities, gaps, and logical flaws that the author is blind to. The subagent receives only a brief scope summary (see `{{PLANNING_CONTEXT}}` below) to verify the plan addresses the user's full intent, not the entire planning dialogue.
 
-**Fast-path for small plans**: If the plan has 2 or fewer steps and covers a narrowly scoped change (e.g., a config change, a single-file refactoring, a straightforward addition), skip the subagent dispatch. Instead, perform a quick self-review checking for obvious gaps in acceptance criteria, missing verification items, and dependency issues. Present the plan to the user and ask if they want to start execution. For plans with 3 or more steps, or any plan that touches architecture, multiple modules, or cross-cutting concerns, always dispatch the subagent — no exceptions.
+**Fast-path:** Plans with ≤2 steps skip the subagent — perform a quick self-review instead (see Fast-path Rules).
 
 **Dispatching the review subagent**: Use Claude Code's Agent tool to dispatch the plan review subagent. Reference `references/plan-review-subagent.md` for the exact prompt template. Substitute placeholders before dispatching:
 
