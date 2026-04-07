@@ -23,7 +23,7 @@ Trigger with: "create a blueprint", "plan this implementation", "make a plan", "
 
 ### execute
 
-Drives a blueprint plan through its build-review-verify cycles using dedicated subagents. Steps are executed strictly serially in batches of up to three. A build subagent implements the step, a review subagent performs an adversarial code review reading files independently from disk, and a verification subagent runs actual tools and reports pass/fail. All failures surface to the user with full error output -- nothing is auto-fixed or silently skipped. The skill supports two git modes: user-managed (pause after each step for manual commits) or skill-managed (automatic commits with adaptive pause cadence -- simple plans run straight through, complex multi-milestone plans pause at milestone boundaries by default with a full-auto option). Progress is tracked with checkmarks in the plan file for cross-session resumability.
+Drives a blueprint plan through its build-review-verify cycles using dedicated subagents. Steps are executed strictly serially in batches of up to three. A build subagent implements the step, a review subagent performs an adversarial code review reading files independently from disk, and a verification subagent runs actual tools and reports pass/fail. All failures surface to the user with full error output -- nothing is auto-fixed or silently skipped. In skill-managed mode, commits are never created for partial steps -- if a step requires human intervention (blocking review findings or failed verification), no commit is made until the intervention is resolved and the step passes all remaining phases. The skill supports two git modes: user-managed (pause after each step for manual commits) or skill-managed (automatic commits with adaptive pause cadence -- simple plans run straight through, complex multi-milestone plans pause at milestone boundaries by default with a full-auto option). Progress is tracked with checkmarks in the plan file for cross-session resumability.
 
 Trigger with: "execute this blueprint", "run the plan", "start building from the plan", "implement the plan", "continue the plan", "resume execution"
 
@@ -58,7 +58,7 @@ One-time setup command that configures blueprint as the default for planning and
    - **Review subagent**: Reads all changed files fresh from disk and performs adversarial code review, categorizing findings as blocking or advisory
    - **Verification subagent**: Runs actual tools (test suite, linter, type checker, formatter) and reports pass/fail per checklist item
 4. Supports partial execution (specific step ranges) and warns about skipped dependencies
-5. Surfaces all failures to the user with full error output and file references -- no auto-fix, no auto-retry, no silent skipping
+5. Surfaces all failures to the user with full error output and file references -- no auto-fix, no auto-retry, no silent skipping. In skill-managed mode, no commit is created for a step that requires human intervention until the intervention is resolved and remaining phases pass cleanly
 6. Adapts step reporting to the execution mode -- full reports in user-managed mode, condensed single-line reports in continuous modes with comprehensive summaries at pause points or run completion
 7. Marks completed steps with checkmarks in the plan file and ticks verification checkboxes for cross-session resumability
 

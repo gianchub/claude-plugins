@@ -40,6 +40,7 @@ Before executing the first step, ask the user which git mode to use. Present exa
 
 **Skill-managed mode:**
 - After each individual step passes all three phases, create a commit automatically.
+- If a step requires human intervention (blocking review findings or failed verification checks), do not commit any of that step's changes until the intervention is fully resolved and the step passes all remaining phases. A partial step is never committed.
 - Include the plan file's progress updates (✅ heading prefix and ticked checkboxes) in the same commit as the step's implementation changes — do not create a separate commit for plan progress.
 - Use a clear, descriptive commit message in conventional commits format referencing the step.
 - Never include Claude Code or AI attribution in commit messages. No co-authored-by lines, no bot signatures, no AI references of any kind.
@@ -89,13 +90,15 @@ Use Claude Code's Agent tool to dispatch subagents. Reference `references/subage
 
 ### Failure Handling
 
-If the review subagent returns any **blocking** finding, stop immediately. Do not proceed to verification. Do not attempt to auto-fix. Do not retry the build. Present the full blocking findings to the user with file:line references and explanations. Wait for the user to provide guidance on how to proceed. The user may choose to:
+If the review subagent returns any **blocking** finding, stop immediately. Do not proceed to verification. Do not attempt to auto-fix. Do not retry the build. Do not commit any changes from this step. Present the full blocking findings to the user with file:line references and explanations. Wait for the user to provide guidance on how to proceed. The user may choose to:
 - Fix the issues manually and ask to re-run the review.
 - Ask the skill to re-run the build with additional instructions.
 - Skip the step (mark it as skipped, not as complete).
 - Abort execution entirely.
 
-If the verification subagent returns any **failed** check, stop immediately. Do not proceed to the next step. Do not attempt to auto-fix. Present the full failure details to the user including complete error output. Wait for the user to provide guidance. The same options apply as with blocking review findings.
+If the verification subagent returns any **failed** check, stop immediately. Do not proceed to the next step. Do not attempt to auto-fix. Do not commit any changes from this step. Present the full failure details to the user including complete error output. Wait for the user to provide guidance. The same options apply as with blocking review findings.
+
+After the user resolves the intervention (manual fix, re-run build, etc.), re-run the remaining phases from the point of failure. Only commit the step once it passes all three phases cleanly — the commit captures the final resolved state, not intermediate attempts.
 
 Advisory review findings do not block execution. Present them to the user as informational notes after the step passes all phases. The user may choose to address them later or ignore them.
 
