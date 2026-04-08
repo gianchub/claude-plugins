@@ -49,9 +49,9 @@ digraph blueprint {
     passed    [label="Review\npassed?", shape=diamond]
     done      [label="Plan ready\nfor execution", shape=doublecircle]
 
-    explore  -> clarify
-    clarify  -> confirm
-    confirm  -> gate
+    explore  -> confirm
+    confirm  -> clarify
+    clarify  -> gate
     gate     -> fastappr  [label="yes"]
     gate     -> clarify   [label="no — gaps remain"]
     fastappr -> assess    [label="yes — single\nobvious strategy"]
@@ -69,7 +69,12 @@ digraph blueprint {
 ```
 
 <PLANNING-GATE>
-Do not begin plan generation until: (1) the user has confirmed the discovered tool chain, and (2) all critical ambiguities surfaced during clarification have been resolved. An ambiguity is critical if resolving it differently would change the plan's structure, step count, or chosen approach. Proceeding without both produces plans built on guesswork.
+Two hard gates exist before plan generation:
+
+1. **Tool confirmation gate (after Step 1)**: The user must confirm the discovered tool chain before any clarifying questions are asked. Present only the tool chain and wait for confirmation — do not combine this with clarifying questions or any other output.
+2. **Readiness gate (after Step 1b)**: All critical ambiguities surfaced during clarification must be resolved. An ambiguity is critical if resolving it differently would change the plan's structure, step count, or chosen approach.
+
+Proceeding without both produces plans built on guesswork.
 </PLANNING-GATE>
 
 ### Fast-path Rules
@@ -82,7 +87,7 @@ Plans with ≤2 steps covering a narrowly scoped change (config change, single-f
 
 For plans with 3 or more steps, or any plan touching architecture, multiple modules, or cross-cutting concerns, follow the full workflow for all steps — no exceptions.
 
-### 1. Understand the Task and Discover Tooling
+### 1. Explore Codebase and Discover Tooling
 
 Begin by reading the codebase broadly. Examine:
 
@@ -95,18 +100,11 @@ Begin by reading the codebase broadly. Examine:
 
 **While exploring, discover project tooling.** Tool discovery is not a separate phase — it happens naturally during codebase exploration. As configuration files, CI pipelines, and lock files are encountered, record the test runner, linter, formatter, type checker, and package manager they imply. See `references/tool-discovery.md` for the full per-language lookup table and detection methodology. When CI pipeline commands conflict with config file commands, prefer the CI commands — they reflect what actually runs.
 
-Then ask clarifying questions. Focus on:
+<TOOL-CONFIRMATION-GATE>
+**This step ends with tool confirmation — nothing else.** After exploration, present the discovered tool chain to the user and wait for their confirmation. Do not ask clarifying questions, propose approaches, or do any other work in this response. The tool chain confirmation is a hard gate: the user must confirm, add, remove, or reorder tools before you proceed to clarification.
+</TOOL-CONFIRMATION-GATE>
 
-- What the user actually wants (not what they said — these sometimes differ).
-- What constraints exist that are not visible in the code.
-- What the definition of done looks like for this work.
-- Whether there are related changes planned that this should accommodate.
-
-Iterate on understanding. Summarize what has been gathered so far, identify gaps, and ask follow-up questions. Two to three rounds of clarification is normal for non-trivial plans. For simple, well-defined tasks, one round may suffice.
-
-When planning involves architectural decisions that benefit from diagrams or visual comparison of approaches, the superpowers plugin's visual companion can render these in a browser. This capability requires the superpowers plugin to be installed; no fallback is provided if it is absent.
-
-**Required deliverable before proceeding**: Present the discovered tool chain to the user for confirmation. Format it as a numbered list with the source of each discovery in parentheses. The user may confirm, add, remove, or reorder tools. Do not proceed to step 2 until the tool chain is confirmed. Example:
+Format the tool chain as a numbered list with the source of each discovery in parentheses. Example:
 
 ```
 Discovered tools for this project:
@@ -121,6 +119,19 @@ Add, remove, or reorder? (or confirm to proceed)
 ```
 
 **Fast-path:** For ≤2-step plans, present tools inline with the plan instead of as a separate confirmation gate (see Fast-path Rules).
+
+### 1b. Clarify Requirements
+
+Once the user has confirmed the tool chain, ask clarifying questions. Focus on:
+
+- What the user actually wants (not what they said — these sometimes differ).
+- What constraints exist that are not visible in the code.
+- What the definition of done looks like for this work.
+- Whether there are related changes planned that this should accommodate.
+
+Iterate on understanding. Summarize what has been gathered so far, identify gaps, and ask follow-up questions. Two to three rounds of clarification is normal for non-trivial plans. For simple, well-defined tasks, one round may suffice.
+
+When planning involves architectural decisions that benefit from diagrams or visual comparison of approaches, the superpowers plugin's visual companion can render these in a browser. This capability requires the superpowers plugin to be installed; no fallback is provided if it is absent.
 
 ### 2. Propose Approaches
 
