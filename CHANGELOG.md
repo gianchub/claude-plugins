@@ -4,6 +4,24 @@ All notable changes to the claude-plugins project are documented in this file.
 
 Version numbers refer to the **blueprint** plugin version, which has been the primary driver of releases. The code-audit plugin version is noted where it differs.
 
+## [1.3.4] - 2026-04-08
+
+### Blueprint
+
+- Replace DOT diagram with prose workflow summary to save tokens
+- Add trigger phrases "plan this refactoring" and "help me plan" to skill description
+- Add partial execution trigger phrases ("execute step 3", "run steps 3-5") to execute skill description
+- Remove duplicated Subagent Architecture table, Batching Rules section, and Additional Resources section from execute skill (~400 words of redundancy)
+- Fold milestone boundary and remaining-steps batching rules into Step Execution section
+- Strengthen post-approval git commit instruction with explicit warning
+
+### Code Audit (1.1.1)
+
+- Add guidance for locating prior audit reports during re-audits (search for `AUDIT-REPORT-*.md`, use most recent)
+- Clarify partitioning thresholds are disjunctive (either 50 files or 10K lines triggers parallelism)
+- Align subagent labels between SKILL.md and intent-discovery.md (remove "Subagent A/B/C" prefixes)
+- Fix heading level in severity-guide.md (`##` → `#`)
+
 ## [1.3.3] - 2026-04-08
 
 ### Blueprint

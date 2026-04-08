@@ -34,7 +34,7 @@ If the user specifies files or directories that do not exist, warn them about th
 
 If the prompt does not contain enough information to determine scope, ask a single clarifying question before proceeding. Do not guess at scope — an audit with unclear boundaries produces unreliable results.
 
-If a previous audit report exists in the project and the user requests a re-audit, default to the same scope as the original audit. Offer to narrow to only files with prior findings if the user wants a faster pass, but do not narrow silently — new issues can appear in files that were previously clean. When a prior report exists, note in the new report which previous findings have been resolved and which persist, so the user gets a delta view.
+If the user requests a re-audit, search for files matching `AUDIT-REPORT-*.md` at the project root. If multiple reports exist, use the most recent by date. Default to the same scope as the original audit. Offer to narrow to only files with prior findings if the user wants a faster pass, but do not narrow silently — new issues can appear in files that were previously clean. When a prior report exists, note in the new report which previous findings have been resolved and which persist, so the user gets a delta view.
 
 Once scope is established, enumerate all files that fall within it. Exclude generated files (e.g., lock files, compiled output, vendored dependencies, minified bundles) unless the user explicitly includes them. For source-committed generated code (protobuf stubs, OpenAPI clients, ORM models), check for modification markers — if files contain hand-written additions or a "DO NOT EDIT" header has been removed, treat them as in-scope. While generated and vendored code is excluded from file-level analysis, cross-file analysis in Phase B should trace data flows into excluded code to determine whether it provides expected validation or safety guarantees. Report findings at the boundary, not within the excluded code.
 
@@ -81,7 +81,7 @@ See `references/intent-discovery.md` for detailed subagent prompts, extraction r
 
 #### Large Codebase Partitioning
 
-When the scope exceeds either 50 files or 10,000 lines of code (whichever is reached first), use parallel subagents to avoid superficial analysis:
+When the scope exceeds 50 files or 10,000 lines of code (either threshold alone is sufficient), use parallel subagents to avoid superficial analysis. The thresholds are intentionally disjunctive: a project with many small files benefits from parallelism just as much as one with fewer large files.
 
 - Partition the scope into logical modules or directory subtrees. Aim for partitions of roughly equal size. In monorepos with multiple independent services, partition by service first — service boundaries take precedence over layer boundaries. Within a single service, prefer boundaries that align with architectural layers (e.g., data access, business logic, API handlers) rather than arbitrary file count splits.
 - Assign one subagent per partition. Each subagent performs Phase A (file-level analysis) on its partition independently, following the same checklist and recording format. Provide each subagent with a brief description of the overall codebase architecture, the Intent Brief from Step 3, and the applicable checklists.

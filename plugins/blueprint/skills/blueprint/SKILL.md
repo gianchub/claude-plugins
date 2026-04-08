@@ -4,7 +4,8 @@ description: >
   This skill should be used when the user asks to "create a blueprint",
   "blueprint this feature", "plan this implementation", "make a plan",
   "create an implementation plan", "design the architecture",
-  "design this feature", or "break this down into steps".
+  "design this feature", "break this down into steps",
+  "plan this refactoring", or "help me plan".
 ---
 
 # Blueprint Skill
@@ -29,49 +30,12 @@ Plan steps describe intent in prose. Do not include code blocks except for inter
 
 ## Workflow
 
-```dot
-digraph blueprint {
-    rankdir=TB
-    node [shape=box, style=rounded, fontname="Helvetica", fontsize=10]
-    edge [fontname="Helvetica", fontsize=9]
-
-    explore   [label="Explore codebase\n& discover tools"]
-    confirm   [label="Confirm tool chain\nwith user"]
-    clarify   [label="Clarify requirements"]
-    gate      [label="Planning gate\nready?", shape=diamond]
-    fastappr  [label="Fast-path\napproach?", shape=diamond]
-    propose   [label="Propose 2-3\napproaches"]
-    pick      [label="User picks\napproach"]
-    assess    [label="Assess complexity"]
-    generate  [label="Generate plan"]
-    fastrev   [label="Fast-path\nreview?", shape=diamond]
-    review    [label="Adversarial review\n(subagent)"]
-    passed    [label="Review\npassed?", shape=diamond]
-    done      [label="Plan ready\nfor execution", shape=doublecircle]
-
-    explore  -> confirm
-    confirm  -> clarify
-    clarify  -> gate
-    gate     -> fastappr  [label="yes"]
-    gate     -> clarify   [label="no — gaps remain"]
-    fastappr -> assess    [label="yes — single\nobvious strategy"]
-    fastappr -> propose   [label="no"]
-    propose  -> pick
-    pick     -> assess
-    assess   -> generate
-    generate -> fastrev
-    fastrev  -> done      [label="≤2 steps"]
-    fastrev  -> review    [label=">2 steps"]
-    review   -> passed
-    passed   -> done      [label="yes"]
-    passed   -> generate  [label="no — fix issues"]
-}
-```
+**Flow:** Explore codebase → Confirm tool chain (hard gate) → Clarify requirements (hard gate) → Propose approaches → Assess complexity → Generate plan → Adversarial review → Plan ready.
 
 <PLANNING-GATE>
 Two hard gates exist before plan generation:
 
-1. **Tool confirmation gate (after Step 1)**: The user must confirm the discovered tool chain before any clarifying questions are asked. Present only the tool chain and wait for confirmation — do not combine this with clarifying questions or any other output.
+1. **Tool confirmation gate (after Step 1)**: Present only the tool chain and wait for confirmation — do not combine this with clarifying questions or any other output.
 2. **Readiness gate (after Step 1b)**: All critical ambiguities surfaced during clarification must be resolved. An ambiguity is critical if resolving it differently would change the plan's structure, step count, or chosen approach.
 
 Proceeding without both produces plans built on guesswork.
@@ -225,7 +189,7 @@ The subagent prompt in `references/plan-review-subagent.md` contains the full re
 
 Do not skip the plan review (except via the fast-path above). Do not auto-resolve findings without user input. The plan review is a hard gate — the plan is not considered complete until it has passed this step.
 
-**After approval**: Commit the plan file to git so it persists across sessions and supports checkmark-based progress tracking.
+**After approval**: **Commit the plan file to git** so it persists across sessions and supports checkmark-based progress tracking. Do not skip this step — without the commit, cross-session resumability breaks.
 
 ## Output Formats
 

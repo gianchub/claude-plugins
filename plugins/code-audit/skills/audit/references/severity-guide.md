@@ -1,4 +1,4 @@
-## Severity Classification Guide
+# Severity Classification Guide
 
 Use the following criteria to assign severity levels. When a finding could fit multiple levels, choose the higher severity and note the reasoning.
 
