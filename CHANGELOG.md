@@ -4,6 +4,36 @@ All notable changes to the claude-plugins project are documented in this file.
 
 Version numbers refer to the **blueprint** plugin version, which has been the primary driver of releases. The code-audit plugin version is noted where it differs.
 
+## [1.3.3] - 2026-04-08
+
+### Blueprint
+
+- Make tool confirmation a hard gate before clarifying questions — the workflow now stops after presenting the discovered tool chain and waits for user confirmation before asking any clarifying questions
+- Split step 1 into "Explore Codebase and Discover Tooling" (step 1) and "Clarify Requirements" (step 1b) with a `<TOOL-CONFIRMATION-GATE>` between them
+- Reorder workflow diagram from `explore -> clarify -> confirm` to `explore -> confirm -> clarify`
+- Update PLANNING-GATE to describe two sequential hard gates
+
+## [1.3.2] - 2026-04-07
+
+### Blueprint
+
+- Prevent skill-managed commits on steps requiring human intervention — no commit is created until the intervention is fully resolved and the step passes all remaining phases
+
+## [1.3.1] - 2026-04-07
+
+### Blueprint
+
+- Consolidate fast-path rules and fix step numbering
+- Tighten step reporting format for skill-managed continuous modes
+
+## [1.3.0] - 2026-04-07
+
+### Blueprint
+
+- Add pause cadence options to execution skill: simple plans run without stopping, complex multi-milestone plans pause at milestone boundaries by default, with a full-auto option
+- Restructure git handling with user-managed and skill-managed modes
+- Update READMEs with detailed execution workflow documentation
+
 ## [1.2.1] - 2026-03-23
 
 ### Code Audit (1.1.0)
