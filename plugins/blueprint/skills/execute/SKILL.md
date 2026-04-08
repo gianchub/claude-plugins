@@ -4,7 +4,8 @@ description: >
   This skill should be used when the user asks to "execute this blueprint",
   "run the plan", "execute the plan", "start building from the plan",
   "implement the blueprint", "implement the plan", "continue the plan",
-  "resume execution", or "execute 01_milestone_name.md".
+  "resume execution", "execute 01_milestone_name.md",
+  "execute step 3", "run steps 3-5", or "skip to step 4".
 ---
 
 # Execute
@@ -63,6 +64,8 @@ Group steps into batches of up to 3 steps maximum. Execute steps **strictly seri
 Never batch builds together. Never batch reviews together. Never batch verifications together. Never start Step B's build while Step A's review or verification is pending. Each phase gates the next phase. Each step gates the next step.
 
 After a batch completes (all steps in the batch passed all phases), handle git according to the chosen mode, then present a batch summary to the user showing which steps completed. In user-managed mode, the user has already been paused after each step. In skill-managed mode, continue to the next batch without pausing unless a pause cadence boundary has been reached (milestone boundary for milestone pauses, or end of plan for simple plans and full auto).
+
+A batch never crosses milestone boundaries. If the current milestone has 2 remaining steps and the next milestone has steps, the current batch contains only those 2 steps. If the plan has fewer remaining steps than the batch size, the batch contains only the remaining steps. If a step fails within a batch, the remaining steps in that batch do not execute — present the failure and wait for guidance.
 
 ### Subagent Dispatch
 
@@ -126,32 +129,6 @@ Always re-read the plan file from disk when resuming execution. Never rely on a 
 
 Accept the plan as-is at resume time. Do not warn about or question changes unless a step's dependencies appear to be broken (e.g., a step references artifacts from a removed step).
 
-## Subagent Architecture
-
-| Phase | Receives | Does |
-|-------|----------|------|
-| Build | Phase 1 instructions (verbatim from plan); full filesystem access | Read context, implement changes, write tests, return structured summary listing files changed with intent, key decisions, and any deviations |
-| Review | Acceptance criteria (verbatim from plan) + build summary (structured, for orientation) + Phase 2 instructions (verbatim from plan) | Read all changed files fresh from disk, verify each acceptance criterion is met, perform adversarial review, return findings categorized as blocking or advisory with file:line references |
-| Verification | Phase 3 checklist (verbatim from plan, includes acceptance criteria) + tool chain configuration | Execute each check using actual tools, return pass/fail per checklist item with full error output on failure |
-
-The review subagent reads files independently from disk. The build summary tells it where to look and what was intended, but the review subagent verifies everything by reading actual file contents. This prevents a build subagent from misrepresenting its own output.
-
-The verification subagent runs real commands. It does not estimate whether tests pass. It does not guess linter output. It executes the tools and reports what happened.
-
-## Batching Rules
-
-- Maximum batch size: 3 steps.
-- Execution within a batch: strictly serial. Step N must pass build, review, and verify before Step N+1 begins.
-- After a batch completes:
-  - **User-managed git mode**: the user has already paused after each step within the batch. Present the batch summary as cumulative context. The user commits at their discretion.
-  - **Skill-managed git mode**: commits happen after each step within the batch. After the batch, present the batch summary. Pause behavior depends on the pause cadence:
-    - Simple plan (single document): never pause at batch boundaries. Continue until the plan is complete.
-    - Milestone pauses: pause only when the completed batch is the last batch in a milestone. Continue without pausing for mid-milestone batch boundaries.
-    - Full auto: never pause at batch boundaries. Continue until the entire plan is complete.
-- If a step fails within a batch, the remaining steps in that batch do not execute. Present the failure and wait for guidance.
-- A batch never crosses milestone boundaries. If the current milestone has 2 remaining steps and the next milestone has steps, the current batch contains only those 2 steps.
-- If the plan has fewer remaining steps than the batch size, the batch contains only the remaining steps.
-
 ## Step Reporting
 
 After each step completes all three phases, present a step report. The level of detail depends on the execution mode:
@@ -162,6 +139,3 @@ After each step completes all three phases, present a step report. The level of 
 
 After a batch completes, present a batch summary listing all steps that completed in the batch and cumulative statistics.
 
-## Additional Resources
-
-Refer to `references/subagent-prompts.md` for the complete prompt templates used when dispatching build, review, and verification subagents. These templates contain the exact system context, process instructions, constraints, and return format specifications for each subagent type. Substitute all placeholders with actual values before dispatching.

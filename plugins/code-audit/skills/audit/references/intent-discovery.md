@@ -6,7 +6,7 @@ Detailed subagent instructions for intent discovery (SKILL.md Step 3). Three sub
 
 ---
 
-## Subagent A — Documentation Scanner
+## Documentation Scanner
 
 ### Objective
 
@@ -48,7 +48,7 @@ Ignore purely procedural content (setup instructions, API reference docs) unless
 
 ---
 
-## Subagent B — Code Intent Scanner
+## Code Intent Scanner
 
 ### Objective
 
@@ -102,7 +102,7 @@ Check for rationale embedded in configuration files:
 
 ---
 
-## Subagent C — History Scanner
+## History Scanner
 
 ### Objective
 
