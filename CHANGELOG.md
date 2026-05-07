@@ -4,6 +4,20 @@ All notable changes to the claude-plugins project are documented in this file.
 
 Version numbers refer to the **blueprint** plugin version, which has been the primary driver of releases. The code-audit plugin version is noted where it differs.
 
+## [1.3.5] - 2026-05-07
+
+### Blueprint
+
+- Restructure execute skill around explicit Iron Laws and ordered hard gates so the workflow is followed to the letter
+- Add `<SUBAGENT-ONLY>` law: main conversation orchestrates only — every build, review, and verification runs in a subagent regardless of step or plan size
+- Add `<HARD-GATES>` law making Phases 1–3 sequential gates that must complete before step execution begins
+- Promote git mode question to a `<GIT-MODE-GATE>` block (matches blueprint skill's gate convention) — must be asked every session, never inferred
+- Promote cadence question to a conditional `<CADENCE-GATE>` block, fired only for skill-managed + complex plans, removing the previous triple-nested bullet structure
+- Add an "Execution Phases" ordered overview at the top so the gate ordering is unmissable
+- Add a "Red Flags" rationalization table covering common skip patterns (small plan, simple step, batch builds, reuse last session's mode, etc.)
+- Reorder so subagent dispatch contract precedes batching/order rules
+- Clarify "Pre-stated answer" handling on both gates: when the user's first message specifies a mode/cadence unambiguously (e.g., "in skill-managed mode", "full auto"), accept it as the gate answer rather than re-asking ceremonially
+
 ## [1.3.4] - 2026-04-08
 
 ### Blueprint
