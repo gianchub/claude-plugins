@@ -1,5 +1,5 @@
 ---
-name: audit
+name: code-audit
 description: >
   This skill should be used when the user asks to "audit this codebase",
   "audit this code", "code audit", "check for bugs", "review code quality",

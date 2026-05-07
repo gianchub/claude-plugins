@@ -2,7 +2,7 @@
 
 Use the checklists below to systematically evaluate the codebase. Each category contains specific items to inspect. Not every item applies to every language or framework; skip items that are irrelevant to the target codebase.
 
-> **Security findings are out of scope for this skill.** The `audit` skill focuses on general code quality: concurrency, dead code, anti-patterns, performance, correctness, error handling, and tests. For security analysis (injection, auth/authz, crypto, secrets, SSRF, deserialization, OWASP-mapped findings, dependency CVEs, IaC and CI/CD review, etc.), use the `security-audit` skill in this plugin. If a security issue is encountered incidentally during a code-quality audit, note it briefly and recommend a security-audit follow-up rather than analyzing it in depth here.
+> **Security findings are out of scope for this skill.** The `code-audit` skill focuses on general code quality: concurrency, dead code, anti-patterns, performance, correctness, error handling, and tests. For security analysis (injection, auth/authz, crypto, secrets, SSRF, deserialization, OWASP-mapped findings, dependency CVEs, IaC and CI/CD review, etc.), use the `security-audit` skill in this plugin. If a security issue is encountered incidentally during a code-quality audit, note it briefly and recommend a `security-audit` follow-up rather than analyzing it in depth here.
 
 ---
 

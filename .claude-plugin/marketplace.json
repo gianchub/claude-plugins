@@ -8,21 +8,21 @@
   },
   "plugins": [
     {
-      "name": "blueprint",
+      "name": "blueprints",
       "description": "Collaborative implementation planning and execution with build-review-verify cycles per step",
       "author": {
         "name": "Fabrizio Romano"
       },
-      "source": "./plugins/blueprint",
+      "source": "./plugins/blueprints",
       "category": "productivity"
     },
     {
-      "name": "code-audit",
-      "description": "Language-agnostic codebase auditing with structured severity-ranked reports",
+      "name": "audits",
+      "description": "Language-agnostic code-quality and security auditing with structured severity-ranked reports",
       "author": {
         "name": "Fabrizio Romano"
       },
-      "source": "./plugins/code-audit",
+      "source": "./plugins/audits",
       "category": "productivity"
     }
   ]

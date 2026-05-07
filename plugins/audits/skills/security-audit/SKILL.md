@@ -20,7 +20,7 @@ description: >
 
 Perform a thorough, threat-model-first security audit of a codebase, producing a structured report with findings ranked by Impact x Exploitability x Exposure, mapped to CWE and OWASP categories, and (for High and Critical) supported by a concrete exploit scenario. Deliver the report as a Markdown file at the project root following the template in `references/report-template.md`.
 
-This skill is exclusively focused on security. For general code-quality auditing (concurrency, dead code, anti-patterns, performance, correctness, error handling, tests), use the sibling `audit` skill in the same plugin. The two skills can run independently or in sequence on the same codebase. If a non-security code-quality issue is encountered incidentally during this audit, note it briefly and recommend running the `audit` skill rather than analyzing it in depth here.
+This skill is exclusively focused on security. For general code-quality auditing (concurrency, dead code, anti-patterns, performance, correctness, error handling, tests), use the sibling `code-audit` skill in the same plugin. The two skills can run independently or in sequence on the same codebase. If a non-security code-quality issue is encountered incidentally during this audit, note it briefly and recommend running the `code-audit` skill rather than analyzing it in depth here.
 
 ## Effort Level
 

@@ -1,14 +1,15 @@
 ---
-name: execute
+name: execute-blueprint
 description: >
   This skill should be used when the user asks to "execute this blueprint",
-  "run the plan", "execute the plan", "start building from the plan",
-  "implement the blueprint", "implement the plan", "continue the plan",
-  "resume execution", "execute 01_milestone_name.md",
-  "execute step 3", "run steps 3-5", or "skip to step 4".
+  "execute the blueprint", "run the blueprint", "run the plan", "execute
+  the plan", "start building from the plan", "implement the blueprint",
+  "implement the plan", "continue the plan", "resume execution", "execute
+  01_milestone_name.md", "execute step 3", "run steps 3-5", or "skip to
+  step 4".
 ---
 
-# Execute
+# Execute Blueprint Skill
 
 ## Purpose
 

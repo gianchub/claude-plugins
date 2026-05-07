@@ -1,6 +1,6 @@
 {
-  "name": "code-audit",
-  "version": "1.2.1",
+  "name": "audits",
+  "version": "2.0.0",
   "description": "Language-agnostic code-quality and security auditing with structured severity-ranked reports",
   "author": {
     "name": "Fabrizio Romano",

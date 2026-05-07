@@ -2,7 +2,46 @@
 
 All notable changes to the claude-plugins project are documented in this file.
 
-Version numbers refer to the **blueprint** plugin version, which has been the primary driver of releases. The code-audit plugin version is noted where it differs.
+Version numbers refer to the **blueprints** plugin version (renamed from `blueprint` in 2.0.0), which has been the primary driver of releases. The `audits` plugin version (renamed from `code-audit` in 2.0.0) is noted where it differs.
+
+## [2.0.0] - 2026-05-07
+
+**Breaking change.** The two plugins and three of their skills have been renamed for consistency. Both plugins are now plural to reflect that they each ship multiple skills, and each skill name reads naturally as a noun or verb-noun pair.
+
+| Old name | New name |
+| --- | --- |
+| `blueprint` (plugin) | `blueprints` |
+| `code-audit` (plugin) | `audits` |
+| `blueprint:blueprint` (skill) | `blueprints:write-blueprint` |
+| `blueprint:execute` (skill) | `blueprints:execute-blueprint` |
+| `code-audit:audit` (skill) | `audits:code-audit` |
+| `code-audit:security-audit` (skill) | `audits:security-audit` (skill name unchanged; plugin renamed) |
+| `/blueprint:setup` (command) | `/blueprints:setup` |
+
+### Blueprints (2.0.0; was `blueprint` 1.3.5)
+
+- Rename plugin from `blueprint` to `blueprints`; rename skills from `blueprint` to `write-blueprint` and from `execute` to `execute-blueprint`; rename command from `/blueprint:setup` to `/blueprints:setup`
+- Update `feedback_blueprints_preference.md` (was `feedback_blueprint_preference.md`); the setup command now updates an existing legacy memory in place rather than duplicating it
+- Update `write-blueprint` skill body to invoke `blueprints:execute-blueprint` (was `blueprint:execute`) for execution
+
+### Audits (2.0.0; was `code-audit` 1.2.1)
+
+- Rename plugin from `code-audit` to `audits`; rename code-quality skill from `audit` to `code-audit`. The `security-audit` skill name is unchanged (only its containing plugin was renamed)
+- Update sibling-skill references in `code-audit/references/categories.md` and `security-audit/SKILL.md` to use the new `code-audit` skill name
+- README rewritten to lead with the plural plugin name and group security-audit domains by the same identity / input-handling / cross-cutting / infrastructure groupings as the skill's Reference Index
+
+### Migration
+
+Existing installs of `blueprint` or `code-audit` continue to function but stop receiving updates. To move to 2.0.0:
+
+```sh
+claude plugin uninstall blueprint@gianchub-plugins
+claude plugin uninstall code-audit@gianchub-plugins
+claude plugin install blueprints@gianchub-plugins
+claude plugin install audits@gianchub-plugins
+```
+
+If `/blueprint:setup` was previously run on a project, run `/blueprints:setup` to point the project preference at the renamed plugin. The old `feedback_blueprint_preference.md` memory is updated in place rather than duplicated.
 
 ## [1.3.6] - 2026-05-07
 

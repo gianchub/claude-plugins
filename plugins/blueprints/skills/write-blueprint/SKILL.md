@@ -1,14 +1,14 @@
 ---
-name: blueprint
+name: write-blueprint
 description: >
   This skill should be used when the user asks to "create a blueprint",
-  "blueprint this feature", "plan this implementation", "make a plan",
-  "create an implementation plan", "design the architecture",
+  "write a blueprint", "blueprint this feature", "plan this implementation",
+  "make a plan", "create an implementation plan", "design the architecture",
   "design this feature", "break this down into steps",
   "plan this refactoring", or "help me plan".
 ---
 
-# Blueprint Skill
+# Write Blueprint Skill
 
 ## Purpose
 
@@ -218,7 +218,7 @@ The `README.md` provides an ordered list of milestones with summaries, the confi
 
 ## Handling Plan Execution
 
-When the user asks to execute, invoke `blueprint:execute` — it provides full subagent orchestration with batching, git handling, and progress tracking. If unavailable, work through steps one at a time completing all three phases before advancing. Mark completed steps with a checkmark in the plan heading and tick Phase 3 checkboxes for cross-session resumability. See `references/step-template.md` for what belongs in each phase of a plan step.
+When the user asks to execute, invoke `blueprints:execute-blueprint` — it provides full subagent orchestration with batching, git handling, and progress tracking. If unavailable, work through steps one at a time completing all three phases before advancing. Mark completed steps with a checkmark in the plan heading and tick Phase 3 checkboxes for cross-session resumability. See `references/step-template.md` for what belongs in each phase of a plan step.
 
 ## Handling Scope Changes
 
