@@ -8,11 +8,11 @@ The plugin ships two complementary skills: a general-purpose `code-audit` skill 
 
 ## Installation
 
-Add the marketplace, then install:
+Run these inside an interactive Claude Code session:
 
 ```
-/plugins marketplace add gianchub/claude-plugins
-/plugins install audits
+/plugin marketplace add gianchub/claude-plugins
+/plugin install audits@gianchub-plugins
 ```
 
 ## Skills

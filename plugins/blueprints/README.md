@@ -6,11 +6,11 @@ The plugin turns vague feature requests, architectural changes, and refactoring 
 
 ## Installation
 
-Add the marketplace, then install:
+Run these inside an interactive Claude Code session:
 
 ```
-/plugins marketplace add gianchub/claude-plugins
-/plugins install blueprints
+/plugin marketplace add gianchub/claude-plugins
+/plugin install blueprints@gianchub-plugins
 ```
 
 ## Skills

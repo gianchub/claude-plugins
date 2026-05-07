@@ -32,16 +32,16 @@ Version numbers refer to the **blueprints** plugin version (renamed from `bluepr
 
 ### Migration
 
-Existing installs of `blueprint` or `code-audit` continue to function but stop receiving updates. To move to 2.0.0:
+Existing installs of `blueprint` or `code-audit` continue to function but stop receiving updates. To move to 2.0.0, run these commands inside an interactive Claude Code session:
 
 1. Uninstall the old plugins:
 
-   ```sh
-   claude plugin uninstall blueprint@gianchub-plugins
-   claude plugin uninstall code-audit@gianchub-plugins
+   ```
+   /plugin uninstall blueprint@gianchub-plugins
+   /plugin uninstall code-audit@gianchub-plugins
    ```
 
-2. Refresh the marketplace cache so the renamed plugins are visible (slash command, run inside an interactive Claude Code session — there is no `claude plugin marketplace update` CLI equivalent, and a session restart alone does not refresh):
+2. Refresh the marketplace cache so the renamed plugins become visible (without this step, `/plugin install blueprints@…` may fail because the local catalog still lists the old names; a session restart alone does not refresh):
 
    ```
    /plugin marketplace update gianchub-plugins
@@ -49,9 +49,9 @@ Existing installs of `blueprint` or `code-audit` continue to function but stop r
 
 3. Install the renamed plugins:
 
-   ```sh
-   claude plugin install blueprints@gianchub-plugins
-   claude plugin install audits@gianchub-plugins
+   ```
+   /plugin install blueprints@gianchub-plugins
+   /plugin install audits@gianchub-plugins
    ```
 
 If `/blueprint:setup` was previously run on a project, run `/blueprints:setup` to point the project preference at the renamed plugin. The old `feedback_blueprint_preference.md` memory is updated in place rather than duplicated.
