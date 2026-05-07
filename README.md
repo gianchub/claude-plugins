@@ -103,12 +103,25 @@ claude plugin update audits@gianchub-plugins
 
 The 2.0.0 release renamed the plugins (`blueprint` → `blueprints`, `code-audit` → `audits`) and renamed several skills (`blueprint` → `write-blueprint`, `execute` → `execute-blueprint`, `audit` → `code-audit`; `security-audit` is unchanged). Existing installations of `blueprint` or `code-audit` keep working but stop receiving updates. To move forward:
 
-```sh
-claude plugin uninstall blueprint@gianchub-plugins
-claude plugin uninstall code-audit@gianchub-plugins
-claude plugin install blueprints@gianchub-plugins
-claude plugin install audits@gianchub-plugins
-```
+1. Uninstall the old plugins:
+
+   ```sh
+   claude plugin uninstall blueprint@gianchub-plugins
+   claude plugin uninstall code-audit@gianchub-plugins
+   ```
+
+2. Refresh the marketplace cache so Claude Code sees the renamed plugins. Run this inside an interactive Claude Code session (slash command — there is no `claude plugin marketplace update` CLI equivalent, and a session restart alone does not refresh):
+
+   ```
+   /plugin marketplace update gianchub-plugins
+   ```
+
+3. Install the renamed plugins:
+
+   ```sh
+   claude plugin install blueprints@gianchub-plugins
+   claude plugin install audits@gianchub-plugins
+   ```
 
 If you previously ran `/blueprint:setup`, run `/blueprints:setup` again so the project preference points at the renamed plugin.
 
