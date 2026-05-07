@@ -1,0 +1,12 @@
+{
+  "name": "blueprints",
+  "version": "2.0.0",
+  "description": "Collaborative implementation planning and execution with build-review-verify cycles per step",
+  "author": {
+    "name": "Fabrizio Romano",
+    "url": "https://github.com/gianchub"
+  },
+  "repository": "https://github.com/gianchub/claude-plugins",
+  "license": "MIT",
+  "keywords": ["planning", "implementation", "architecture", "blueprint", "execution"]
+}
