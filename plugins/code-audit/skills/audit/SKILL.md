@@ -2,10 +2,12 @@
 name: audit
 description: >
   This skill should be used when the user asks to "audit this codebase",
-  "audit this code", "security audit", "code audit", "find vulnerabilities",
-  "check for bugs", "review code quality", "find dead code",
-  "check for anti-patterns", "performance audit", "check for code smells",
-  "technical debt", or "code health check".
+  "audit this code", "code audit", "check for bugs", "review code quality",
+  "find dead code", "check for anti-patterns", "performance audit",
+  "check for code smells", "technical debt", "code health check",
+  "review test quality", or "check error handling". For security-focused
+  audits (vulnerabilities, OWASP issues, injection, auth, secrets, crypto,
+  dependencies, IaC, CI/CD), use the `security-audit` skill instead.
 ---
 
 # Code Audit Skill
@@ -44,14 +46,15 @@ State the resolved scope back to the user. If the scope is unambiguous, proceed 
 
 Analyze the user's request and the codebase to select the most relevant audit categories from the full list:
 
-1. Security vulnerabilities
-2. Race conditions and concurrency
-3. Dead code
-4. Anti-patterns and code smells
-5. Performance
-6. Correctness
-7. Error handling gaps
-8. Test quality
+1. Race conditions and concurrency
+2. Dead code
+3. Anti-patterns and code smells
+4. Performance
+5. Correctness
+6. Error handling gaps
+7. Test quality
+
+Security analysis is intentionally excluded from this skill. If the user's request includes security concerns (vulnerabilities, injection, authentication, authorization, secrets, cryptography, dependency CVEs, OWASP issues, IaC, CI/CD review), recommend running the `security-audit` skill instead, either alongside this audit or in place of it. If a security issue is encountered incidentally during this audit, record it as a single finding noting the issue and recommend a follow-up `security-audit` run; do not analyze it in depth here.
 
 Consider both what the user explicitly asked for and what the code naturally warrants. For example, if the codebase uses async patterns, include the concurrency category even if the user didn't mention it.
 
@@ -88,7 +91,7 @@ When the scope exceeds 50 files or 10,000 lines of code (either threshold alone 
 - After all subagents complete, perform Phase B (cross-file analysis) on the merged set of findings, focusing on interactions between partitions. Pay special attention to trust boundaries — data flowing from one partition to another is a common source of missed validation and injection vulnerabilities.
 - Deduplicate findings that were independently discovered by multiple subagents operating on shared or overlapping code. Consolidate into the highest-severity version and list all affected locations.
 
-If subagents are not available or the scope is small enough, perform all phases sequentially as a single agent. When even partitioned analysis cannot cover every line, prioritize depth on security-critical and correctness-critical paths: entry points, authentication/authorization flows, data persistence, and external API boundaries.
+If subagents are not available or the scope is small enough, perform all phases sequentially as a single agent. When even partitioned analysis cannot cover every line, prioritize depth on correctness-critical and reliability-critical paths: entry points, data persistence, transaction boundaries, error-handling middleware, and external API boundaries.
 
 #### Phase A — File-Level Analysis
 

@@ -1,26 +1,26 @@
 # Severity Classification Guide
 
-Use the following criteria to assign severity levels. When a finding could fit multiple levels, choose the higher severity and note the reasoning.
+Use the following criteria to assign severity levels. When a finding could fit multiple levels, choose the higher severity and note the reasoning. This guide covers code-quality severity only; the `security-audit` skill defines its own security-tuned severity model that incorporates exploitability and exposure.
 
 **Intent-based downgrades:** When the Intent Brief provides general context justifying a pattern (but not an explicit per-instance acknowledgment), reduce severity by one level (e.g., High → Medium) and cite the intent source in the finding. Never downgrade Critical findings below High — Critical severity indicates risk significant enough that even documented intent warrants attention.
 
 ### Critical
 
-Reserve for findings that represent an immediate, exploitable threat or a near-certain path to significant damage:
+Reserve for findings that represent a near-certain path to significant damage in normal operation:
 
-- Remotely exploitable security vulnerabilities (injection, auth bypass, SSRF with internal network access).
 - Direct paths to data loss or corruption (unprotected destructive operations, missing transaction safety on critical writes).
-- Hardcoded production credentials or secrets committed to version control.
-- Privilege escalation that grants administrative access to unauthorized users.
+- Correctness bugs that produce silently wrong results on common inputs in critical business paths (financial calculations, billing, audit-relevant state).
+- Resource leaks or unbounded growth that will exhaust memory, file handles, or connections under realistic load.
+- Race conditions on persistent state that produce permanently inconsistent or corrupt data.
 
 ### High
 
-Assign to findings that are likely to cause real-world bugs, outages, or security degradation under normal operating conditions:
+Assign to findings that are likely to cause real-world bugs, outages, or significant degradation under normal operating conditions:
 
 - Correctness bugs that produce wrong results or crash the application for common inputs.
 - Race conditions on data structures or resources accessed in production paths.
-- Missing authorization checks on sensitive but non-critical endpoints.
 - Error handling gaps that cause cascading failures (e.g., unhandled exceptions in request middleware that crash the entire process).
+- Missing cleanup on error paths that leak resources over time.
 
 ### Medium
 
@@ -28,8 +28,8 @@ Assign to findings that degrade quality, maintainability, or performance but are
 
 - Performance issues that cause slowdowns under realistic load (N+1 queries, blocking in async contexts, O(n^2) algorithms on growing datasets).
 - Anti-patterns that make the code significantly harder to maintain or extend (god objects, deep nesting, SRP violations).
-- Missing input validation on internal APIs where the blast radius is limited.
-- Insecure defaults that are partially mitigated by other layers (e.g., missing CORS headers behind an API gateway that enforces its own).
+- Missing input validation on internal APIs where the blast radius is limited and no cross-trust-boundary impact exists.
+- Test quality gaps on important code paths (vacuous assertions, missing failure-path coverage).
 
 ### Low
 

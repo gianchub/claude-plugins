@@ -18,6 +18,20 @@ Version numbers refer to the **blueprint** plugin version, which has been the pr
 - Reorder so subagent dispatch contract precedes batching/order rules
 - Clarify "Pre-stated answer" handling on both gates: when the user's first message specifies a mode/cadence unambiguously (e.g., "in skill-managed mode", "full auto"), accept it as the gate answer rather than re-asking ceremonially
 
+### Code Audit (1.2.0)
+
+- Split the plugin into two complementary skills: `audit` (code quality) and `security-audit` (security only); the two can run independently or in sequence on the same codebase
+- Add `security-audit` skill with a six-phase workflow: scope → threat-model → security-intent discovery → source/sink map → systematic analysis (file-level + cross-trust-boundary dataflow + exploit-scenario construction) → report
+- Add `Impact × Exploitability × Exposure` severity model with per-exposure-tier matrix and threat-model modifiers (PHI floor, hostile multi-tenancy, defense-in-depth credit); same weakness scores differently per application context
+- Require concrete exploit scenarios for High and Critical findings; when a scenario cannot be constructed despite the underlying weakness being clear, the finding still ships at its assessed severity marked "Exploit Scenario — Not Confirmed" with explicit reasoning
+- Tag every finding with CWE ID(s) and OWASP Top 10 / API Top 10 mapping; CWE Top 25 (2024) reference included for prioritization
+- Cover 15 security domains in dedicated checklists: auth-and-session, authorization (IDOR/BOLA, BFLA, mass assignment, tenancy), injection, XSS/CSRF/frontend, SSRF/redirect/URL parsing, crypto, deserialization, file handling, secrets-and-keys (current code + git history), error-and-logging, business-logic, api-security (OWASP API Top 10), dependencies, containers-iac, ci-cd
+- Add language-specific footgun references for Python, JavaScript/TypeScript, Java/Kotlin, Go, Ruby, PHP, C#/.NET, Rust, and C/C++; loaded only when the threat-model brief flags the language as in scope
+- Produce a separate `SECURITY-AUDIT-REPORT-YYYY-MM-DD.md` report at project root with finding fields including CWE/OWASP/severity-decomposition/exploit-scenario plus appendices for the source/sink map, coverage limitations, and re-audit delta
+- Remove "Security vulnerabilities" category from the `audit` skill; its triggers ("security audit", "find vulnerabilities") now route to `security-audit`. The `audit` skill retains seven categories: concurrency, dead code, anti-patterns, performance, correctness, error handling, test quality
+- Retune the `audit` skill's severity guide to drop security-specific examples and focus on code-quality-relevant Critical/High examples (data corruption, silently wrong results, race conditions on persistent state, resource exhaustion)
+- Renumber `audit` checklist categories accordingly (1–7); update plugin README to describe both skills; extend keywords with `owasp`, `pentest`, `cwe`
+
 ## [1.3.4] - 2026-04-08
 
 ### Blueprint
