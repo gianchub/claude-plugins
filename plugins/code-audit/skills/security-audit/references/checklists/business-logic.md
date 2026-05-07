@@ -13,7 +13,7 @@ The application enforces a sequence of steps; the attacker skips, repeats, or re
 ### Patterns
 
 - **Multi-step forms / wizards** — Step 1 asks for email, step 2 asks for password, step 3 issues account. If step 3 is an endpoint reachable directly with a forged session-state cookie or by setting the right URL parameter, the attacker creates accounts with arbitrary email-skipping verification.
-- **Verification-then-action** — "Click this email link to verify, then your account is active." If the action endpoint doesn't check `verified=true`, the verification step is decorative.
+- **Verification-then-action** — A link emailed for "click to verify, then the account is active." If the action endpoint doesn't check `verified=true`, the verification step is decorative.
 - **Payment-then-fulfillment** — "Pay, then we ship." If the fulfillment endpoint doesn't check payment status, free shipping. Webhook-driven fulfillment that *trusts* the payment provider's call but doesn't verify the signature is also exploitable.
 - **Approval-then-execution** — Sensitive admin action requires another admin's approval; if the execute endpoint doesn't check `approved_by`, attacker bypasses the second-eyes control.
 - **Phased rollout flags** — Feature gated behind a flag; flag check happens at one entry point but an alternative entry point omits the check.
@@ -62,7 +62,7 @@ Features designed for legitimate use, used at scale or in unexpected combination
 ### Examples
 
 - **Mass account creation** — Signup endpoint without anti-automation; attacker creates millions of accounts (for spam, scraping, free-tier abuse, fraud setup).
-- **Mass invitation / email send** — User invites colleagues; without rate limit, abuse channel for spam from your domain.
+- **Mass invitation / email send** — User invites colleagues; without rate limit, the application becomes an abuse channel for spam originating from the application's domain (deliverability damage compounds the abuse).
 - **Password reset email flood** — Reset endpoint sending email per request; without rate limit, mass spam to victim email or victim's customers.
 - **Free-tier / trial abuse** — Sign up, consume free credits, abandon. Detection by linking accounts (browser fingerprint, payment method, IP); mitigation by raising friction.
 - **Refund abuse** — Repeated refund requests after delivery; detect via per-user history.

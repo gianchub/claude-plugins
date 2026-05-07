@@ -2,7 +2,7 @@
 
 ## Scope
 
-Java and Kotlin on JVM; Spring Boot, Jakarta EE / Java EE, Micronaut, Quarkus. Cross-reference deserialization.md (ObjectInputStream, Jackson, SnakeYAML, XStream), injection.md (Runtime.exec), crypto.md (JCE).
+Java and Kotlin on JVM; Spring Boot, Jakarta EE / Java EE, Micronaut, Quarkus. Cross-reference `deserialization.md` (ObjectInputStream, Jackson, SnakeYAML, XStream), `injection.md` (Runtime.exec), `crypto.md` (JCE).
 
 ## Code Execution Sinks
 
@@ -31,7 +31,7 @@ Java and Kotlin on JVM; Spring Boot, Jakarta EE / Java EE, Micronaut, Quarkus. C
 
 ### Java Deserialization
 
-- `ObjectInputStream.readObject()` — Covered in deserialization.md. RCE via gadget chains.
+- `ObjectInputStream.readObject()` — Covered in `deserialization.md`. RCE via gadget chains.
 - `XMLDecoder.readObject()` — Reads XML serialized form; same RCE class.
 - **Configure `ObjectInputFilter`** (Java 9+) per call site with strict allowlist.
 
@@ -127,7 +127,7 @@ Java and Kotlin on JVM; Spring Boot, Jakarta EE / Java EE, Micronaut, Quarkus. C
 ### JCE
 
 - `MessageDigest.getInstance("MD5")`, `"SHA-1"` — Not for security purposes.
-- `Cipher.getInstance("AES")` — Default mode is ECB on Oracle JDK; explicit mode required: `Cipher.getInstance("AES/GCM/NoPadding")` or `"AES/CBC/PKCS5Padding"` (CBC requires HMAC for integrity).
+- `Cipher.getInstance("AES")` — On the SunJCE provider (Oracle JDK / OpenJDK default), this resolves to `AES/ECB/PKCS5Padding`. Other providers may differ or throw. Always specify the full transformation: `"AES/GCM/NoPadding"` (preferred) or `"AES/CBC/PKCS5Padding"` (CBC requires HMAC for integrity — never bare).
 - `KeyGenerator` / `SecureRandom` — `SecureRandom.getInstance("SHA1PRNG")` is older and on some JDKs deterministic; prefer `SecureRandom.getInstanceStrong()` or default `new SecureRandom()`.
 - `Random` (java.util.Random) — NOT cryptographic; never for tokens.
 - `MessageDigest.isEqual` (recent JDK) — Constant-time comparison; older JDK versions did not implement constant-time. Verify version or use a known-constant-time helper.
@@ -150,7 +150,7 @@ Java and Kotlin on JVM; Spring Boot, Jakarta EE / Java EE, Micronaut, Quarkus. C
 
 ### `URL.openStream`, `HttpURLConnection`, `HttpClient` (Java 11+)
 
-- SSRF risks; covered in ssrf-redirect-url.md.
+- SSRF risks; covered in `ssrf-redirect-url.md`.
 - `setSSLSocketFactory` with permissive context.
 - Redirect-following defaults may need restriction.
 
@@ -173,7 +173,7 @@ Java and Kotlin on JVM; Spring Boot, Jakarta EE / Java EE, Micronaut, Quarkus. C
 
 ### Spring Security
 
-- `WebSecurityConfigurerAdapter` (older) / `SecurityFilterChain` (5.7+) — Configuration code; verify rule order.
+- `WebSecurityConfigurerAdapter` was deprecated in Spring Security 5.7 and **removed in Spring Security 6.0** (Spring Boot 3.x). Code still using it is on an unsupported version — that itself is a finding. Modern code uses a `SecurityFilterChain` `@Bean`. Verify rule order in the chain.
 - `permitAll()` / `anonymous()` — Explicit permission; verify what's exempted.
 - `csrf().disable()` — Often done for stateless APIs; verify the API is genuinely stateless and bearer-token-authenticated.
 - `httpBasic()` — Acceptable for service APIs; verify TLS.

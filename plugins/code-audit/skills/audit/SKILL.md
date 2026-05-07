@@ -6,8 +6,9 @@ description: >
   "find dead code", "check for anti-patterns", "performance audit",
   "check for code smells", "technical debt", "code health check",
   "review test quality", or "check error handling". For security-focused
-  audits (vulnerabilities, OWASP issues, injection, auth, secrets, crypto,
-  dependencies, IaC, CI/CD), use the `security-audit` skill instead.
+  audits (vulnerabilities, OWASP issues, injection, authentication or
+  authorization weaknesses, secrets handling, cryptography review,
+  dependency CVEs, IaC, CI/CD), use the `security-audit` skill instead.
 ---
 
 # Code Audit Skill
@@ -88,7 +89,7 @@ When the scope exceeds 50 files or 10,000 lines of code (either threshold alone 
 
 - Partition the scope into logical modules or directory subtrees. Aim for partitions of roughly equal size. In monorepos with multiple independent services, partition by service first — service boundaries take precedence over layer boundaries. Within a single service, prefer boundaries that align with architectural layers (e.g., data access, business logic, API handlers) rather than arbitrary file count splits.
 - Assign one subagent per partition. Each subagent performs Phase A (file-level analysis) on its partition independently, following the same checklist and recording format. Provide each subagent with a brief description of the overall codebase architecture, the Intent Brief from Step 3, and the applicable checklists.
-- After all subagents complete, perform Phase B (cross-file analysis) on the merged set of findings, focusing on interactions between partitions. Pay special attention to trust boundaries — data flowing from one partition to another is a common source of missed validation and injection vulnerabilities.
+- After all subagents complete, perform Phase B (cross-file analysis) on the merged set of findings, focusing on interactions between partitions. Pay special attention to module boundaries — data flowing from one partition to another is a common source of missed validation and assumption mismatches that surface as bugs.
 - Deduplicate findings that were independently discovered by multiple subagents operating on shared or overlapping code. Consolidate into the highest-severity version and list all affected locations.
 
 If subagents are not available or the scope is small enough, perform all phases sequentially as a single agent. When even partitioned analysis cannot cover every line, prioritize depth on correctness-critical and reliability-critical paths: entry points, data persistence, transaction boundaries, error-handling middleware, and external API boundaries.
@@ -110,7 +111,7 @@ Avoid recording the same logical issue multiple times when it appears in multipl
 After completing the file-level pass, revisit findings marked for cross-file follow-up:
 
 - Trace data from entry points (HTTP handlers, CLI parsers, message consumers, public API surfaces) through intermediate layers to terminal operations (database writes, file I/O, external API calls, responses to users).
-- Evaluate whether input validation, authorization, error handling, or resource cleanup is missing at any point along the traced path, even if each individual file appears correct in isolation.
+- Evaluate whether type/shape validation, precondition checks, error handling, or resource cleanup is missing at any point along the traced path, even if each individual file appears correct in isolation. (Authorization checks and security-relevant input validation are evaluated by the `security-audit` skill.)
 - Check for architectural issues: circular dependencies between modules, inconsistent error handling strategies across layers, mixed paradigms that introduce subtle bugs, and shared mutable state accessed from multiple modules.
 - Cross-reference new cross-file findings against the Intent Brief using the same skip/downgrade rules as Phase A.
 

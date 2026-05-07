@@ -2,7 +2,7 @@
 
 ## Scope
 
-Rust on the server side. Memory-safe by design; the unsafe operations are concentrated in `unsafe` blocks, FFI, and specific dependency choices. Cross-reference deserialization.md (serde-related), injection.md (process spawning), crypto.md.
+Rust on the server side. Memory-safe by design; the unsafe operations are concentrated in `unsafe` blocks, FFI, and specific dependency choices. Cross-reference `deserialization.md` (serde-related), `injection.md` (process spawning), `crypto.md`.
 
 Rust eliminates entire vulnerability classes (buffer overflows, use-after-free, double-free) at the language level for safe code. The remaining surface is application-level (logic, auth, injection at sinks) plus `unsafe` blocks and dependencies.
 
@@ -111,9 +111,8 @@ When calling C/C++ libraries via `extern` blocks:
 
 ### Random
 
-- `rand` crate `thread_rng()` — CSPRNG (since rand 0.8 default is `OsRng`-seeded ChaCha; verify version).
-- `rand::random()` — Convenience using thread_rng.
-- For security context, prefer explicit `OsRng` from `rand_core` or `getrandom` for direct access to the OS CSPRNG.
+- `rand` crate `thread_rng()` — Returns a `ThreadRng` (currently ChaCha12 reseeded from the OS CSPRNG). It is **not API-guaranteed** to be cryptographically secure, even though current versions meet that bar. For security-critical randomness, use `OsRng` from `rand_core` directly, or call `getrandom::getrandom` for a direct OS-CSPRNG read. Verify the `rand` crate version; older `0.7`/`0.6` defaults were weaker.
+- `rand::random()` — Convenience over thread_rng; same caveat as above.
 - `rand::rngs::SmallRng` — NOT cryptographic; never for security.
 - `rand::distributions` — Uniform, etc.; combined with secure RNG is fine.
 
@@ -127,7 +126,7 @@ When calling C/C++ libraries via `extern` blocks:
 
 ### `reqwest`, `hyper`, `ureq`, `surf`
 
-- SSRF risks; covered in ssrf-redirect-url.md.
+- SSRF risks; covered in `ssrf-redirect-url.md`.
 - TLS verification — `reqwest::ClientBuilder::danger_accept_invalid_certs(true)` — Disabled; flag.
 - Redirect handling — Default policy varies; verify.
 

@@ -105,7 +105,7 @@ User-supplied data containing secrets may be logged inadvertently; structured lo
 - **`echo $SECRET` / printing for debugging** — Captured in workflow logs; log scrubbing may not catch.
 - **Permissive `GITHUB_TOKEN`** — Default may grant write to PRs and packages; restrict per-job.
 - **Self-hosted runners** — Persistent state; one PR's malicious code can read secrets from prior jobs.
-- **`pull_request_target` event with PR code checkout** — "Pwn-request"; covered in cicd.md.
+- **`pull_request_target` event with PR code checkout** — "Pwn-request"; covered in `cicd.md`.
 
 ## Secret Rotation
 
@@ -139,7 +139,7 @@ For any finding involving a public repository:
 
 - Even if the secret has been removed from current code, it's been read by anyone watching the repo and indexed by search engines and clone services.
 - Treat any discovery as Critical (assuming the secret has any access value) and recommend immediate rotation and audit for unauthorized use.
-- Note any repository-search aggregators (`grep.app`, GitHub search, gitlhub-trends scrapers) as amplifying the exposure.
+- Note any repository-search aggregators (`grep.app`, GitHub code search, GitHub-history scrapers) as amplifying the exposure.
 
 ## Recommendation Patterns
 

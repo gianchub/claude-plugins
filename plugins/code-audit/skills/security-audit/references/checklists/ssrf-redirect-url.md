@@ -29,7 +29,7 @@ The attacker causes the application's server to make an HTTP/network request to 
 - **Loopback IPv6** — `::1`, IPv4-mapped IPv6 (`::ffff:127.0.0.1`).
 - **Bypassing IPv4 checks via IPv6** — `[::ffff:127.0.0.1]` or `0.0.0.0` may skip naive IPv4 string-prefix checks.
 - **DNS-resolver-controlled targets** — `attacker.example.com` resolves to `127.0.0.1`; allowlists on hostname strings without resolution don't catch.
-- **Other protocols** — `file://` (read local files), `gopher://` (raw TCP, can hit Redis/SMTP), `dict://`, `ldap://`, `ftp://`, `tftp://`. Many HTTP libraries support these by default.
+- **Other protocols** — `file://` (read local files), `gopher://` (raw TCP; can hit Redis/SMTP), `dict://`, `ldap://`, `ftp://`, `tftp://`. Library support varies: curl/libcurl and PHP `file_get_contents` enable many of these by default; modern HTTP-only clients (Node `fetch`/`axios`, Python `requests`, Go `net/http`) typically restrict to HTTP(S). Audit per library; restrict to `http`/`https` explicitly where the option exists.
 - **Localhost via 0.0.0.0 or unusual decimal forms** — `0`, `0.0`, `127.1`, `2130706433` (decimal), `0x7f000001` (hex), `017700000001` (octal).
 
 ### Defenses
@@ -56,7 +56,7 @@ URL parsers across languages and libraries handle edge cases differently. The sa
 - **Trailing dots** — `host.example.com.` may equal `host.example.com` to some validators but not others.
 - **Bracket confusion (IPv6)** — `[::1]` vs `::1`.
 
-Defense: **always parse the URL with the same library you'll use to make the request, then validate the parsed host/port/scheme directly**. Never validate by string operations on the URL.
+Defense: **always parse the URL with the same library that will be used to make the request, then validate the parsed host/port/scheme directly**. Never validate by string operations on the URL.
 
 ### Blind SSRF
 

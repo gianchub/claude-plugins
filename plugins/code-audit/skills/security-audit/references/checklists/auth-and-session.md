@@ -10,7 +10,7 @@ Authentication (authn) is "who is this subject?" Sessions and tokens persist tha
 
 - **Hashing algorithm** — Must be a memory-hard or iterated KDF: argon2id, scrypt, bcrypt, PBKDF2 (with high iteration count). Never plain SHA-*, MD5, or single-round hashing.
 - **Salt** — Per-user random salt. Built-in to bcrypt/argon2/scrypt outputs. Verify implementations don't strip the salt.
-- **Cost parameters** — argon2id minimum: m=19MiB, t=2, p=1 (current OWASP guidance). bcrypt cost factor ≥ 12 (CPU-bound, plan upgrades). Verify cost is updatable.
+- **Cost parameters** — Argon2id: pick one of the OWASP-recommended profiles (`m=47104, t=1, p=1`; `m=19456, t=2, p=1`; `m=12288, t=3, p=1`; `m=9216, t=4, p=1`; `m=7168, t=5, p=1` — measured in KiB). bcrypt cost factor ≥ 12 (CPU-bound; plan increase cadence). Verify cost is updatable and that login rehashes when stored cost is below current minimum.
 - **Pepper** (optional defense-in-depth) — Server-side secret added to all password hashes; raises bar for offline cracking. Document rotation strategy.
 - **Length / charset enforcement** — Maximum length should accommodate at least 64 bytes; very low caps (e.g., 16 chars) signal architectural problems. NIST SP 800-63B disallows arbitrary composition rules; allow long passphrases.
 - **Common-password rejection** — Reject top-N most common passwords. NIST recommends.
@@ -23,7 +23,7 @@ Authentication (authn) is "who is this subject?" Sessions and tokens persist tha
 - **Account lockout** — Optional. If implemented, must include unlock mechanism (time-based or admin) and not enable DoS by attacker locking arbitrary accounts.
 - **Generic error message** — "Invalid username or password" — never specify which was wrong. (Some frameworks return per-field validation errors that leak this; verify.)
 - **Timing equality** — Login that returns immediately for unknown user but takes 100ms for known user enables enumeration. Always perform a dummy hash comparison even on unknown users to equalize timing.
-- **MFA prompt timing** — MFA-only-after-correct-password also enumerates. Prompt for MFA code consistently or randomize timing.
+- **MFA prompt timing** — Prompting for an MFA code only after a correct password also leaks valid usernames. Prompt for the second factor consistently (regardless of whether the first factor was correct), or equalize response timing.
 - **Login enumeration via signup** — `/signup` returning "email already exists" enumerates users. Use email-verification flow instead.
 - **Login enumeration via password reset** — Password reset returning "no account with that email" enumerates. Always return the same generic response.
 - **Credential stuffing exposure** — At minimum, integrate haveibeenpwned API for password compromise check at password creation. Detect and slow credential-stuffing patterns (many failed logins across many accounts from same IP).
@@ -33,7 +33,7 @@ Authentication (authn) is "who is this subject?" Sessions and tokens persist tha
 - **TOTP** — Standard TOTP (RFC 6238). Verify clock-drift window is reasonable (≤ 1 step ahead/back is typical). Verify replay protection: each code valid only once, or once per window.
 - **Recovery codes** — Treated as second factor with the same protection as TOTP secrets: hashed at rest, single-use, regeneratable. Do not log or email in plaintext beyond initial generation.
 - **WebAuthn / FIDO2** — Verify origin binding, challenge freshness, attestation handling matches policy.
-- **SMS MFA** — Acceptable as fallback but not primary. Rate-limit code sending; cap codes per phone per day; expire codes quickly (3-5 minutes).
+- **SMS MFA** — Acceptable as fallback but not primary (NIST SP 800-63B classifies SMS as restricted). Rate-limit code sending; cap codes per phone per day; expire codes within 5–10 minutes (industry norm; tighter is better but very short windows can break legitimate use on slow networks).
 - **MFA enrollment** — Require existing factor before adding/removing; require existing factor before disabling MFA entirely.
 - **Step-up authentication** — Sensitive operations (change email, change password, change MFA, withdraw funds) should require recent authentication or fresh MFA, not just session validity.
 

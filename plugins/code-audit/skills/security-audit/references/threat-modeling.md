@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Produce the Threat Model Brief that drives Phases 3–6 of the audit. Without this brief, the audit becomes a generic checklist scan; with it, the audit prioritizes the threats that actually apply to this application and scores findings against realistic exposure.
+Produce the Threat Model Brief that drives Phases 4–6 of the audit. (Phase 3, Security Intent Discovery, runs in parallel with Phase 2 and does not consume the Brief; Phases 4–6 do.) Without this brief, the audit becomes a generic checklist scan; with it, the audit prioritizes the threats that actually apply to this application and scores findings against realistic exposure.
 
 The brief is short (typically 200–400 words). It is regenerated on every audit run and never persisted across runs.
 

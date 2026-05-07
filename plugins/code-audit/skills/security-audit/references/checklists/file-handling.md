@@ -29,7 +29,7 @@ User input flows into a file path, allowing access to files outside the intended
   if base not in candidate.parents:
       raise PermissionError
   ```
-- **Reject filenames with separators** — `if "/" in name or "\\" in name or ".." in name.split("/")` — basic sanity. Insufficient alone; combine with canonicalization.
+- **Sanity-check filenames** (not a substitute for canonicalization) — Reject names containing `/`, `\`, or `..` segments before any path operation. Use this only as a fast-fail layer; canonicalization-and-prefix-check is still required.
 - **chroot / containers** — OS-level scoping; defense-in-depth.
 
 ### Common Sinks
@@ -133,7 +133,7 @@ Third-party libraries that process user-uploaded files have repeated CVE history
 
 - `pypdf2`, `pdf-lib`, `pdf2htmlEX` — historic CVEs.
 - PDF JavaScript / form-action features are attack surface.
-- Server-side PDF rendering (wkhtmltopdf, WeasyPrint) is also SSRF surface (covered in ssrf-redirect-url.md).
+- Server-side PDF rendering (wkhtmltopdf, WeasyPrint) is also SSRF surface (covered in `ssrf-redirect-url.md`).
 
 ### Office Document Libraries
 

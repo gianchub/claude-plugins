@@ -25,11 +25,13 @@ Score each dimension independently, then combine using the matrix below. Always 
 
 ### Exploitability (how easy is it to trigger?)
 
+> Note: Exploitability uses **Multistep** rather than "Moderate" to keep its scale visually distinct from the Impact scale (which uses Moderate). The two dimensions never share a level name.
+
 | Score | Meaning |
 |-------|---------|
 | Trivial | Reproducible from a single crafted request or input with no precondition. Off-the-shelf tools can find or exploit it. |
 | Easy | A small number of straightforward steps; standard attacker tooling; no privileged position required. |
-| Moderate | Multiple steps or specific timing; requires some reconnaissance, a valid low-privilege account, or targeted crafting. |
+| Multistep | Multiple steps or specific timing; requires some reconnaissance, a valid low-privilege account, or targeted crafting. |
 | Hard | Requires unusual conditions: a privileged starting position, narrow timing windows, controlling an external system, or chaining multiple weaknesses. |
 
 ### Exposure (who can reach the affected code?)
@@ -50,44 +52,44 @@ Use the following matrix as the default, then apply Threat-Model adjustments doc
 
 ```
 Public exposure:
-  Severe Impact + (Trivial | Easy)            -> Critical
-  Severe Impact + Moderate                    -> Critical
-  Severe Impact + Hard                        -> High
-  High Impact + (Trivial | Easy)              -> Critical
-  High Impact + Moderate                      -> High
-  High Impact + Hard                          -> High
-  Moderate Impact + (Trivial | Easy)          -> High
-  Moderate Impact + Moderate                  -> Medium
-  Moderate Impact + Hard                      -> Medium
-  Low Impact + any                            -> Low
+  Severe Impact + (Trivial | Easy)             -> Critical
+  Severe Impact + Multistep                    -> Critical
+  Severe Impact + Hard                         -> High
+  High Impact + (Trivial | Easy)               -> Critical
+  High Impact + Multistep                      -> High
+  High Impact + Hard                           -> High
+  Moderate Impact + (Trivial | Easy)           -> High
+  Moderate Impact + Multistep                  -> Medium
+  Moderate Impact + Hard                       -> Medium
+  Low Impact + any                             -> Low
 
 Authenticated public exposure:
-  Severe Impact + (Trivial | Easy)            -> Critical
-  Severe Impact + Moderate                    -> High
-  Severe Impact + Hard                        -> High
-  High Impact + (Trivial | Easy)              -> High
-  High Impact + Moderate                      -> High
-  High Impact + Hard                          -> Medium
-  Moderate Impact + (Trivial | Easy)          -> Medium
-  Moderate Impact + (Moderate | Hard)         -> Medium
-  Low Impact + any                            -> Low
+  Severe Impact + (Trivial | Easy)             -> Critical
+  Severe Impact + Multistep                    -> High
+  Severe Impact + Hard                         -> High
+  High Impact + (Trivial | Easy)               -> High
+  High Impact + Multistep                      -> High
+  High Impact + Hard                           -> Medium
+  Moderate Impact + (Trivial | Easy)           -> Medium
+  Moderate Impact + (Multistep | Hard)         -> Medium
+  Low Impact + any                             -> Low
 
 Authenticated restricted exposure:
-  Severe Impact + (Trivial | Easy)            -> High
-  Severe Impact + (Moderate | Hard)           -> Medium
-  High Impact + (Trivial | Easy)              -> Medium
-  High Impact + (Moderate | Hard)             -> Medium
-  Moderate Impact + any                       -> Low
-  Low Impact + any                            -> Low
+  Severe Impact + (Trivial | Easy)             -> High
+  Severe Impact + (Multistep | Hard)           -> Medium
+  High Impact + (Trivial | Easy)               -> Medium
+  High Impact + (Multistep | Hard)             -> Medium
+  Moderate Impact + any                        -> Low
+  Low Impact + any                             -> Low
 
 Internal exposure:
-  Severe Impact + Trivial                     -> Medium
-  Severe Impact + (Easy | Moderate | Hard)    -> Low
-  Other combinations                          -> Low
+  Severe Impact + Trivial                      -> Medium
+  Severe Impact + (Easy | Multistep | Hard)    -> Low
+  Other combinations                           -> Low
 
 Local exposure:
-  Severe Impact + Trivial                     -> Low
-  Other combinations                          -> Informational (typically not reported unless aggregating)
+  Severe Impact + Trivial                      -> Low
+  Other combinations                           -> Informational (typically not reported unless aggregating)
 ```
 
 ### Threat-Model Adjustments
@@ -109,7 +111,7 @@ Reserve Critical exclusively for findings that meet *all* of the following:
 2. Public or Authenticated Public exposure.
 3. A concrete exploit scenario constructed and verified (or marked "Not Confirmed" with strong reasoning that the construction is blocked by infrastructure outside the source code, not by any weakness in the construction itself).
 
-Critical implies "drop everything and fix this." If a finding might be Critical but the exploit scenario could not be constructed, ship it as High with "Possibly Critical pending verification of <X>" in the description.
+Critical implies "drop everything and fix this." When a finding's underlying weakness is clear but a concrete exploit scenario cannot be constructed, ship it at its assessed severity with the "Exploit Scenario — Not Confirmed" structure from `references/exploit-scenarios.md`. Never silently downgrade a suspected Critical to High solely because exploit construction is hard; defenders need to know what's questionable.
 
 ## Examples
 
@@ -131,7 +133,7 @@ Default matrix → Critical. Exploit scenario constructed. Final: **Critical**.
 | Exploitability | Trivial | Same payload. |
 | Exposure | Internal | Admin tool only reachable on corporate VPN. |
 
-Default matrix → Low. But: the operator is staff, not an external attacker. If an attacker compromises a single staff laptop, this becomes a privilege escalation vector. Document: **Low** with note "Becomes Critical if attacker reaches internal network; tracked for defense-in-depth review."
+Default matrix → Low. But: the operator is staff, not an external attacker. If an attacker compromises a single staff laptop or otherwise reaches the corporate network, the same weakness becomes reachable. Document: **Low** with a note "Severity rises to High (Authenticated-restricted, per matrix) if internal-network exposure increases; recommend fixing the root cause regardless, since the cost of remediation is small relative to the residual risk."
 
 ### Example 3: Missing CSRF token on a state-changing form
 
@@ -158,7 +160,7 @@ For a public repo with an AWS admin key: Severe + Trivial + Public → **Critica
 | Dimension | Score | Reasoning |
 |-----------|-------|-----------|
 | Impact | Severe | RCE via template engine. |
-| Exploitability | Easy to Moderate | Engine-dependent; Jinja2/Twig with sandbox bypasses are well-documented; Handlebars is harder. |
+| Exploitability | Easy to Multistep | Engine-dependent; Jinja2/Twig with sandbox bypasses are well-documented; Handlebars is harder. |
 | Exposure | Public if endpoint is public | Often reachable via report-generation or email-template features. |
 
 Severe + Easy + Public → **Critical**. Construct exploit scenario showing escape from template into RCE.

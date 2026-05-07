@@ -83,7 +83,7 @@ Use the current date at the time of report generation.
 
 **Exploit Scenario**
 
-<Per references/exploit-scenarios.md template: starting position, action, path, outcome. Or "Exploit Scenario — Not Confirmed" with the not-confirmed structure.>
+<Per the `references/exploit-scenarios.md` template: starting position, action, path, outcome. Or use the "Exploit Scenario — Not Confirmed" structure when a scenario cannot be constructed.>
 
 **Recommendation**
 
@@ -221,8 +221,10 @@ When a finding affects multiple locations (same root cause across files), use a 
 Always include the three component scores:
 
 ```
-Severity: <level> (Impact: <Severe|High|Moderate|Low>, Exploitability: <Trivial|Easy|Moderate|Hard|Not Confirmed>, Exposure: <Public|Authenticated public|Authenticated restricted|Internal|Local>)
+Severity: <level> (Impact: <Severe|High|Moderate|Low>, Exploitability: <Trivial|Easy|Multistep|Hard|Not Confirmed>, Exposure: <Public|Authenticated public|Authenticated restricted|Internal|Local>)
 ```
+
+Note that Exploitability uses **Multistep** (not "Moderate") to keep its scale visually distinct from Impact's Moderate level.
 
 When a Threat-Model modifier was applied, add a `Modifier:` row in the table citing the modifier name and source.
 
@@ -245,4 +247,3 @@ No issues found at this severity level.
 ```
 
 Still include Threat Model and Documented Security Posture sections; they document what was considered. Include Appendices A and B; they document scope and coverage.
-```

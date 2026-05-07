@@ -4,6 +4,24 @@ All notable changes to the claude-plugins project are documented in this file.
 
 Version numbers refer to the **blueprint** plugin version, which has been the primary driver of releases. The code-audit plugin version is noted where it differs.
 
+## [1.3.6] - 2026-05-07
+
+### Code Audit (1.2.1)
+
+- Multi-agent review pass on the new `security-audit` skill and the modified `audit` skill; all corrections applied in a single follow-up
+- Resolve a contradiction in `references/severity-guide.md`: the "Critical Reservation" rule now matches the policy in `SKILL.md` and `references/exploit-scenarios.md` (High/Critical findings whose exploit scenario cannot be constructed ship at assessed severity marked "Exploit Scenario — Not Confirmed", never silently downgraded)
+- Fix factual errors in security guidance: PBKDF2-HMAC-SHA512 minimum iteration count corrected to 220,000 (was 210,000); React `javascript:` URL behaviour corrected (16.9+ warns but does not block); `csurf` flagged as deprecated and archived rather than as a valid choice; `node-fetch` noted as in maintenance mode (lead recommendation is built-in `fetch` / `undici`); `Cipher.getInstance("AES")` default mode qualified as SunJCE-specific; Python `tarfile` `filter='data'` parameter clarified with backport list and 3.14 default; Python EOL guidance updated to 3.10 minimum; Go `math/rand/v2` corrected to 1.22; `WebSecurityConfigurerAdapter` noted as removed in Spring Security 6.0
+- Eliminate the Impact / Exploitability "Moderate" naming collision: rename Exploitability "Moderate" to "Multistep" in the severity matrix, definition table, worked examples, and report template field format
+- Fix Threat Model Brief scope claim ("drives Phases 4–6", not 3–6 — Phase 3 runs in parallel and does not consume the Brief)
+- Remove a stray closing code fence in `references/report-template.md` that broke rendering
+- Deduplicate CWE listings in `references/owasp-cwe-mapping.md` (CWE-916 was listed twice; CWE-829 appeared under two categories; CWE-918 split out into its own SSRF section)
+- Tighten the `audit` skill after security removal: error-message-leak example reframed for code quality (security-flavored examples deferred to `security-audit`); cross-file analysis bullet updated (no more "injection vulnerabilities" wording); severity-guide rephrased to drop "blast radius" and "cross-trust-boundary" vocabulary; README partition threshold corrected to "50+ files or 10,000+ lines"
+- Trim `security-audit/SKILL.md` Phase 4 source/sink enumeration that duplicated `references/source-sink-mapping.md`; add inline pointers to `references/severity-guide.md` (Phase 5) and `references/owasp-cwe-mapping.md` (Phase 6) so progressive disclosure fires; expand trigger phrases (threat model, secure code review, vulnerability assessment, CSRF, supply chain, IDOR alone)
+- Soften the "phases run sequentially" claim — Phases 2 and 3 may run in parallel
+- Reorganize `security-audit` Reference Index into four semantic groups (identity & access, input handling & injection, cross-cutting concerns, infrastructure & supply chain); these groupings also define the canonical domain-category sort order for the report
+- Fix second-person voice across multiple files (SKILL.md, intent-discovery, crypto, business-logic, xss-csrf-frontend, cicd, ssrf-redirect-url, csharp-dotnet); apply consistent backticking on cross-references between markdown files
+- Smaller corrections: Example 2 in severity-guide rewritten to match the matrix (was claiming "becomes Critical" where matrix would say High); SMS MFA expiry guidance updated (5–10 min industry norm, drop the unrealistic 3-min floor); argon2id parameter framing updated to list all OWASP profiles; SnakeYAML / Psych / `xml.etree` notes refined; `gopher://` claim qualified to curl/PHP; Rust `thread_rng()` warning strengthened; numerous typos and awkward phrasings polished
+
 ## [1.3.5] - 2026-05-07
 
 ### Blueprint

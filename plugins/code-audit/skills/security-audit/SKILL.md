@@ -1,16 +1,17 @@
 ---
 name: security-audit
 description: >
-  This skill should be used when the user asks to "security audit", "find
-  vulnerabilities", "check for security issues", "pentest this code",
-  "security review", "OWASP audit", "find injection vulnerabilities",
-  "check authentication", "check authorization", "find secrets", "check
-  for XSS", "check for SSRF", "review crypto", "audit dependencies for
-  CVEs", "review Dockerfile security", "review CI/CD security", "find
-  IDOR / BOLA", "check for SSTI", "review JWT handling", "find hardcoded
-  credentials", "check for path traversal", "review for prototype
-  pollution", "find deserialization issues", or otherwise asks for a
-  security-focused review of a codebase.
+  This skill should be used when the user asks for a security-focused review
+  of a codebase. Triggers: "security audit", "find vulnerabilities",
+  "check for security issues", "pentest this code", "security review",
+  "secure code review", "vulnerability assessment", "threat model this code",
+  "OWASP audit", "find injection vulnerabilities", "check authentication",
+  "check authorization", "find secrets", "find hardcoded credentials",
+  "check for XSS", "check for CSRF", "check for SSRF", "find IDOR",
+  "find IDOR / BOLA", "check for SSTI", "review JWT handling", "review
+  crypto", "find deserialization issues", "check for path traversal",
+  "review for prototype pollution", "audit dependencies for CVEs", "supply
+  chain audit", "review Dockerfile security", "review CI/CD security".
 ---
 
 # Security Audit Skill
@@ -19,7 +20,7 @@ description: >
 
 Perform a thorough, threat-model-first security audit of a codebase, producing a structured report with findings ranked by Impact x Exploitability x Exposure, mapped to CWE and OWASP categories, and (for High and Critical) supported by a concrete exploit scenario. Deliver the report as a Markdown file at the project root following the template in `references/report-template.md`.
 
-This skill is exclusively focused on security. For general code-quality auditing (concurrency, dead code, anti-patterns, performance, correctness, error handling, tests), use the sibling `audit` skill in the same plugin. The two skills can run independently or in sequence on the same codebase.
+This skill is exclusively focused on security. For general code-quality auditing (concurrency, dead code, anti-patterns, performance, correctness, error handling, tests), use the sibling `audit` skill in the same plugin. The two skills can run independently or in sequence on the same codebase. If a non-security code-quality issue is encountered incidentally during this audit, note it briefly and recommend running the `audit` skill rather than analyzing it in depth here.
 
 ## Effort Level
 
@@ -31,7 +32,7 @@ Audit the code as a pentester would: assume any untrusted input is hostile, assu
 
 ## Workflow
 
-The workflow has six phases. Phases run sequentially; parallelism happens within phases (intent discovery subagents, partition subagents).
+The workflow has six phases. Phase 1 must precede everything else; Phases 2 and 3 may run in parallel (they have no data dependency); Phase 4 depends on Phase 2; Phases 5 and 6 depend on all earlier phases. Parallelism within phases is encouraged where useful — Phase 3 always uses subagents (one per scanner); Phase 5 uses subagents to partition large scopes.
 
 ### Phase 1 — Resolve Scope
 
@@ -43,7 +44,7 @@ Determine the audit scope from the user's prompt. The user may specify:
 - A functional area described in natural language (e.g., "the authentication flow", "the file-upload endpoint").
 - A specific function, class, or code region within a file. Restrict analysis to the specified code and its immediate dependencies.
 
-Generated files (lock files, compiled output, vendored dependencies, minified bundles) are excluded by default. For source-committed generated code (protobuf stubs, OpenAPI clients, ORM models), check for modification markers — if files contain hand-written additions or "DO NOT EDIT" headers have been removed, treat them as in-scope. Cross-trust-boundary analysis in Phase 5 still traces flows *into* excluded code to determine whether it provides expected validation.
+Generated files (lock files, compiled output, vendored dependencies, minified bundles) are excluded by default. For source-committed generated code (protobuf stubs, OpenAPI clients, ORM models), check for modification markers — if files contain hand-written additions or "DO NOT EDIT" headers have been removed, treat them as in-scope. Phase 5 Phase B (cross-trust-boundary dataflow) still traces flows *into* excluded code to determine whether it provides expected validation.
 
 If the user specifies paths that do not exist, warn about missing paths and proceed with the rest. If none exist, stop and ask for clarification.
 
@@ -51,7 +52,7 @@ If the prompt does not contain enough information to determine scope, ask a sing
 
 If the user requests a re-audit, search for `SECURITY-AUDIT-REPORT-*.md` at the project root. If multiple reports exist, use the most recent. Default to the same scope as the prior audit. When a prior report exists, note in the new report which previous findings have been resolved and which persist, so the user gets a delta view.
 
-State the resolved scope back to the user. If unambiguous, proceed immediately without waiting for confirmation.
+State the resolved scope to the user and proceed immediately; only stop for confirmation if scope is genuinely ambiguous.
 
 ### Phase 2 — Threat-Model the Application
 
@@ -59,18 +60,20 @@ Before reading the code in depth, build a Threat Model Brief that drives the res
 
 The Threat Model Brief identifies:
 
-- **Application kind** — Web API, server-rendered web app, single-page app, CLI, library, mobile backend, desktop app, embedded, IoT, browser extension. Different kinds have radically different attack surfaces.
-- **Exposure** — Internet-facing (anonymous traffic), authenticated public, internal-only (corporate network), localhost-only, single-tenant, multi-tenant. Same vulnerability has very different severity at different exposures.
-- **Sensitive data classes** — PII, payment data, authentication credentials, session tokens, health records, financial records, IP/source code, customer-uploaded files. Determines which threats matter most.
-- **Trust boundaries** — Where untrusted data enters (HTTP layer, message queues, file uploads, third-party API responses, environment), where privilege transitions occur (anonymous to authenticated, user to admin, tenant A to tenant B), where data crosses processes or services.
-- **Authentication model** — Form login + session cookie, JWT bearer, OAuth/OIDC, mTLS, API keys, signed URLs, none. Pinpoints which parts of the auth checklist apply.
-- **Authorization model** — RBAC, ABAC, ownership-based, none. Tells you what kind of authorization checks to look for.
-- **External dependencies and integrations** — Databases, caches, queues, third-party APIs, payment processors, identity providers. Each is a potential trust boundary.
-- **Deployment context** — Containers, serverless, VMs, on-prem; cloud provider; CI/CD platform. Drives the IaC/CI/CD checklists.
+- **Application kind** — Web API, server-rendered web app, single-page app, CLI, library, mobile backend, desktop app, embedded, IoT, browser extension.
+- **Exposure** — Internet-facing (anonymous traffic), authenticated public, internal-only (corporate network), localhost-only, single-tenant, multi-tenant (mutually trusted vs. mutually hostile).
+- **Sensitive data classes** — PII, payment data, authentication credentials, session tokens, health records, financial records, IP/source code, customer-uploaded files.
+- **Trust boundaries** — Where untrusted data enters, where privilege transitions occur (anonymous-to-authenticated, user-to-admin, tenant-to-tenant), where data crosses processes or services.
+- **Authentication model** — Form login + session cookie, JWT bearer, OAuth/OIDC, mTLS, API keys, signed URLs, none. Determines which sections of `references/checklists/auth-and-session.md` apply.
+- **Authorization model** — RBAC, ABAC, ownership-based, tenancy-scoped, none. Determines which authorization checks the audit must verify.
+- **External dependencies and integrations** — Databases, caches, queues, third-party APIs, payment processors, identity providers; for each, the trust assumption.
+- **Deployment context** — Containers, serverless, VMs, on-prem; cloud provider; CI/CD platform. Drives the IaC and CI/CD checklists.
+- **Applicable checklists** — The subset of `references/checklists/*.md` to load in Phase 5, derived from the above signals (e.g., a CLI tool skips XSS/CSRF; a public API includes API security).
+- **Severity-modifier notes** — Application-specific factors that should raise or lower default severities (e.g., PHI handling, hostile multi-tenancy, behind-WAF mitigations).
 
-Detect this from `README`, `package.json`/`pyproject.toml`/`go.mod`, `Dockerfile`, `docker-compose.yml`, framework signals (Django settings, Express middleware, Spring annotations, Rails routes), entry-point files, and the directory structure. Ask a single clarifying question only if the kind of application or exposure is genuinely ambiguous from the code; otherwise infer and state your inference.
+Detect this from `README`, `package.json` / `pyproject.toml` / `go.mod`, `Dockerfile`, `docker-compose.yml`, framework signals (Django settings, Express middleware, Spring annotations, Rails routes), entry-point files, and the directory structure. Ask a single clarifying question only if the application kind or exposure is genuinely ambiguous from the code; otherwise infer and document the inference so the report consumer can correct it.
 
-The Threat Model Brief is a short structured document (typically 200–400 words) consumed in every later phase. It is regenerated on each audit run; never persist it across runs.
+The Threat Model Brief is a short structured document (typically 200–400 words for a single service). For monorepos with multiple distinct services or application kinds, produce one brief per service or one combined brief that names each kind's threats explicitly; the per-service form scales better. The brief is regenerated on each audit run; never persist it across runs.
 
 See `references/threat-modeling.md` for the full template, the inference heuristics, and worked examples for common application kinds.
 
@@ -80,9 +83,9 @@ Scan for documented security decisions, threat models, and acknowledged limitati
 
 Run three subagents in parallel:
 
-- **Documentation Scanner** — reads project-wide documentation, with extra weight on `SECURITY.md`, `THREAT_MODEL.md`, `THREAT-MODEL.md`, `.well-known/security.txt`, `docs/security/`, `SECURITY-POLICY.md`, ADRs that mention security, compliance documents, penetration test reports.
-- **Code Intent Scanner** — searches in-scope source for security suppressions (`# nosec`, `# noqa: S*`, `# semgrepignore`, `// codeql[*]`, `# bandit:skip`, `// CodeQL`, `// lgtm`, security-related `eslint-disable` comments) and rationale comments mentioning `security`, `auth`, `CSRF`, `XSS`, `injection`, `sandbox`, `untrusted`, `trusted`, `hardened`, `threat`, `attacker`, `risk`, `mitig`.
-- **History Scanner** — extracts intent signals from git history, prioritizing commits whose messages mention `security`, `CVE`, `vulnerability`, `auth`, `permission`, `escalation`, `disclosure`, `harden`, `mitigat`, `patch`, `bypass`, `exploit`, `pentest`. Includes commits that touched security-sensitive files (auth code, crypto, secrets handling, deserialization).
+- **Documentation Scanner** — reads project-wide documentation, with extra weight on security-specific files (`SECURITY.md`, `THREAT_MODEL.md`, `.well-known/security.txt`, `docs/security/`, ADRs, compliance documents, pentest reports). Full file-discovery list is in `references/intent-discovery.md`.
+- **Code Intent Scanner** — searches in-scope source for security suppression markers (across SAST tools, secret scanners, and language linters) and rationale comments containing security keywords. Full marker and keyword lists are in `references/intent-discovery.md`.
+- **History Scanner** — extracts intent signals from git history, prioritizing commits whose messages mention security keywords (CVE, vulnerability, auth, escalation, disclosure, harden, bypass, exploit, pentest, etc.) and commits that touched security-sensitive files. Full keyword list and pattern guidance are in `references/intent-discovery.md`.
 
 This step always executes regardless of codebase size. The output is a structured Security Intent Brief organized by theme (Documented Threat Model, Acknowledged Risks & Trade-offs, Security Conventions, Suppressed Findings & Rationale, Historical Security Fixes). Target no more than 100 entries.
 
@@ -94,33 +97,13 @@ See `references/intent-discovery.md` for detailed subagent prompts and the brief
 
 Before flagging vulnerabilities, enumerate the application's untrusted-input sources and dangerous sinks. The map drives the rest of the audit: every High/Critical injection-class finding traces back to a documented source and a documented sink.
 
-**Sources** to enumerate:
+**Sources** include HTTP entry points (body, query, path, headers, cookies, multipart files), authentication artifacts treated as input (JWT/OAuth/SSO claims after decode), CLI inputs (argv, stdin, env), message/event inputs (queue consumers, webhook receivers, scheduled-job payloads), responses from external calls treated as trusted, and storage reads of previously-untrusted data ("second-order" sources).
 
-- HTTP entry points: route handlers, request body, query string, path params, headers (User-Agent, Referer, X-Forwarded-For, custom), cookies, form fields, multipart files
-- Authentication artifacts treated as input: JWT claims, OAuth state, SSO assertions
-- CLI entry points: argv, stdin
-- File and message inputs: file uploads, message queue consumers (Kafka/SQS/RabbitMQ), webhook receivers, scheduled job payloads
-- External calls treated as trusted: third-party API responses, identity provider responses, payment provider callbacks
-- Environment: env vars (especially when injected from user-controlled sources like Helm values), config files
-- Storage read after writing untrusted data: rows previously written from untrusted input ("second-order" injection)
-
-**Sinks** to enumerate:
-
-- Database query construction (SQL string-building, raw queries, ORM `.raw()` / `.query()`, NoSQL `$where`, dynamic `find()`)
-- Shell execution (`exec`, `system`, `popen`, `subprocess` with `shell=True`, `child_process.exec`, `Runtime.exec`, backticks)
-- Code execution (`eval`, `Function`, `setTimeout(string)`, `vm.runInThisContext`, `exec` in Python, `instance_eval` in Ruby)
-- Deserialization sinks (pickle, ObjectInputStream, unserialize, YAML.load, JSON.parse with reviver, BinaryFormatter)
-- Filesystem (`open`, `read`, `write`, `unlink`, `Path` joining; archive extraction)
-- HTTP egress (`requests`, `fetch`, `axios`, `http.Client`, `urllib`) — SSRF risk
-- Template rendering with user input (Jinja2, Twig, EJS, Handlebars `{{{ }}}`, ERB, Thymeleaf)
-- HTTP response writing (HTML, JSON serialization, redirect headers, Set-Cookie, Location)
-- Logging (sensitive data leak, log injection)
-- Cryptographic operations (key handling, signing, verification)
-- Authentication/authorization decision points (any code that grants access)
+**Sinks** include database query construction, shell and process execution, code execution (`eval`/`Function`/dynamic `import`), deserialization, filesystem operations, HTTP egress (SSRF surface), template rendering, HTTP response writing (HTML / redirect / `Set-Cookie` / custom headers), logging (sensitive-data leak and log injection), cryptographic operations, and authentication/authorization decision points.
 
 The map does not need to be exhaustive prose; a list of `source@file:line` and `sink@file:line` entries with the input shape and the operation suffices. For monorepos, build the map per service.
 
-See `references/source-sink-mapping.md` for enumeration heuristics, framework-specific source/sink patterns, and worked examples.
+See `references/source-sink-mapping.md` for the full enumeration of source classes and sink categories, framework-specific patterns (Express, Flask, FastAPI, Django, Rails, Spring, Gin, ASP.NET, etc.), heuristics for building the map, and worked examples.
 
 ### Phase 5 — Systematic Analysis
 
@@ -141,7 +124,7 @@ If subagents are unavailable or scope is small, perform all phases sequentially.
 Iterate through every in-scope file. For each file:
 
 - Read the file in full.
-- Walk through each applicable checklist from `references/checklists/`. The Threat Model Brief tells you which checklists are applicable: authn/authz/sessions for any auth code, injection for any sink-adjacent code, crypto for any code that calls crypto APIs, file handling for upload/download endpoints, error/logging across the board, etc. Skip checklists that don't apply to the application kind (e.g., XSS/CSRF on a CLI tool).
+- Walk through each applicable checklist from `references/checklists/`. The Threat Model Brief's "Applicable checklists" entry identifies which to load: authn/authz/sessions for any auth code, injection for any sink-adjacent code, crypto for any code that calls crypto APIs, file handling for upload/download endpoints, error/logging across the board, etc. Skip checklists that don't apply to the application kind (e.g., XSS/CSRF on a CLI tool).
 - Load language-footgun references (`references/language-footguns/<lang>.md`) for each language present in the partition. Apply language-specific checks alongside the domain checklists.
 - Cross-reference candidate findings against the Security Intent Brief. Skip when the brief explicitly addresses the exact pattern at the exact location. Downgrade by one severity level when the brief provides general context but not per-instance acknowledgment, and cite the intent source.
 - Record each finding with file path, line number, domain category, CWE ID(s), OWASP mapping (Top 10 and/or API Top 10), preliminary severity, the weakness, the impact, and a concrete recommendation. Mark findings that involve cross-file flows for Phase B follow-up.
@@ -164,20 +147,11 @@ Record new findings; update severity for file-level findings whose impact change
 
 #### Exploit Scenario Construction
 
-For every finding tentatively scored High or Critical, attempt to construct a concrete exploit scenario:
+For every finding tentatively scored High or Critical, attempt to construct a concrete exploit scenario answering: starting position (who is the attacker), action (what concrete request/input/sequence), path (file:line steps from source to outcome), and outcome (specific data accessed, command executed, privilege gained).
 
-- Specify the attacker's starting position (anonymous internet user, authenticated low-privilege user, authenticated high-privilege user adjacent tenant, internal user, etc.).
-- Provide a concrete input or sequence of requests, including HTTP method, path, headers, and body where relevant. Use placeholder values where credentials would be needed.
-- Trace the dataflow from input to outcome, citing file:line for each step.
-- State the achieved outcome (data read, data written, command executed, account taken over, privilege escalated).
+If the scenario can be constructed, include it under "Exploit Scenario." If the underlying weakness is clear but a scenario cannot be constructed (defense-in-depth gap, second-layer mitigation, ambiguous trust boundary, missing precondition the auditor cannot fabricate), keep the finding at its assessed severity and use the "Exploit Scenario — Not Confirmed" structure. **Do not silently downgrade or drop a High/Critical solely because the scenario is hard to construct.** For Medium and Low findings, an exploit scenario is optional.
 
-If a concrete scenario can be constructed, include it in the finding under "Exploit Scenario."
-
-If a scenario cannot be constructed despite the underlying weakness being clear (defense-in-depth gap, missing-but-not-yet-exploitable check, second-layer protection that mitigates in practice but not in design, ambiguous trust boundary), keep the finding at its assessed severity and label the section "Exploit Scenario — Not Confirmed" with an explanation: what would be needed to exploit, why the construction failed, and the residual risk. Do not silently downgrade or drop a High/Critical solely because the scenario is hard to construct — defenders need to know what's questionable.
-
-For Medium and Low findings, an exploit scenario is optional. Include one when it materially clarifies impact; omit it when the weakness is self-explanatory.
-
-See `references/exploit-scenarios.md` for templates, examples for each major weakness class, and rules for what counts as a valid scenario.
+See `references/exploit-scenarios.md` for the full 4-question rule, scenario templates by weakness class, the "Not Confirmed" template, and anti-patterns to avoid.
 
 #### Deduplication
 
@@ -186,7 +160,7 @@ Before report generation:
 - Merge findings with the same root cause manifesting in multiple locations into a single finding listing all affected locations.
 - Remove false positives discovered during Phase B (e.g., input that appeared unvalidated in one file but is validated by middleware discovered later — verify the middleware actually applies to the route in question).
 - Consolidate findings derived from the same documented trade-off in the Security Intent Brief into a single finding referencing the intent entry.
-- Reconcile conflicting severity assessments by considering worst realistic Impact × Exploitability × Exposure.
+- Reconcile conflicting severity assessments by considering worst realistic Impact × Exploitability × Exposure. See `references/severity-guide.md` for the scoring matrix, threat-model modifiers, and worked examples.
 
 ### Phase 6 — Report Generation
 
@@ -196,9 +170,9 @@ Generate the final report following `references/report-template.md`. Specificall
 - Populate the summary table: scope, application kind and exposure (from Threat Model Brief), domains audited, finding counts by severity.
 - Include "Threat Model" and "Documented Security Posture" sections summarizing Phase 2 and Phase 3 outputs.
 - Include a "Source/Sink Map" appendix summarizing the Phase 4 enumeration so the reader can see what was analyzed.
-- Assign sequential `SEC-NNN` identifiers starting at `SEC-001`. Order findings by severity (Critical first), then by domain category, then by file path.
-- Each finding contains: identifier, short title, domain category, CWE ID(s), OWASP Top 10 / API Top 10 mapping, location (`file:line`), severity (with the Impact/Exploitability/Exposure breakdown), description, impact, exploit scenario (or "Not Confirmed" explanation for High/Critical), and recommendation.
-- Save the report at the project root using the filename convention in the template (`SECURITY-AUDIT-REPORT-YYYY-MM-DD.md`), incrementing the suffix if the file already exists.
+- Assign sequential `SEC-NNN` identifiers starting at `SEC-001`. Order findings by severity (Critical first), then by domain category in the order listed in the Reference Index below, then by file path within the same severity and category.
+- Each finding contains: identifier, short title, domain category, CWE ID(s), OWASP Top 10 / API Top 10 mapping, location (`file:line`), severity (with the Impact/Exploitability/Exposure breakdown), description, impact, exploit scenario (or "Not Confirmed" explanation for High/Critical), and recommendation. Use `references/owasp-cwe-mapping.md` for CWE/OWASP lookup; pick the most specific CWE that fits.
+- Save the report at the project root following the filename convention in the template, incrementing the numeric suffix if the file already exists.
 
 After saving, state the file path and a brief summary of the results to the user, including the number of Critical findings (if any), the application kind and exposure used in scoring, and any High findings whose exploitability was not confirmed.
 
@@ -216,20 +190,31 @@ Load these references when their phase is active. The SKILL.md body intentionall
 - `references/owasp-cwe-mapping.md` — quick lookup for OWASP and CWE tags.
 - `references/report-template.md` — Phase 6 report format.
 
-**Domain checklists** (load only those flagged applicable by the Threat Model Brief):
+**Domain checklists** (load only those flagged applicable by the Threat Model Brief). Grouped to aid selection and to define the canonical domain-category sort order for the report:
+
+*Identity & access:*
 
 - `references/checklists/auth-and-session.md`
 - `references/checklists/authorization.md`
+- `references/checklists/secrets-and-keys.md`
+
+*Input handling & injection:*
+
 - `references/checklists/injection.md`
 - `references/checklists/xss-csrf-frontend.md`
 - `references/checklists/ssrf-redirect-url.md`
-- `references/checklists/crypto.md`
 - `references/checklists/deserialization.md`
 - `references/checklists/file-handling.md`
-- `references/checklists/secrets-and-keys.md`
+
+*Cross-cutting concerns:*
+
+- `references/checklists/crypto.md`
 - `references/checklists/error-and-logging.md`
 - `references/checklists/business-logic.md`
 - `references/checklists/api-security.md`
+
+*Infrastructure & supply chain:*
+
 - `references/checklists/dependencies.md`
 - `references/checklists/containers-iac.md`
 - `references/checklists/cicd.md`

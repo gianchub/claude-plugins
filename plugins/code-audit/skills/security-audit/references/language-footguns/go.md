@@ -2,7 +2,7 @@
 
 ## Scope
 
-Go (Golang) on the server side. Cross-reference deserialization.md (gob, JSON, XML), injection.md (os/exec), crypto.md (crypto/*).
+Go (Golang) on the server side. Cross-reference `deserialization.md` (gob, JSON, XML), `injection.md` (os/exec), `crypto.md` (crypto/*).
 
 Go's standard library is generally well-designed for security; many footguns come from idioms that are correct-looking but subtly unsafe, or from third-party packages.
 
@@ -94,7 +94,7 @@ Go's standard library is generally well-designed for security; many footguns com
 ### `crypto/rand`
 
 - `rand.Read` / `rand.Int` / `rand.Reader` — CSPRNG; safe.
-- `math/rand` — NOT cryptographic; never for tokens / IDs / salts. (Go 1.20 added `math/rand/v2` which still isn't cryptographic; stay with `crypto/rand`.)
+- `math/rand` — NOT cryptographic; never for tokens / IDs / salts. (Go 1.22 added `math/rand/v2`; it is also not cryptographic and must not be used for security purposes — stay with `crypto/rand`.)
 
 ### `crypto/sha*`, `crypto/md5`
 
@@ -131,7 +131,7 @@ Go's standard library is generally well-designed for security; many footguns com
 
 ### `net/http`
 
-- `http.Get(userURL)` — SSRF; covered in ssrf-redirect-url.md.
+- `http.Get(userURL)` — SSRF; covered in `ssrf-redirect-url.md`.
 - Default `http.Client` follows redirects up to 10; can chain to internal addresses.
 - `http.Client.CheckRedirect` — Custom function to validate redirects.
 - Default timeout: none; sets `http.Client.Timeout` to bound.

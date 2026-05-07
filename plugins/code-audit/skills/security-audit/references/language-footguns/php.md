@@ -2,7 +2,7 @@
 
 ## Scope
 
-PHP server-side. Laravel, Symfony, WordPress, Drupal, raw PHP. Cross-reference deserialization.md (unserialize), injection.md (system/exec, SQL), crypto.md (openssl, hash).
+PHP server-side. Laravel, Symfony, WordPress, Drupal, raw PHP. Cross-reference `deserialization.md` (unserialize), `injection.md` (system/exec, SQL), `crypto.md` (openssl, hash).
 
 ## Code Execution Sinks
 
@@ -21,7 +21,7 @@ PHP server-side. Laravel, Symfony, WordPress, Drupal, raw PHP. Cross-reference d
 
 ### `unserialize`
 
-- See deserialization.md. Object injection via magic methods (`__wakeup`, `__destruct`, `__toString`, etc.); RCE via gadget chains.
+- See `deserialization.md`. Object injection via magic methods (`__wakeup`, `__destruct`, `__toString`, etc.); RCE via gadget chains.
 - `unserialize($input, ['allowed_classes' => false])` (PHP 7+) — Disables class instantiation; safer.
 
 ### Dynamic `include`, `require`, `include_once`, `require_once`
@@ -177,7 +177,7 @@ PHP server-side. Laravel, Symfony, WordPress, Drupal, raw PHP. Cross-reference d
 
 ### cURL, Guzzle, Symfony HttpClient
 
-- SSRF risks; covered in ssrf-redirect-url.md.
+- SSRF risks; covered in `ssrf-redirect-url.md`.
 - `CURLOPT_FOLLOWLOCATION = true` (default off) — May enable; verify redirect target validation.
 - `CURLOPT_PROTOCOLS` — Restrict to `CURLPROTO_HTTP | CURLPROTO_HTTPS` to block file://, gopher://, etc.
 
@@ -203,7 +203,7 @@ PHP server-side. Laravel, Symfony, WordPress, Drupal, raw PHP. Cross-reference d
 
 ### Composer / Packagist
 
-- See dependencies.md.
+- See `dependencies.md`.
 
 ### `mail` Function
 

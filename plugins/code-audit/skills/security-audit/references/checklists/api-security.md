@@ -2,7 +2,7 @@
 
 ## Scope
 
-API-specific security concerns mapped to the OWASP API Security Top 10 (2023). Many items overlap with other checklists (authorization.md covers BOLA/BFLA in depth; injection.md covers injection); this checklist focuses on what's API-specific or what gets missed when only thinking in web-app terms. Apply to REST, GraphQL, gRPC, WebSocket, and other API surfaces.
+API-specific security concerns mapped to the OWASP API Security Top 10 (2023). Many items overlap with other checklists (`authorization.md` covers BOLA/BFLA in depth; `injection.md` covers injection); this checklist focuses on what's API-specific or what gets missed when only thinking in web-app terms. Apply to REST, GraphQL, gRPC, WebSocket, and other API surfaces.
 
 ## API1:2023 — Broken Object Level Authorization (BOLA)
 
@@ -126,7 +126,7 @@ API-specific configurations:
 - **Unauthenticated debug endpoints** — `/debug/pprof`, `/_debug`, `/api/v1/debug`, framework default error pages.
 - **Open metrics / health endpoints** — Prometheus `/metrics` endpoint exposing internal state; verify authentication or network restriction.
 - **Insecure defaults** — Frameworks defaulting to permissive (e.g., older Spring Boot exposing actuator endpoints; older Drupal/WordPress with default admin paths).
-- **TLS configuration** — Old protocol versions enabled; weak cipher suites; covered in crypto.md.
+- **TLS configuration** — Old protocol versions enabled; weak cipher suites; covered in `crypto.md`.
 
 ## API9:2023 — Improper Inventory Management
 
@@ -157,7 +157,7 @@ The application calls third-party APIs and trusts the responses unsafely.
 - **TLS verification disabled** — `verify=False`, `rejectUnauthorized: false`, `InsecureSkipVerify: true` — accepts MITM-modified responses.
 - **Response treated as code** — Third-party returns HTML / JS that the app renders without sanitization.
 - **Response treated as a security decision** — IdP returns user info; app trusts the email field and creates / merges accounts based on it; attacker controls the IdP or compromises the connection.
-- **Deserialized into typed objects** — Third-party JSON deserialized into a class hierarchy; treat as untrusted (covered in deserialization.md).
+- **Deserialized into typed objects** — Third-party JSON deserialized into a class hierarchy; treat as untrusted (covered in `deserialization.md`).
 - **Unvalidated redirects from third party** — App receives a third-party-supplied URL and redirects to it; attacker controls third party → open redirect.
 - **Webhook receivers with no signature verification** — Trusting that the webhook came from the expected sender without verifying signature.
 - **Following redirects in third-party calls** — Library default may follow to internal addresses; redirect validation required.

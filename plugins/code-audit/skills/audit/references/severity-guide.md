@@ -28,7 +28,7 @@ Assign to findings that degrade quality, maintainability, or performance but are
 
 - Performance issues that cause slowdowns under realistic load (N+1 queries, blocking in async contexts, O(n^2) algorithms on growing datasets).
 - Anti-patterns that make the code significantly harder to maintain or extend (god objects, deep nesting, SRP violations).
-- Missing input validation on internal APIs where the blast radius is limited and no cross-trust-boundary impact exists.
+- Missing input validation on internal APIs where downstream code may misbehave on unexpected types or values but no broader impact is plausible.
 - Test quality gaps on important code paths (vacuous assertions, missing failure-path coverage).
 
 ### Low

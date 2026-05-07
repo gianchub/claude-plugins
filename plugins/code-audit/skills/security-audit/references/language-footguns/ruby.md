@@ -2,7 +2,7 @@
 
 ## Scope
 
-Ruby on Rails, Sinatra, Hanami, raw Ruby. Cross-reference deserialization.md (Marshal, YAML), injection.md (system/exec), crypto.md (OpenSSL).
+Ruby on Rails, Sinatra, Hanami, raw Ruby. Cross-reference `deserialization.md` (Marshal, YAML), `injection.md` (system/exec), `crypto.md` (OpenSSL).
 
 ## Code Execution Sinks
 
@@ -28,7 +28,7 @@ Ruby on Rails, Sinatra, Hanami, raw Ruby. Cross-reference deserialization.md (Ma
 
 ### `Marshal.load`, `YAML.load`
 
-- See deserialization.md. RCE via gadgets.
+- See `deserialization.md`. RCE via gadgets.
 
 ### `Process.spawn`, `Process.exec`
 
@@ -155,7 +155,7 @@ Ruby on Rails, Sinatra, Hanami, raw Ruby. Cross-reference deserialization.md (Ma
 
 ### Net::HTTP, HTTParty, RestClient, Faraday
 
-- SSRF risks; covered in ssrf-redirect-url.md.
+- SSRF risks; covered in `ssrf-redirect-url.md`.
 - `OpenSSL::SSL::VERIFY_NONE` — Disabled TLS; finding.
 - Default redirect handling — Verify per library.
 

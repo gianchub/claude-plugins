@@ -43,7 +43,7 @@ Read each discovered file and extract:
 - **Acknowledged risks and trade-offs** — features the team knows are risky but accepts the risk; mitigations they rely on; rationale for accepting.
 - **Security conventions and standards** — required patterns (always parameterize queries, never log request bodies, all admin actions audited, all secrets in <secret store>).
 - **Historical security incidents and fixes** — incidents the team has had, what was fixed, and what processes were added.
-- **Pentest summaries** — most recent test, scope, findings, status. Pentest scope tells you what has and hasn't been examined.
+- **Pentest summaries** — most recent test, scope, findings, status. Pentest scope identifies what has and hasn't been examined.
 - **Rate limiting / WAF / external mitigations** — controls the team is relying on outside the application code.
 
 Ignore purely procedural content (installation guides, API reference) unless it contains security-relevant rationale.

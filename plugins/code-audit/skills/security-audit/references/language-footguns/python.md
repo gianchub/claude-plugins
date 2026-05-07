@@ -2,7 +2,7 @@
 
 ## Scope
 
-Python-specific patterns that produce security findings. Apply alongside the domain checklists when Python is detected in scope. Cross-reference deserialization.md (pickle/yaml), injection.md (subprocess), and crypto.md (hashlib defaults).
+Python-specific patterns that produce security findings. Apply alongside the domain checklists when Python is detected in scope. Cross-reference `deserialization.md` (pickle/yaml), `injection.md` (subprocess), and `crypto.md` (hashlib defaults).
 
 ## Code Execution Sinks
 
@@ -126,7 +126,7 @@ Without `Loader=yaml.SafeLoader`, RCE via `!!python/object/apply`. Use `yaml.saf
 - `open(path)` with user-controlled `path` — Path traversal.
 - `os.path.join(BASE, user)` with `..` — Doesn't block; canonicalize and prefix-check.
 - `pathlib.Path(...).resolve()` — Resolves; check `.is_relative_to(BASE)`.
-- `tarfile.extractall()`, `zipfile.extractall()` — Zip slip; use `filter='data'` (Python 3.12+) or per-member validation.
+- `tarfile.extractall()`, `zipfile.extractall()` — Zip Slip. Pass `filter='data'` to `tarfile.extractall` / `extract` / `open` (added in Python 3.12 and backported to 3.8.17, 3.9.17, 3.10.12, 3.11.4 per PEP 706; default in 3.14+). For `zipfile`, perform per-member canonicalization-and-prefix-check before extraction.
 - `tempfile.mktemp()` — Predictable; use `mkstemp` or `NamedTemporaryFile`.
 
 ## Crypto
@@ -146,8 +146,9 @@ Without `Loader=yaml.SafeLoader`, RCE via `!!python/object/apply`. Use `yaml.saf
 
 ### `cryptography` library
 
-- Use `cryptography.fernet.Fernet` for symmetric authenticated encryption; high-level safe primitive.
-- Low-level `Cipher` API allows CBC without HMAC; verify mode and authentication.
+- For new code, prefer the AEAD primitives in `cryptography.hazmat.primitives.ciphers.aead`: `AESGCM`, `AESGCMSIV`, or `ChaCha20Poly1305`. These provide authenticated encryption with explicit nonce handling.
+- `cryptography.fernet.Fernet` is a safe high-level primitive (AES-128-CBC + HMAC-SHA256, encrypt-then-MAC) and is acceptable when its constraints fit; note it is not an AEAD mode and the key/nonce model is fixed by the library.
+- Low-level `Cipher` API allows CBC without HMAC, raw modes, etc.; verify mode and authentication on every call site.
 
 ### `pycryptodome`
 
@@ -161,7 +162,7 @@ Without `Loader=yaml.SafeLoader`, RCE via `!!python/object/apply`. Use `yaml.saf
 - `verify=False` — TLS verification disabled; MITM-vulnerable.
 - `requests.get(user_url)` — SSRF if URL is user-controlled.
 - `allow_redirects=True` (default) — Redirect-following SSRF if not validating per-redirect.
-- `requests.utils.urlparse` for SSRF validation — URL parser confusion (covered in ssrf-redirect-url.md).
+- `requests.utils.urlparse` for SSRF validation — URL parser confusion (covered in `ssrf-redirect-url.md`).
 
 ### `urllib.request.urlopen`
 
@@ -177,7 +178,7 @@ Without `Loader=yaml.SafeLoader`, RCE via `!!python/object/apply`. Use `yaml.saf
 
 ## XML
 
-- `xml.etree.ElementTree` — Modern Python disables external entities; verify version.
+- `xml.etree.ElementTree` — Does not resolve external entities by design; XXE in the strict sense is not a concern. It can still be vulnerable to billion-laughs / quadratic-blowup entity expansion DoS in older Python versions; `defusedxml.ElementTree` is the safe drop-in.
 - `lxml.etree` — Set `resolve_entities=False`, `no_network=True`.
 - `xml.dom.minidom` — Same considerations.
 - `defusedxml` — Drop-in replacement; use it.
@@ -230,7 +231,7 @@ Without `Loader=yaml.SafeLoader`, RCE via `!!python/object/apply`. Use `yaml.saf
 ## Python Version Notes
 
 - **Python 2** — EOL since 2020; any Python 2 code is a finding (compatibility / supply chain).
-- **Python < 3.8** — Out of upstream support; flag.
+- **Python 3.9 and earlier** — Out of upstream security support as of 2025; flag. Minimum supported series is 3.10 (security-only) / 3.11+ for active support; verify against [the current devguide schedule](https://devguide.python.org/versions/) at audit time.
 - **Older asyncio versions** — Subtle CVEs in `aiohttp` and async ecosystems; track.
 
 ## Common Findings Patterns

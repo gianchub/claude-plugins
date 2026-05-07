@@ -128,9 +128,9 @@ A Content Security Policy is strong only when strict. Common weaknesses:
 
 - **Origin check on receiving** — `event.origin === expected` constant; never trust `event.origin` as the value to allowlist (literally allowing anything).
 - **Source check** — `event.source === expectedWindow` for stricter validation.
-- **Avoid wildcard target origin in `postMessage(message, '*')`** — Anyone framing your page receives the message including any sensitive content.
+- **Avoid wildcard target origin in `postMessage(message, '*')`** — Any frame embedding the page receives the message, including any sensitive content.
 - **Treat received message data as untrusted** — Validate structure, types, and value ranges. Same dataflow rules as HTTP input.
-- **Combined with framing** — If your page can be framed, postMessage from the framing context is attacker-controllable.
+- **Combined with framing** — When the page can be framed, postMessage from the framing context is attacker-controllable.
 
 ## Prototype Pollution (JavaScript-Specific)
 

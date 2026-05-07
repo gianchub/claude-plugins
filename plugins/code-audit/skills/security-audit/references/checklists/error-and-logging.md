@@ -23,7 +23,7 @@ Information disclosure via errors, log injection, sensitive data in logs, audit-
 ### Verbose Validation Errors
 
 - **Per-field error fields** — May leak existence of fields, valid value ranges, type constraints used in business logic. Generally acceptable for documented public APIs; document the leak when business logic is sensitive.
-- **"User not found" vs. "Invalid password"** — Login enumeration; covered in auth-and-session.md.
+- **"User not found" vs. "Invalid password"** — Login enumeration; covered in `auth-and-session.md`.
 - **"Invalid email" vs. "Email already registered"** — Signup enumeration.
 - **Rate limit messages** — "Too many requests; current count: 47" leaks rate limit threshold.
 

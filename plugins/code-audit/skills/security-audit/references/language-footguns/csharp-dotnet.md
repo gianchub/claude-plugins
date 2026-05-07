@@ -2,7 +2,7 @@
 
 ## Scope
 
-C# on .NET (Core / 5/6/7/8/9), legacy .NET Framework. ASP.NET Core, ASP.NET MVC, Blazor, WPF/WinForms. Cross-reference deserialization.md (BinaryFormatter, Newtonsoft.Json), injection.md (Process.Start), crypto.md (System.Security.Cryptography).
+C# on .NET (Core / 5/6/7/8/9), legacy .NET Framework. ASP.NET Core, ASP.NET MVC, Blazor, WPF/WinForms. Cross-reference `deserialization.md` (BinaryFormatter, Newtonsoft.Json), `injection.md` (Process.Start), `crypto.md` (System.Security.Cryptography).
 
 ## Code Execution Sinks
 
@@ -33,7 +33,7 @@ C# on .NET (Core / 5/6/7/8/9), legacy .NET Framework. ASP.NET Core, ASP.NET MVC,
 
 ## Deserialization
 
-Covered in deserialization.md. .NET-specific:
+Covered in `deserialization.md`. .NET-specific:
 
 - **`BinaryFormatter.Deserialize`** — Officially deprecated by Microsoft. Critical RCE class.
 - **`SoapFormatter`, `NetDataContractSerializer`, `LosFormatter`, `ObjectStateFormatter`** — Same risk class.
@@ -108,7 +108,7 @@ Covered in deserialization.md. .NET-specific:
 
 ### WCF, Web API (Framework)
 
-- WCF: Custom serialization formats; verify same rules as deserialization.md.
+- WCF: Custom serialization formats; verify same rules as `deserialization.md`.
 - Web API: Model binding similar to MVC.
 
 ## Templating
@@ -177,9 +177,9 @@ Covered in deserialization.md. .NET-specific:
 
 ### `HttpClient`, `WebClient`, `HttpWebRequest`
 
-- SSRF risks; covered in ssrf-redirect-url.md.
+- SSRF risks; covered in `ssrf-redirect-url.md`.
 - `HttpClient.MaxResponseContentBufferSize` — Limit response size; without it, memory DoS possible.
-- Redirect handling — `HttpClientHandler.AllowAutoRedirect = false` if you need to validate per-redirect.
+- Redirect handling — set `HttpClientHandler.AllowAutoRedirect = false` when per-redirect validation is required.
 
 ### `WebRequest.Create(url)`
 

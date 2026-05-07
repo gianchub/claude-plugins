@@ -2,7 +2,7 @@
 
 ## Scope
 
-JavaScript and TypeScript on Node.js (server) and browser (client). TypeScript adds compile-time type safety but does not change runtime behavior; all runtime issues apply equally. Cross-reference xss-csrf-frontend.md for browser issues, deserialization.md for server-side parsing, ssrf-redirect-url.md for fetch/axios concerns.
+JavaScript and TypeScript on Node.js (server) and browser (client). TypeScript adds compile-time type safety but does not change runtime behavior; all runtime issues apply equally. Cross-reference `xss-csrf-frontend.md` for browser issues, `deserialization.md` for server-side parsing, `ssrf-redirect-url.md` for fetch/axios concerns.
 
 ## Code Execution Sinks
 
@@ -28,7 +28,7 @@ JavaScript and TypeScript on Node.js (server) and browser (client). TypeScript a
 
 ### `serialize-javascript` with `unsafe: true`, `node-serialize`
 
-- Function deserialization → RCE; covered in deserialization.md.
+- Function deserialization → RCE; covered in `deserialization.md`.
 
 ### Dynamic `require(...)`, ESM `import(name)`
 
@@ -87,7 +87,7 @@ User input merged into objects with `__proto__`, `constructor.prototype`, or `pr
 
 - `<a href={userInput}>` allows `javascript:alert(1)`. Validate scheme allowlist.
 - `<iframe src={userInput}>` similar.
-- React `<a href={url}>` does not block `javascript:`; React 16+ blocks `javascript:` URLs in Element-side attribute setters.
+- React 16.9+ logs a console warning for `javascript:` URLs in `href` / `src` attributes but does not block them. Validate the scheme against an allowlist (`http:`, `https:`, `mailto:`, etc.) before rendering user-supplied URLs.
 
 ## Authentication / Sessions
 
@@ -136,7 +136,7 @@ User input merged into objects with `__proto__`, `constructor.prototype`, or `pr
 
 - `User.findOne({username: req.body.username})` — When `username` is `{$ne: null}`, returns first user (NoSQL injection). Coerce types: `String(req.body.username)`.
 - `Model.find({}, req.query.field)` — Field selection from user input; can leak sensitive fields.
-- `$where` operator with user-controlled JS — RCE (covered in injection.md).
+- `$where` operator with user-controlled JS — RCE (covered in `injection.md`).
 
 ### Prisma
 
@@ -158,13 +158,13 @@ User input merged into objects with `__proto__`, `constructor.prototype`, or `pr
 
 ### `fetch`, `axios`, `node-fetch`, `got`, `superagent`
 
-- SSRF risks; covered in ssrf-redirect-url.md.
+- SSRF risks; covered in `ssrf-redirect-url.md`.
 - TLS verification — Disabled via `axios.create({httpsAgent: new https.Agent({rejectUnauthorized: false})})` or `--tls-reject-unauthorized=0`.
 - Redirect handling defaults vary; verify per library.
 
 ### `request` (deprecated)
 
-- Deprecated; vulnerabilities historic; recommend migration to `axios` / `node-fetch` / `undici`.
+- Deprecated and unmaintained since 2020; carries historic vulnerabilities. Migrate to built-in `fetch` (Node 18+), `undici`, or `axios`. `node-fetch` is in maintenance mode and is no longer the preferred new dependency.
 
 ### `socket.io`
 
@@ -212,7 +212,7 @@ User input merged into objects with `__proto__`, `constructor.prototype`, or `pr
 - `body-parser` size limits (`express.json({limit: '...' })`).
 - `helmet` middleware for security headers.
 - `cors` middleware — Verify origin allowlist.
-- `csurf` for CSRF tokens (deprecated; modern alternatives via SameSite + custom checks).
+- `csurf` is deprecated and the GitHub repo is archived (CVE / advisory history); presence of `csurf` in `package.json` is itself a finding. Replace with `csrf-csrf`, `lusca`, or framework-native CSRF protection paired with `SameSite=Lax` cookies.
 
 ### NestJS
 

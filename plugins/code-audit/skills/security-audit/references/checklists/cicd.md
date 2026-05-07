@@ -52,7 +52,7 @@ The attacker opens a PR with a malicious `package.json`, `npm` install script, o
 
 ### Action Versioning
 
-- **`uses: actions/checkout@main`** or **`@master`** — Branch reference; if the branch is moved to malicious code, your workflow runs it. Pin to commit SHA: `actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608`.
+- **`uses: actions/checkout@main`** or **`@master`** — Branch reference; if the branch is moved to malicious code, the workflow executes it. Pin to commit SHA: `actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608`.
 - **`uses: org/action@v3`** — Tag reference; can be moved by the maintainer or compromised. Better than branch but pin to digest for high-trust workflows.
 - **Third-party actions** — Audit the action's source before use; community actions can change behavior. Pin to verified versions.
 - **Verified creator badge** is a weak signal; doesn't prove safety of action content.

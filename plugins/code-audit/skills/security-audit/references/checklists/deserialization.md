@@ -57,9 +57,9 @@ Modern alternatives are JSON (with explicit DTOs and validation), Protocol Buffe
 
 ### SnakeYAML
 
-- **`new Yaml().load(input)`** — Pre-2.0: same risk as Python yaml.load; constructs arbitrary classes via tags. SnakeYAML 2.0+ defaults to safe.
-- **Safe construction** — `new Yaml(new SafeConstructor()).load(...)`.
-- **Verify version** — Older Spring Boot bundles older SnakeYAML.
+- **`new Yaml().load(input)`** — Pre-2.0: same risk as Python yaml.load; constructs arbitrary classes via tags. SnakeYAML 2.0 (Aug 2022) changed the default constructor to `SafeConstructor`. Pre-2.0 versions in `vendor/` or transitive dependencies remain vulnerable even when call sites look safe.
+- **Safe construction (pre-2.0)** — `new Yaml(new SafeConstructor()).load(...)`.
+- **Verify version** — Older Spring Boot releases bundled SnakeYAML < 2.0; check the resolved transitive version, not just direct dependencies.
 
 ### XStream
 
@@ -131,12 +131,12 @@ Modern alternatives are JSON (with explicit DTOs and validation), Protocol Buffe
 - **`YAML.load(data)`** — In Psych < 4 or with permissive class allowlist, equivalent to Python yaml.load.
 - **`YAML.safe_load(data)`** — Safer; only basic types.
 - **`YAML.unsafe_load(data)`** — Explicitly unsafe; never on untrusted.
-- **Psych 4+** — Default `load` is now safe (only basic types).
+- **Psych 4+** — Default `load` is now an alias for `safe_load` (basic types only). Bundled with Ruby 3.1+. Ruby 3.0 and earlier still default to permissive loading; verify the runtime version, not just the gem.
 - **Older Rails** — May use unsafe load patterns.
 
 ### ERB / Liquid templates
 
-- **ERB compiled from user input** — RCE; covered in injection.md SSTI section.
+- **ERB compiled from user input** — RCE; covered in `injection.md` SSTI section.
 - **Liquid** — Sandboxed by design; SSTI-resistant but verify version (older versions had escapes).
 
 ### XML
@@ -194,7 +194,7 @@ Modern alternatives are JSON (with explicit DTOs and validation), Protocol Buffe
 ### Schema Validation
 
 - **JSON Schema** validation — Validates structure; doesn't prevent deserialization-class issues for typed deserialization.
-- **OpenAPI / typed binders** — Convert to typed objects; verify mass-assignment-style protections (covered in authorization.md).
+- **OpenAPI / typed binders** — Convert to typed objects; verify mass-assignment-style protections (covered in `authorization.md`).
 
 ## Recommendation Patterns
 

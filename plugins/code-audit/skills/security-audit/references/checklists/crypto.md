@@ -4,7 +4,7 @@
 
 Algorithm choice, mode, IV/nonce handling, key derivation, key storage, randomness, signature verification, transport security configuration, and side-channel concerns. Cryptography failures rarely produce immediate compromise on their own; they amplify other failures and reduce the cost of attacks (offline cracking of leaked hashes, replaying captured data, breaking signed tokens).
 
-The defining principle: **don't roll your own crypto, and don't tune the dials.** Use library defaults from well-maintained libraries and verify the call sites match the documented secure usage. Custom protocols, custom modes, or custom KDFs are findings even when they "look right."
+The defining principle: **never roll custom crypto, and never tune the dials beyond library defaults.** Use defaults from well-maintained libraries and verify call sites match the documented secure usage. Custom protocols, custom modes, or custom KDFs are findings even when they "look right."
 
 ## Algorithm Choice
 
@@ -38,7 +38,7 @@ The defining principle: **don't roll your own crypto, and don't tune the dials.*
 - **For deriving multiple keys from a master**: HKDF.
 - **From shared secrets** (DH, ECDH): HKDF.
 - **Bare hashing of password** (`SHA-256(password)`) — Wrong; use a proper password KDF.
-- **PBKDF2 iteration count** — OWASP 2024: PBKDF2-SHA256 ≥ 600,000; PBKDF2-SHA512 ≥ 210,000. Older code with 1000-10000 iterations is a finding.
+- **PBKDF2 iteration count** — Current OWASP guidance: PBKDF2-HMAC-SHA256 ≥ 600,000; PBKDF2-HMAC-SHA512 ≥ 220,000. Older code with 1,000–10,000 iterations is a finding.
 
 ## Modes, IVs, and Nonces
 
@@ -76,7 +76,7 @@ The defining principle: **don't roll your own crypto, and don't tune the dials.*
 
 - **TLS configuration** — TLS 1.2 minimum, 1.3 preferred. Old protocols (SSLv2/3, TLS 1.0/1.1) disabled at the application or framework level when configurable.
 - **Cipher suites** — Restrict to AEAD ciphers (GCM, ChaCha20-Poly1305) where configurable. RC4, NULL, EXPORT, anonymous cipher suites disabled.
-- **HSTS** — `Strict-Transport-Security` header (covered in xss-csrf-frontend.md). Force HTTPS at the network level too.
+- **HSTS** — `Strict-Transport-Security` header (covered in `xss-csrf-frontend.md`). Force HTTPS at the network level too.
 - **Certificate verification** — Library default verification used; never `verify=False`, `rejectUnauthorized: false`, `InsecureSkipVerify: true` in production code.
 - **Certificate pinning** — For mobile clients or sensitive integrations; document if used.
 - **Mutual TLS** — Where used, verify the peer cert chain, hostname (optional, depending on identity model), and revocation handling.
@@ -130,13 +130,13 @@ The defining principle: **don't roll your own crypto, and don't tune the dials.*
 
 ## Library Choice
 
-- **Avoid**: cryptography by hand, untested or unmaintained crypto libs, "rolled your own" KDF / signature / cipher.
+- **Avoid**: hand-rolled cryptography, untested or unmaintained crypto libs, custom KDF / signature / cipher implementations.
 - **Prefer**: language-blessed libraries (Python `cryptography`, JS `crypto` (Node), `@noble/*` libraries, Java JCE / BouncyCastle, .NET `System.Security.Cryptography`, Go `crypto/*` and `golang.org/x/crypto`, libsodium / NaCl bindings).
 - **libsodium / NaCl** — Strong defaults; preferred when available.
 
 ## Recommendation Patterns
 
-- Use library defaults; do not tune algorithm/mode/iteration parameters unless you understand the implications and document the rationale.
+- Use library defaults; do not tune algorithm/mode/iteration parameters unless the rationale is documented and the implications are understood.
 - Centralize crypto operations behind small, well-named wrapper functions (`hashPassword`, `verifyPassword`, `signPayload`). Audit the wrappers; downstream callers don't have to understand crypto.
 - Move secrets to a dedicated store (KMS, secret manager) with a clear rotation policy.
 - Replace any custom crypto with a battle-tested library; treat custom crypto as a finding even when it appears correct, because correctness review is impractical without specialized expertise.

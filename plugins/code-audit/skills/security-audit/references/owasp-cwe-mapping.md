@@ -93,11 +93,9 @@ The following CWEs cover the great majority of security findings. Pick the most 
 - **CWE-916** — Use of Password Hash with Insufficient Computational Effort
 - **CWE-759** — Use of a One-Way Hash without a Salt
 - **CWE-760** — Use of a One-Way Hash with a Predictable Salt
-- **CWE-200** — Exposure of Sensitive Information (broad; pair with a more specific CWE when possible)
 - **CWE-208** — Observable Timing Discrepancy (timing side channel)
 - **CWE-321** — Use of Hard-coded Cryptographic Key
 - **CWE-798** — Use of Hard-coded Credentials
-- **CWE-916** — Use of Password Hash with Insufficient Computational Effort
 
 ### Deserialization / Data Integrity
 
@@ -113,11 +111,14 @@ The following CWEs cover the great majority of security findings. Pick the most 
 - **CWE-434** — Unrestricted Upload of File with Dangerous Type
 - **CWE-552** — Files or Directories Accessible to External Parties
 - **CWE-409** — Improper Handling of Highly Compressed Data (zip bomb)
-- **CWE-918** — SSRF (canonical CWE for SSRF)
+
+### SSRF
+
+- **CWE-918** — Server-Side Request Forgery (canonical CWE)
 
 ### Information Disclosure
 
-- **CWE-200** — Exposure of Sensitive Information to Unauthorized Actor
+- **CWE-200** — Exposure of Sensitive Information to Unauthorized Actor (broad; pair with a more specific CWE when one fits)
 - **CWE-209** — Generation of Error Message Containing Sensitive Information
 - **CWE-532** — Insertion of Sensitive Information into Log File
 - **CWE-525** — Use of Web Browser Cache Containing Sensitive Information
@@ -133,7 +134,6 @@ The following CWEs cover the great majority of security findings. Pick the most 
 - **CWE-614** — Sensitive Cookie in HTTPS Session Without Secure Attribute
 - **CWE-319** — Cleartext Transmission of Sensitive Information
 - **CWE-693** — Protection Mechanism Failure
-- **CWE-829** — Inclusion of Functionality from Untrusted Control Sphere (third-party scripts without SRI)
 
 ### Race Conditions / Concurrency (Security-relevant)
 
@@ -152,7 +152,7 @@ The following CWEs cover the great majority of security findings. Pick the most 
 
 - **CWE-1104** — Use of Unmaintained Third Party Components
 - **CWE-1357** — Reliance on Insufficiently Trustworthy Component
-- **CWE-829** — Inclusion of Functionality from Untrusted Control Sphere
+- **CWE-829** — Inclusion of Functionality from Untrusted Control Sphere (covers third-party scripts loaded without SRI as well as direct supply-chain ingestion; use here when the third-party component is the issue)
 
 ### Business Logic
 
