@@ -15,11 +15,41 @@ description: >
 
 ## Purpose
 
-Perform a thorough, language-agnostic audit of a codebase or subset of files, producing a structured report with findings ranked by severity. Deliver the report as a Markdown file at the project root following the template in `references/report-template.md`.
+Perform a thorough, language-agnostic audit of a codebase or subset of files, producing a structured report with findings ranked by severity. Deliver the report as a self-contained file at the project root in the format the user chose (see "Report Format" below): HTML following `references/report-template-html.md`, or Markdown following `references/report-template.md`.
 
 ## Effort Level
 
 Read every line of in-scope code. Do not skim, sample, or rely on heuristics to skip files. Trace data flows from external inputs through processing layers to outputs and storage. Follow call chains across module boundaries to detect issues that only manifest through component interaction. When the scope is too large for a single pass, split work across parallel subagents (see Step 4 for partitioning strategy).
+
+## Report Format
+
+The audit produces a self-contained file at the project root. The format determines the file extension and the template used in Step 5. **HTML is the default** because it enables inline SVG dataflow diagrams, severity badges, collapsible Intent Brief themes, and cross-reference anchors between findings — affordances that materially improve a long audit report and cannot be expressed in Markdown.
+
+<FORMAT-GATE>
+**Determine the format before resolving scope.** This is a hard gate — do not start scope resolution, intent discovery, analysis, or any other work until the format is fixed for this run.
+
+First, scan the user's launching message for an explicit format choice. Honor any of these:
+
+- HTML signals: `HTML`, `html`, "as a webpage", "browser-viewable", "rendered report".
+- Markdown signals: `MD`, `md`, `Markdown`, `markdown`, "plain text report", "as Markdown".
+
+If the launching message contains a clear format signal, accept it as the gate answer and proceed — do not re-ask for ceremonial confirmation. State the chosen format briefly when you state the resolved scope.
+
+If the launching message does not specify a format, ask exactly this question (or equivalent) and wait for the user's answer before proceeding:
+
+> Which report format would you like? **HTML** (default, self-contained file with inline diagrams and severity badges) or **MD** (plain Markdown)?
+
+Do not bundle this question with any other output. Do not assume a default without asking. The gate fires every time this skill runs.
+</FORMAT-GATE>
+
+Once the format is chosen, use it consistently for the remainder of the run:
+
+| Format | Template | Filename |
+|---|---|---|
+| HTML | `references/report-template-html.md` | `AUDIT-REPORT-YYYY-MM-DD.html` |
+| MD | `references/report-template.md` | `AUDIT-REPORT-YYYY-MM-DD.md` |
+
+When generating an HTML report, treat the HTML-specific affordances documented in `references/report-template-html.md` as tools to use when they add information — not decoration. Wrapping Markdown content in HTML tags without using those affordances defeats the point of choosing HTML.
 
 ## Workflow
 
@@ -37,7 +67,7 @@ If the user specifies files or directories that do not exist, warn them about th
 
 If the prompt does not contain enough information to determine scope, ask a single clarifying question before proceeding. Do not guess at scope — an audit with unclear boundaries produces unreliable results.
 
-If the user requests a re-audit, search for files matching `AUDIT-REPORT-*.md` at the project root. If multiple reports exist, use the most recent by date. Default to the same scope as the original audit. Offer to narrow to only files with prior findings if the user wants a faster pass, but do not narrow silently — new issues can appear in files that were previously clean. When a prior report exists, note in the new report which previous findings have been resolved and which persist, so the user gets a delta view.
+If the user requests a re-audit, search for files matching `AUDIT-REPORT-*.md` and `AUDIT-REPORT-*.html` at the project root. If multiple reports exist, use the most recent by file modification time regardless of format. Default to the same scope as the original audit. Offer to narrow to only files with prior findings if the user wants a faster pass, but do not narrow silently — new issues can appear in files that were previously clean. When a prior report exists, note in the new report which previous findings have been resolved and which persist, so the user gets a delta view. The new report's format follows the gate decision for the current run; it does not have to match the prior report's format.
 
 Once scope is established, enumerate all files that fall within it. Exclude generated files (e.g., lock files, compiled output, vendored dependencies, minified bundles) unless the user explicitly includes them. For source-committed generated code (protobuf stubs, OpenAPI clients, ORM models), check for modification markers — if files contain hand-written additions or a "DO NOT EDIT" header has been removed, treat them as in-scope. While generated and vendored code is excluded from file-level analysis, cross-file analysis in Phase B should trace data flows into excluded code to determine whether it provides expected validation or safety guarantees. Report findings at the boundary, not within the excluded code.
 
@@ -128,13 +158,18 @@ Before moving to report generation, deduplicate findings:
 
 ### Step 5 — Report Generation
 
-Generate the final report following the structure and formatting rules defined in `references/report-template.md`. Specifically:
+Generate the final report following the template that matches the format chosen in the Format Gate: `references/report-template-html.md` for HTML output, `references/report-template.md` for Markdown output. The content rules below apply to both formats; the templates define the structural rendering.
 
 - Set the report date to the current date.
 - Populate the summary table with the resolved scope, confirmed categories, and finding counts by severity.
 - Include a "Context & Intent" section between the Summary table and the Critical severity section. This section summarizes the Intent Brief and lists key documented decisions that influenced the audit.
 - Assign sequential `AUDIT-NNN` identifiers starting at `AUDIT-001`. Order findings by severity (Critical first), then by category, then by file path within the same severity and category.
 - Write each finding with all required fields: identifier, short title, category, location (`file:line`), severity, description, impact, and recommendation.
-- Save the report at the project root using the filename convention in the template (`AUDIT-REPORT-YYYY-MM-DD.md`), incrementing the suffix if a file with that name already exists.
+- Save the report at the project root using the filename convention from the chosen template (`AUDIT-REPORT-YYYY-MM-DD.html` for HTML, `AUDIT-REPORT-YYYY-MM-DD.md` for Markdown), incrementing the suffix if a file with that name already exists.
+
+When the chosen format is HTML, additionally:
+
+- Follow the structural contract in `references/report-template-html.md` exactly: required IDs, classes, and `data-*` attributes are not optional. The scaffold is what makes the report parseable and the re-audit delta possible.
+- Use HTML-specific affordances (inline SVG dataflow diagrams, collapsible Intent Brief themes, anchor cross-references between findings) when they add information. Skip them when the same content reads well in prose — the goal is information density, not decoration.
 
 After saving the report, state the file path and a brief summary of the results to the user.

@@ -1,4 +1,6 @@
-# Step Template: 3-Phase Build-Review-Verify Cycle
+# Step Template — Markdown: 3-Phase Build-Review-Verify Cycle
+
+Use this template when the chosen plan format is **Markdown**. For HTML plans (the default), use `step-template-html.md` instead.
 
 Every step in a blueprint plan follows this exact structure. Each step is self-contained: it builds one increment, reviews it adversarially, and verifies it before moving on.
 
