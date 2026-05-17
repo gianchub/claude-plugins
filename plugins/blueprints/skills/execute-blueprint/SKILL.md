@@ -30,7 +30,7 @@ Every build, every review, and every verification is dispatched to a subagent vi
 - Handles git according to the user's chosen mode.
 - Marks progress in the plan file.
 
-This rule applies regardless of plan size, step size, or apparent triviality. A one-line config change is still dispatched as a build subagent. The main conversation does not edit source files, run tests, or run linters directly during step execution. Tools the main conversation may use during execution are limited to: reading the plan, writing checkmarks back into the plan, dispatching agents, and creating git commits in skill-managed mode.
+This rule applies regardless of plan size, step size, or apparent triviality. A one-line config change is still dispatched as a build subagent. The main conversation does not edit source files, run tests, or run linters directly during step execution. Tools the main conversation may use during execution are limited to: reading the plan, writing progress markers back into the plan (the format-specific mutations defined in "Progress Tracking" below), dispatching agents, and creating git commits in skill-managed mode.
 </SUBAGENT-ONLY>
 
 <HARD-GATES>
@@ -57,6 +57,8 @@ Execution proceeds through these phases in strict order. Phases 1–3 are gates 
 Scan `docs/plans/` for plan files. Plans may be written in either Markdown (`.md`) or HTML (`.html`). Search for both extensions and treat them equivalently — a single `.md` file, a single `.html` file, a milestone folder containing `.md` files, and a milestone folder containing `.html` files are all valid plan structures.
 
 If a single plan file or folder exists, use it. If multiple plan files or folders exist, present the list to the user and ask which to execute. For milestone folders containing numbered step files, start from the first step that is not marked complete (see "Progress Tracking" below for how completion is encoded in each format). If the plan file is specified directly in the user's request (e.g., "execute 01_milestone_name.md" or "execute 01_milestone_name.html"), use that file without asking.
+
+If a milestone folder mixes `.md` and `.html` step files, this is out-of-spec: `write-blueprint` never produces mixed folders. Warn the user, list the mixed files, and ask which format to use for the run. Do not silently pick one extension over the other.
 
 **Detect the plan's format** by file extension. The format affects only how the plan is parsed and how progress is written back; it does not affect how subagents are dispatched. Cache the detected format for the rest of the session.
 
@@ -207,7 +209,7 @@ After the user resolves the intervention (manual fix, re-run build, etc.), re-ru
 
 Advisory review findings do not block execution. Present them to the user as informational notes after the step passes all phases. The user may choose to address them later or ignore them.
 
-Steps that have already passed all three phases and been marked complete retain their checkmarks regardless of subsequent failures in other steps. A failure in Step B does not roll back Step A.
+Steps that have already passed all three phases and been marked complete retain their completion markers regardless of subsequent failures in other steps. A failure in Step B does not roll back Step A.
 
 ### Progress Tracking
 
@@ -275,7 +277,7 @@ If any of these thoughts appear, the skill is about to be violated. Stop and cor
 | "I'll batch all the builds first, then all the reviews." | No. Steps run strictly serially within a batch: Build → Review → Verify per step before moving to the next step. |
 | "The plan only has 2 milestones, I'll skip the cadence question." | The Cadence Gate fires for any complex (multi-milestone) plan in skill-managed mode. Two milestones still counts. |
 | "User-managed mode in a milestone plan — I should ask the cadence too." | No. Cadence Gate is conditional on skill-managed mode. User-managed always pauses per step. |
-| "I'll squash the plan progress into a separate commit so the diff is cleaner." | No. Plan progress (checkmarks) goes in the same commit as the step's implementation. |
-| "Step B failed verification, but Step A passed — I'll roll back A." | No. Completed steps keep their checkmarks. Failures stop forward progress; they do not undo prior progress. |
+| "I'll squash the plan progress into a separate commit so the diff is cleaner." | No. Plan progress markers (Markdown checkboxes or HTML `data-status` / badge / checkbox attributes) go in the same commit as the step's implementation. |
+| "Step B failed verification, but Step A passed — I'll roll back A." | No. Completed steps keep their completion markers. Failures stop forward progress; they do not undo prior progress. |
 
 All of these mean: stop, re-read the relevant phase or law, and follow it as written.

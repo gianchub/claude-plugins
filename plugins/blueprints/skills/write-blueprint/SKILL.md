@@ -26,9 +26,9 @@ Unlike the audit skills, the blueprint format is *not* a hard gate. Detect the u
 
 - HTML signals: `HTML`, `html`, "as a webpage", "browser-viewable" → use HTML.
 - Markdown signals: `MD`, `md`, `Markdown`, `markdown`, "plain text plan", "as Markdown" → use MD.
-- No signal: default to HTML silently. Mention the choice once in the plan header so it's visible.
+- No signal: default to HTML silently. The file extension on disk (`.html` vs `.md`) is the canonical signal of which format was chosen — do not add a redundant "Format: HTML" line to the plan header just to restate what the extension already conveys.
 
-If the launching message is genuinely ambiguous about format (e.g., conflicting signals, or the user asks "which format should I use?"), ask once and proceed. Otherwise do not interrupt the planning dialogue with a format gate — the planning flow is already heavy with hard gates (tool chain, clarification, approach, plan review).
+If the launching message is genuinely ambiguous about format (e.g., conflicting signals, or the user asks "which format should I use?"), ask once and proceed. When you resolved real ambiguity with a default, briefly document the resolution in the plan header (e.g., "Format chosen: HTML — launching message had conflicting signals, defaulted to HTML"). Otherwise do not interrupt the planning dialogue with a format gate — the planning flow is already heavy with hard gates (tool chain, clarification, approach, plan review).
 
 The chosen format is used consistently for the remainder of the run:
 

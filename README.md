@@ -11,7 +11,7 @@ Collaborative implementation planning and execution with build-review-verify cyc
 - **Dialogue-first planning** — asks clarifying questions and explores the codebase exhaustively before writing a single plan step. Never plans in a vacuum.
 - **Automatic tool discovery** — detects your project's test runner, linter, formatter, and type checker from config files and CI pipelines, then embeds the exact verification commands into every step.
 - **Build-review-verify cycle** — every step goes through three phases: build the thing, adversarial review targeting likely failure modes, then run the full tool chain to verify.
-- **Adaptive format** — produces a single plan document for small tasks or a milestone folder structure for larger efforts, based on complexity.
+- **Adaptive format** — produces a single plan document for small tasks or a milestone folder structure for larger efforts, based on complexity. Output is HTML by default (self-contained, with inline SVG dependency graphs and stable `data-status` attributes so progress mutations stay surgical) or Markdown when requested.
 - **Subagent execution** — the `execute-blueprint` skill drives plans step-by-step using dedicated subagents for each phase, with git handling (manual or automatic with adaptive pause cadence) and progress tracking.
 
 **Skills:**
@@ -36,7 +36,7 @@ Language-agnostic code-quality and security auditing with structured severity-ra
 - **Exhaustive analysis** — reads every line of in-scope code. No skimming, no sampling.
 - **Cross-file tracing** — traces data flows from entry points through processing layers to outputs, catching issues that only manifest through component interaction.
 - **Two complementary skills** — `code-audit` covers code quality (concurrency, dead code, anti-patterns, performance, correctness, error handling, test quality); `security-audit` covers security exclusively (OWASP Top 10, OWASP API Top 10, CWE-mapped findings, threat-model-first workflow, source-to-sink dataflow, exploit scenarios for High/Critical findings).
-- **Severity-ranked output** — produces a deduplicated Markdown report at the project root. Code-quality findings use an impact-based scale; security findings use Impact × Exploitability × Exposure with threat-model modifiers.
+- **Severity-ranked output** — produces a deduplicated report at the project root in HTML (default, self-contained with inline SVG diagrams and severity badges) or Markdown. Code-quality findings use an impact-based scale; security findings use Impact × Exploitability × Exposure with threat-model modifiers.
 - **Parallel subagents** — for large codebases, splits the audit across parallel subagents by module, then merges and deduplicates findings.
 
 **Skills:**

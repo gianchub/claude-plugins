@@ -25,7 +25,7 @@ Use the current date at the time of report generation. When searching for prior 
 
 The HTML format is not a place to wrap Markdown content in tags. Each HTML-specific affordance below has a defined purpose; use it when it adds information the Markdown version cannot convey, and omit it otherwise.
 
-1. **Self-contained**: All styling is inline (`<style>` in `<head>`). All diagrams are inline SVG. No external CSS, no JS libraries, no fonts loaded over the network. The file must render correctly when opened directly from the filesystem with no network access.
+1. **Self-contained**: All styling lives in the document — inline `<style>` blocks (anywhere in the document, including inside `<svg>` for SVG-scoped styles) and inline `style=` attributes. All diagrams are inline SVG. No external CSS, no JS libraries, no fonts loaded over the network. The file must render correctly when opened directly from the filesystem with no network access.
 2. **Stable scaffold**: The IDs, classes, and `data-*` attributes listed in the "Structural Contract" section below are required and must be spelled exactly as shown. Re-audit comparison and any future tooling depend on them.
 3. **Content freedom inside sections**: Within a section, the LLM decides layout, nesting, and which optional affordances (collapsibles, inline SVG, cross-reference anchors) to use.
 4. **No embellishment for its own sake**: Do not add inline SVG, collapsibles, or color flourishes that do not carry information. An exploit scenario with three sentences does not need to be wrapped in `<details>`.

@@ -30,7 +30,7 @@ The folder's `README.html` lists the milestones with one-sentence descriptions, 
 
 ## Authoring Rules
 
-1. **Self-contained**: All styling is inline (`<style>` in `<head>`). All diagrams are inline SVG. No external CSS, no JS libraries, no fonts loaded over the network. The file must render correctly when opened directly from the filesystem with no network access.
+1. **Self-contained**: All styling lives in the document — inline `<style>` blocks (anywhere in the document, including inside `<svg>` for SVG-scoped styles) and inline `style=` attributes. All diagrams are inline SVG. No external CSS, no JS libraries, no fonts loaded over the network. The file must render correctly when opened directly from the filesystem with no network access.
 2. **Stable scaffold**: The IDs, classes, and `data-*` attributes listed in the "Structural Contract" section below are required and must be spelled exactly as shown. `execute-blueprint` walks these to locate steps, mutate progress state, and tick verification checkboxes.
 3. **Content freedom inside sections**: Within a phase section, the LLM decides layout. Build phase content must remain prose-first per the design principle in `SKILL.md` — inline SVG and other HTML affordances are for *structural* expression (dependencies, state, relationships), not for replacing prose with diagrams.
 4. **No embellishment for its own sake**: Do not add diagrams, collapsibles, or styling that does not carry information. A two-step linear plan does not need a dependency graph. A one-paragraph build phase does not need to be collapsed.
@@ -319,7 +319,19 @@ When a step passes all three phases, `execute-blueprint` performs these mutation
 3. Prepend `✅ ` to the inner text of the step's `<h3>` (e.g., `<h3>Step 2: Auth middleware</h3>` → `<h3>✅ Step 2: Auth middleware</h3>`).
 4. Add the `checked` attribute to every `<input type="checkbox">` inside that step's `<section class="phase phase-verify">`.
 
-Other status values (`failed`, `skipped`, `active`) follow the same pattern with their corresponding badge text. `data-status` and the badge text are the canonical sources of progress state; the `✅ ` prefix is the human-visible signal.
+### Status Mapping
+
+The full mapping between `data-status`, badge text, and the `✅ ` prefix:
+
+| `data-status` | Badge text  | `✅ ` prefix on `<h3>`? | When used |
+|---|---|---|---|
+| `pending`  | `Pending`  | no  | Initial state, before execution begins. |
+| `active`   | `Active`   | no  | Step currently being executed (optional intermediate state; many runs go straight from `pending` to a terminal state). |
+| `complete` | `Complete` | yes | Step passed all three phases (build, review, verify). |
+| `failed`   | `Failed`   | no  | Step blocked on a review finding or verification failure that was not resolved before the run ended. |
+| `skipped`  | `Skipped`  | no  | Step deliberately skipped (e.g., user requested "execute steps 3-5", or step abandoned after a blocking finding). |
+
+`data-status` and the badge text are the canonical sources of progress state; the `✅ ` prefix is the human-visible signal for completion specifically. Do not prepend `✅ ` for any terminal state other than `complete`.
 
 ---
 
