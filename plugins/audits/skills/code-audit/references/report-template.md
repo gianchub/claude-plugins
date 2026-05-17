@@ -1,4 +1,6 @@
-# Audit Report Template
+# Audit Report Template — Markdown
+
+Use this template when the user has chosen the **Markdown** report format. For the HTML format (the default), use `report-template-html.md` instead.
 
 ## Filename Convention
 

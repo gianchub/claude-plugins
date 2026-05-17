@@ -18,6 +18,27 @@ Produce collaborative implementation plans as written artifacts, where every ste
 
 Scale exploration depth to task complexity, but always err toward more thoroughness. Read broadly before narrowing — the goal is a plan that surfaces zero surprises during execution.
 
+## Plan Format
+
+Plans are written as a self-contained file (or folder for milestone plans). The format determines the file extension and the step template used in Step 4. **HTML is the default** because it enables inline SVG dependency graphs for non-linear step dependencies, structured `data-status` attributes that `execute-blueprint` uses for precise progress tracking, and anchor cross-references between steps — affordances that materially improve a multi-step plan and cannot be expressed in Markdown.
+
+Unlike the audit skills, the blueprint format is *not* a hard gate. Detect the user's preference from the launching message and respect it:
+
+- HTML signals: `HTML`, `html`, "as a webpage", "browser-viewable" → use HTML.
+- Markdown signals: `MD`, `md`, `Markdown`, `markdown`, "plain text plan", "as Markdown" → use MD.
+- No signal: default to HTML silently. The file extension on disk (`.html` vs `.md`) is the canonical signal of which format was chosen — do not add a redundant "Format: HTML" line to the plan header just to restate what the extension already conveys.
+
+If the launching message is genuinely ambiguous about format (e.g., conflicting signals, or the user asks "which format should I use?"), ask once and proceed. When you resolved real ambiguity with a default, briefly document the resolution in the plan header (e.g., "Format chosen: HTML — launching message had conflicting signals, defaulted to HTML"). Otherwise do not interrupt the planning dialogue with a format gate — the planning flow is already heavy with hard gates (tool chain, clarification, approach, plan review).
+
+The chosen format is used consistently for the remainder of the run:
+
+| Format | Step template | File extension |
+|---|---|---|
+| HTML | `references/step-template-html.md` | `.html` |
+| MD | `references/step-template.md` | `.md` |
+
+When writing an HTML plan, treat the HTML-specific affordances documented in `references/step-template-html.md` as tools to use when they add information — not decoration. Wrapping Markdown content in HTML tags without using those affordances defeats the point of choosing HTML.
+
 ## Anti-pattern: "Too Simple to Plan"
 
 Even a one-line change carries assumptions about where it goes, what it affects, and how it gets verified. "Simple" tasks are precisely where unexamined assumptions cause wasted rework — the build-review-verify structure catches those before they compound. A plan can be a single step with one acceptance criterion; the fast-path for small plans (≤2 steps) already keeps overhead minimal. The anti-pattern is skipping planning entirely, not the plan's size.
@@ -122,9 +143,9 @@ With the approach selected, determine the plan's scope:
 
 ### 4. Generate the Plan
 
-Write the plan artifact(s) following the structure defined in `references/step-template.md`. Every step includes all three phases: Build, Adversarial Review, and Verification.
+Write the plan artifact(s) following the template that matches the format chosen in the Plan Format section above: `references/step-template-html.md` for HTML output (default), or `references/step-template.md` for Markdown. Every step includes all three phases: Build, Adversarial Review, and Verification.
 
-**Plan header**: Include a title, date, summary of the goal, and the confirmed tool chain.
+**Plan header**: Include a title, date, summary of the goal, and the confirmed tool chain. The exact rendering of the header lives in the chosen template's "Plan Document Structure" section. For Markdown, the header looks like:
 
 ```markdown
 # Plan: [Feature/Change Title]
@@ -146,6 +167,8 @@ Write the plan artifact(s) following the structure defined in `references/step-t
 [Steps follow here, each using the 3-phase template]
 ```
 
+For HTML, the header uses the `<header class="plan-header">` and `<section id="tool-chain">` scaffold defined in `references/step-template-html.md`. The required IDs, classes, and `data-*` attributes on `<article class="step">` are not optional for HTML plans — `execute-blueprint` mutates those exact attributes to track progress.
+
 **Step generation rules**:
 
 - Number steps sequentially starting from 1.
@@ -159,10 +182,11 @@ Write the plan artifact(s) following the structure defined in `references/step-t
 
 **Writing the milestone folder** (when applicable):
 
-- Create one file per milestone: `01_milestone-name.md`, `02_milestone-name.md`, etc.
-- Each milestone file follows the same structure (header, tool chain, steps).
-- Add a root `README.md` in the plan folder that lists milestones in order with one-sentence descriptions.
+- Create one file per milestone using the chosen format's extension: `01_milestone-name.html`, `02_milestone-name.html`, etc. for HTML; `.md` for Markdown.
+- Each milestone file follows the same structure (header, tool chain, steps) from the chosen template.
+- Add a root `README` in the plan folder (`README.html` for HTML plans, `README.md` for Markdown plans) that lists milestones in order with one-sentence descriptions. The HTML variant uses the `<section id="milestones">` scaffold from `references/step-template-html.md`.
 - Keep milestones to 3-5 steps each. If a milestone has more, split it.
+- Do not mix formats within a single plan folder. All milestone files and the README share one extension.
 
 ### 5. Adversarial Plan Review
 
@@ -193,19 +217,29 @@ Do not skip the plan review (except via the fast-path above). Do not auto-resolv
 
 ## Output Formats
 
-See Step 3 (Assess Complexity) for which format to choose based on step count.
+See Step 3 (Assess Complexity) for which document layout to choose based on step count. See "Plan Format" near the top of this skill for the HTML vs Markdown decision. The two choices are orthogonal: any document layout can be HTML or Markdown.
 
 ### Single Document
 
-**Path**: `docs/plans/YYYY-MM-DD-<topic>-plan.md`
+**Path**: `docs/plans/YYYY-MM-DD-<topic>-plan.<ext>` where `<ext>` is `html` (default) or `md`.
 
-Example: `docs/plans/2026-03-15-user-auth-plan.md`
+Example (HTML): `docs/plans/2026-03-15-user-auth-plan.html`
+Example (MD): `docs/plans/2026-03-15-user-auth-plan.md`
 
 ### Milestone Folder
 
 **Path**: `docs/plans/YYYY-MM-DD-<topic>/`
 
-Contents:
+Contents (HTML, the default):
+```
+docs/plans/2026-03-15-user-auth/
+  README.html
+  01_data-layer.html
+  02_api-endpoints.html
+  03_frontend-integration.html
+```
+
+Contents (Markdown):
 ```
 docs/plans/2026-03-15-user-auth/
   README.md
@@ -214,11 +248,11 @@ docs/plans/2026-03-15-user-auth/
   03_frontend-integration.md
 ```
 
-The `README.md` provides an ordered list of milestones with summaries, the confirmed tool chain, and any cross-cutting concerns that apply to all milestones.
+The `README` (`.html` or `.md` matching the plan's format) provides an ordered list of milestones with summaries, the confirmed tool chain, and any cross-cutting concerns that apply to all milestones.
 
 ## Handling Plan Execution
 
-When the user asks to execute, invoke `blueprints:execute-blueprint` — it provides full subagent orchestration with batching, git handling, and progress tracking. If unavailable, work through steps one at a time completing all three phases before advancing. Mark completed steps with a checkmark in the plan heading and tick Phase 3 checkboxes for cross-session resumability. See `references/step-template.md` for what belongs in each phase of a plan step.
+When the user asks to execute, invoke `blueprints:execute-blueprint` — it provides full subagent orchestration with batching, git handling, and progress tracking, and handles both `.md` and `.html` plan formats. If unavailable, work through steps one at a time completing all three phases before advancing. Mark completed steps with a checkmark in the plan heading and tick Phase 3 checkboxes (or, for HTML plans, set `data-status="complete"` on the step's `<article>`, update the status badge text, prepend `✅ ` to the step heading, and add `checked` to verification checkboxes) for cross-session resumability. See `references/step-template.md` or `references/step-template-html.md` for what belongs in each phase of a plan step.
 
 ## Handling Scope Changes
 
@@ -229,6 +263,7 @@ When the user asks to execute, invoke `blueprints:execute-blueprint` — it prov
 
 Refer to the following reference files for detailed guidance:
 
-- **`references/step-template.md`** — Full step template with phase-by-phase guidance and a complete example step. Use this as the structural reference for every step in every plan.
+- **`references/step-template.md`** — Markdown step template with phase-by-phase guidance and a complete example step. Use as the structural reference when the chosen plan format is Markdown.
+- **`references/step-template-html.md`** — HTML step template with the required scaffold, structural contract (IDs/classes/`data-*` attributes), HTML-specific affordances guidance, and a complete example step. Use as the structural reference when the chosen plan format is HTML (default).
 - **`references/tool-discovery.md`** — Per-language lookup tables for detecting project tooling across ecosystems. Use as a reference during codebase exploration in step 1.
 - **`references/plan-review-subagent.md`** — Prompt template for the adversarial plan review subagent dispatched in step 5. Use this verbatim when dispatching the review subagent after plan generation.

@@ -4,6 +4,25 @@ All notable changes to the claude-plugins project are documented in this file.
 
 Version numbers refer to the **blueprints** plugin version (renamed from `blueprint` in 2.0.0), which has been the primary driver of releases. The `audits` plugin version (renamed from `code-audit` in 2.0.0) is noted where it differs.
 
+## [2.1.0] - 2026-05-17
+
+Add HTML as a first-class output format alongside Markdown for both plugins. HTML is the default; Markdown output is fully preserved. HTML files are self-contained — inline CSS, inline SVG, no external resources — and follow a stable structural contract (required IDs, classes, `data-*` attributes) so `execute-blueprint` can mutate progress state surgically.
+
+### Audits (2.1.0)
+
+- Add `report-template-html.md` for the `code-audit` skill and a parallel one for `security-audit`, defining the HTML scaffold, required IDs/classes/`data-*` attributes, and when to use HTML-specific affordances (inline SVG dataflow / trust-boundary diagrams, severity badges, CWE/OWASP tag styling, collapsible Intent Brief themes, anchor cross-references between findings). The existing Markdown templates are unchanged behaviourally; each now declares its format in its title and points at the HTML variant
+- Introduce a `<FORMAT-GATE>` hard gate before scope resolution in both audit skills: the launching message is scanned for HTML/MD signals; absent a signal, the user is asked once and the answer fixes the format for the run. Pre-stated formats in the launching message bypass the gate without ceremonial reconfirmation
+- Re-audit search now scans both `AUDIT-REPORT-*.html` and `AUDIT-REPORT-*.md` (and likewise for `SECURITY-AUDIT-REPORT-*`), picks the most recent by file modification time, and lets the new report's format float independently of the prior report's
+
+### Blueprints (2.1.0)
+
+- Add `step-template-html.md` for the `write-blueprint` skill, defining the HTML scaffold, the structural contract (`<article class="step" data-step="N" data-status="..." id="step-N">` and friends), the explicit `data-status` → badge-text → `✅ ` prefix mapping for all five states (`pending`/`active`/`complete`/`failed`/`skipped`), HTML-specific affordances to use when they add information (inline SVG dependency graphs for non-linear step dependencies, anchor cross-references between steps), and the milestone-folder README scaffold. The existing Markdown step template is unchanged behaviourally
+- `write-blueprint` defaults to HTML silently; HTML/MD signals in the launching message are honoured without a proactive gate. Genuinely ambiguous launching messages get one targeted question, after which the resolution is documented in the plan header
+- `execute-blueprint` detects plan format by file extension and applies format-specific progress mutations: for Markdown, the existing `✅ ` heading prefix and `- [ ]` → `- [x]` mutations; for HTML, four surgical mutations (`data-status="pending"` → `"complete"`, badge text `Pending` → `Complete`, `✅ ` prepended to the step `<h3>`, `checked` attribute added to every verification `<input type="checkbox">` in the step's `phase-verify` section). Mutations use `Edit`-style surgical replacement, never full-file rewrites
+- Subagent dispatch documented to pass the inner HTML of the matching section verbatim when the plan is HTML-format; semantic markup (lists, code blocks, emphasis, links) is preserved, not flattened. A note in `references/subagent-prompts.md` makes this explicit for the build / review / verification subagent templates
+- Mixed-format milestone folders (out-of-spec for `write-blueprint`) are detected by `execute-blueprint` and surfaced to the user with a question about which extension to use, rather than silently picked
+- READMEs and skill body wording updated to be format-neutral (no more "Markdown report" or "checkmarks" as the only options)
+
 ## [2.0.0] - 2026-05-07
 
 **Breaking change.** The two plugins and three of their skills have been renamed for consistency. Both plugins are now plural to reflect that they each ship multiple skills, and each skill name reads naturally as a noun or verb-noun pair.

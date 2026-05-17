@@ -2,7 +2,7 @@
 
 Language-agnostic code-quality and security auditing with structured, severity-ranked reports.
 
-This plugin performs thorough, systematic code audits that go beyond surface-level scanning. It reads every line of in-scope code, traces data flows across module boundaries, and produces structured Markdown reports with findings ranked by severity. It works with any language or framework, adapting its analysis checklists to the technologies present in your codebase.
+This plugin performs thorough, systematic code audits that go beyond surface-level scanning. It reads every line of in-scope code, traces data flows across module boundaries, and produces structured reports with findings ranked by severity. Reports can be generated as self-contained HTML (the default — with inline SVG dataflow diagrams, severity badges, CWE/OWASP tag styling, and collapsible Intent Brief themes) or as plain Markdown. The format is chosen at the start of every audit via a hard gate; if the launching message specifies HTML or MD, the gate accepts that without re-asking. The plugin works with any language or framework, adapting its analysis checklists to the technologies present in your codebase.
 
 The plugin ships two complementary skills: a general-purpose `code-audit` skill for code quality, and a deeper `security-audit` skill focused exclusively on security. They can be run independently or in sequence on the same codebase.
 
@@ -19,13 +19,13 @@ Run these inside an interactive Claude Code session:
 
 ### code-audit
 
-Performs a comprehensive code-quality audit covering concurrency issues, dead code, anti-patterns, performance problems, correctness bugs, error handling gaps, and test quality. The skill intelligently selects which audit categories to apply based on your request and the codebase under review, confirms the plan with you, then executes a systematic two-phase analysis producing a structured `AUDIT-REPORT-YYYY-MM-DD.md` file at the project root.
+Performs a comprehensive code-quality audit covering concurrency issues, dead code, anti-patterns, performance problems, correctness bugs, error handling gaps, and test quality. The skill intelligently selects which audit categories to apply based on your request and the codebase under review, confirms the plan with you, then executes a systematic two-phase analysis producing a structured `AUDIT-REPORT-YYYY-MM-DD.{html,md}` file at the project root (extension depends on the format chosen at the start of the run; HTML is the default).
 
 Trigger with: "audit this codebase", "code audit", "check for bugs", "review code quality", "find dead code", "check for anti-patterns", "performance audit", "technical debt", "code health check", "review test quality", "check error handling"
 
 ### security-audit
 
-Performs a security-focused audit using a threat-model-first, source-to-sink workflow. Covers the OWASP Top 10, OWASP API Top 10, CWE Top 25, language-specific footguns, secrets in current code and git history, dependency manifest review, IaC and container security, and CI/CD pipeline risks. Produces a structured `SECURITY-AUDIT-REPORT-YYYY-MM-DD.md` file with findings mapped to CWE and OWASP categories, severity scored by Impact × Exploitability × Exposure, and concrete exploit scenarios for High and Critical findings.
+Performs a security-focused audit using a threat-model-first, source-to-sink workflow. Covers the OWASP Top 10, OWASP API Top 10, CWE Top 25, language-specific footguns, secrets in current code and git history, dependency manifest review, IaC and container security, and CI/CD pipeline risks. Produces a structured `SECURITY-AUDIT-REPORT-YYYY-MM-DD.{html,md}` file at the project root (HTML by default) with findings mapped to CWE and OWASP categories, severity scored by Impact × Exploitability × Exposure, and concrete exploit scenarios for High and Critical findings. HTML reports additionally support inline SVG trust-boundary and source-to-sink dataflow diagrams.
 
 Trigger with: "security audit", "find vulnerabilities", "check for security issues", "pentest this code", "OWASP audit", "find injection vulnerabilities", "check authentication", "check authorization", "find secrets", "review for XSS", "check for SSRF", "audit dependencies for CVEs", "review Dockerfile security", "review CI/CD security"
 
@@ -38,7 +38,7 @@ Trigger with: "security audit", "find vulnerabilities", "check for security issu
 5. **Systematic analysis** -- two-phase analysis with automatic partitioning for large codebases (50+ files or 10,000+ lines, whichever applies first):
    - File-level: reads every line of every in-scope file, walking through applicable checklists item by item, cross-referencing potential findings against the Intent Brief.
    - Cross-file: traces data flows from entry points through processing layers to terminal operations, evaluating validation, authorization, error handling, and resource cleanup across module boundaries.
-6. **Report generation** -- produces a structured Markdown report with deduplicated findings ordered by severity, each including file location, category, description, impact assessment, and actionable recommendation. The security-audit report additionally includes CWE/OWASP mapping and exploit scenarios.
+6. **Report generation** -- produces a structured report (HTML by default, or Markdown if requested at the format gate) with deduplicated findings ordered by severity, each including file location, category, description, impact assessment, and actionable recommendation. The security-audit report additionally includes CWE/OWASP mapping and exploit scenarios. HTML reports follow a stable structural contract (required IDs, classes, and `data-*` attributes per finding) so they can be parsed for re-audit delta comparisons.
 
 ## Audit Categories (code-audit skill)
 

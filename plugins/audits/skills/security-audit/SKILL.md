@@ -18,7 +18,7 @@ description: >
 
 ## Purpose
 
-Perform a thorough, threat-model-first security audit of a codebase, producing a structured report with findings ranked by Impact x Exploitability x Exposure, mapped to CWE and OWASP categories, and (for High and Critical) supported by a concrete exploit scenario. Deliver the report as a Markdown file at the project root following the template in `references/report-template.md`.
+Perform a thorough, threat-model-first security audit of a codebase, producing a structured report with findings ranked by Impact x Exploitability x Exposure, mapped to CWE and OWASP categories, and (for High and Critical) supported by a concrete exploit scenario. Deliver the report as a self-contained file at the project root in the format the user chose (see "Report Format" below): HTML following `references/report-template-html.md`, or Markdown following `references/report-template.md`.
 
 This skill is exclusively focused on security. For general code-quality auditing (concurrency, dead code, anti-patterns, performance, correctness, error handling, tests), use the sibling `code-audit` skill in the same plugin. The two skills can run independently or in sequence on the same codebase. If a non-security code-quality issue is encountered incidentally during this audit, note it briefly and recommend running the `code-audit` skill rather than analyzing it in depth here.
 
@@ -29,6 +29,36 @@ Read every line of in-scope code. Do not skim, sample, or rely on heuristics to 
 ## Mindset
 
 Audit the code as a pentester would: assume any untrusted input is hostile, assume any check can be bypassed unless proven otherwise, assume any boundary can be crossed unless validated. Defense-in-depth matters — when one layer fails, what's the next layer? Look for what is *missing* (a check that should exist), not only what is *present* (a check that's wrong). Most real-world breaches come from missing controls, mass-assignment-style overposting, broken object-level authorization, and trust placed in user-controlled fields, not from exotic exploits.
+
+## Report Format
+
+The audit produces a self-contained file at the project root. The format determines the file extension and the template used in Phase 6. **HTML is the default** because it enables inline SVG trust-boundary and dataflow diagrams, severity / CWE / OWASP tag styling, collapsible Source/Sink Map entries per service, and anchor cross-references between related findings — affordances that materially improve a long security report and cannot be expressed in Markdown.
+
+<FORMAT-GATE>
+**Determine the format before resolving scope.** This is a hard gate — do not start scope resolution, threat modeling, intent discovery, source/sink mapping, analysis, or any other work until the format is fixed for this run.
+
+First, scan the user's launching message for an explicit format choice. Honor any of these:
+
+- HTML signals: `HTML`, `html`, "as a webpage", "browser-viewable", "rendered report".
+- Markdown signals: `MD`, `md`, `Markdown`, `markdown`, "plain text report", "as Markdown".
+
+If the launching message contains a clear format signal, accept it as the gate answer and proceed — do not re-ask for ceremonial confirmation. State the chosen format briefly when you state the resolved scope.
+
+If the launching message does not specify a format, ask exactly this question (or equivalent) and wait for the user's answer before proceeding:
+
+> Which report format would you like? **HTML** (default, self-contained file with inline trust-boundary diagrams, CWE/OWASP tags, and severity badges) or **MD** (plain Markdown)?
+
+Do not bundle this question with any other output. Do not assume a default without asking. The gate fires every time this skill runs.
+</FORMAT-GATE>
+
+Once the format is chosen, use it consistently for the remainder of the run:
+
+| Format | Template | Filename |
+|---|---|---|
+| HTML | `references/report-template-html.md` | `SECURITY-AUDIT-REPORT-YYYY-MM-DD.html` |
+| MD | `references/report-template.md` | `SECURITY-AUDIT-REPORT-YYYY-MM-DD.md` |
+
+When generating an HTML report, treat the HTML-specific affordances documented in `references/report-template-html.md` as tools to use when they add information — not decoration. Wrapping Markdown content in HTML tags without using those affordances defeats the point of choosing HTML.
 
 ## Workflow
 
@@ -50,7 +80,7 @@ If the user specifies paths that do not exist, warn about missing paths and proc
 
 If the prompt does not contain enough information to determine scope, ask a single clarifying question before proceeding. An audit with unclear boundaries produces unreliable results.
 
-If the user requests a re-audit, search for `SECURITY-AUDIT-REPORT-*.md` at the project root. If multiple reports exist, use the most recent. Default to the same scope as the prior audit. When a prior report exists, note in the new report which previous findings have been resolved and which persist, so the user gets a delta view.
+If the user requests a re-audit, search for `SECURITY-AUDIT-REPORT-*.md` and `SECURITY-AUDIT-REPORT-*.html` at the project root. If multiple reports exist, use the most recent by file modification time regardless of format. Default to the same scope as the prior audit. When a prior report exists, note in the new report which previous findings have been resolved and which persist, so the user gets a delta view. The new report's format follows the gate decision for the current run; it does not have to match the prior report's format.
 
 State the resolved scope to the user and proceed immediately; only stop for confirmation if scope is genuinely ambiguous.
 
@@ -164,7 +194,7 @@ Before report generation:
 
 ### Phase 6 — Report Generation
 
-Generate the final report following `references/report-template.md`. Specifically:
+Generate the final report following the template that matches the format chosen in the Format Gate: `references/report-template-html.md` for HTML output, `references/report-template.md` for Markdown output. The content rules below apply to both formats; the templates define the structural rendering.
 
 - Set the report date to the current date.
 - Populate the summary table: scope, application kind and exposure (from Threat Model Brief), domains audited, finding counts by severity.
@@ -172,7 +202,12 @@ Generate the final report following `references/report-template.md`. Specificall
 - Include a "Source/Sink Map" appendix summarizing the Phase 4 enumeration so the reader can see what was analyzed.
 - Assign sequential `SEC-NNN` identifiers starting at `SEC-001`. Order findings by severity (Critical first), then by domain category in the order listed in the Reference Index below, then by file path within the same severity and category.
 - Each finding contains: identifier, short title, domain category, CWE ID(s), OWASP Top 10 / API Top 10 mapping, location (`file:line`), severity (with the Impact/Exploitability/Exposure breakdown), description, impact, exploit scenario (or "Not Confirmed" explanation for High/Critical), and recommendation. Use `references/owasp-cwe-mapping.md` for CWE/OWASP lookup; pick the most specific CWE that fits.
-- Save the report at the project root following the filename convention in the template, incrementing the numeric suffix if the file already exists.
+- Save the report at the project root following the filename convention from the chosen template (`SECURITY-AUDIT-REPORT-YYYY-MM-DD.html` for HTML, `SECURITY-AUDIT-REPORT-YYYY-MM-DD.md` for Markdown), incrementing the numeric suffix if the file already exists.
+
+When the chosen format is HTML, additionally:
+
+- Follow the structural contract in `references/report-template-html.md` exactly: required IDs, classes, and `data-*` attributes are not optional. The scaffold is what makes the report parseable and the re-audit delta possible.
+- Use HTML-specific affordances when they add information: inline SVG trust-boundary diagrams in the Threat Model section for multi-service or multi-tenant applications; SVG source-to-sink dataflow diagrams for High/Critical injection findings whose path spans many files; collapsible Security Intent Brief themes; anchor cross-references between related findings (shared root cause, chained exploit prerequisites). Skip them when prose already conveys the relationship cleanly.
 
 After saving, state the file path and a brief summary of the results to the user, including the number of Critical findings (if any), the application kind and exposure used in scoring, and any High findings whose exploitability was not confirmed.
 
@@ -188,7 +223,8 @@ Load these references when their phase is active. The SKILL.md body intentionall
 - `references/exploit-scenarios.md` — Phase 5 exploit-scenario construction.
 - `references/severity-guide.md` — Impact x Exploitability x Exposure scoring.
 - `references/owasp-cwe-mapping.md` — quick lookup for OWASP and CWE tags.
-- `references/report-template.md` — Phase 6 report format.
+- `references/report-template.md` — Phase 6 report format when the user chose Markdown.
+- `references/report-template-html.md` — Phase 6 report format when the user chose HTML (default).
 
 **Domain checklists** (load only those flagged applicable by the Threat Model Brief). Grouped to aid selection and to define the canonical domain-category sort order for the report:
 

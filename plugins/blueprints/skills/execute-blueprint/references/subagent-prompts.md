@@ -2,6 +2,8 @@
 
 Prompt templates for the three subagent types dispatched during plan execution. Each template is passed to Claude Code's Agent tool verbatim, with placeholders substituted at dispatch time.
 
+**Note on HTML-format plans:** When the source plan is HTML, the substituted placeholders (objective, acceptance criteria, phase instructions, verification checklist) contain HTML markup — lists as `<ul>`/`<ol>`, code as `<pre>`/`<code>`, emphasis as `<strong>`/`<em>`, links as `<a>`, etc. Subagents read these natively and treat the semantic tags as content structure. No special handling is required; the prompts below are format-agnostic.
+
 ---
 
 ## Build Subagent

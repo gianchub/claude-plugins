@@ -30,7 +30,7 @@ Every build, every review, and every verification is dispatched to a subagent vi
 - Handles git according to the user's chosen mode.
 - Marks progress in the plan file.
 
-This rule applies regardless of plan size, step size, or apparent triviality. A one-line config change is still dispatched as a build subagent. The main conversation does not edit source files, run tests, or run linters directly during step execution. Tools the main conversation may use during execution are limited to: reading the plan, writing checkmarks back into the plan, dispatching agents, and creating git commits in skill-managed mode.
+This rule applies regardless of plan size, step size, or apparent triviality. A one-line config change is still dispatched as a build subagent. The main conversation does not edit source files, run tests, or run linters directly during step execution. Tools the main conversation may use during execution are limited to: reading the plan, writing progress markers back into the plan (the format-specific mutations defined in "Progress Tracking" below), dispatching agents, and creating git commits in skill-managed mode.
 </SUBAGENT-ONLY>
 
 <HARD-GATES>
@@ -54,18 +54,29 @@ Execution proceeds through these phases in strict order. Phases 1–3 are gates 
 
 ## Phase 1: Locate the Plan
 
-Scan `docs/plans/` for plan files. If a single plan file exists, use it. If multiple plan files or milestone folders exist, present the list to the user and ask which to execute. For milestone folders containing numbered step files, start from the first step that is not marked with a checkmark. If the plan file is specified directly in the user's request (e.g., "execute 01_milestone_name.md"), use that file without asking.
+Scan `docs/plans/` for plan files. Plans may be written in either Markdown (`.md`) or HTML (`.html`). Search for both extensions and treat them equivalently — a single `.md` file, a single `.html` file, a milestone folder containing `.md` files, and a milestone folder containing `.html` files are all valid plan structures.
 
-Read the entire plan file into context before beginning execution. Identify all step headings, their phase instructions (Phase 1 build, Phase 2 review, Phase 3 verification), and any dependencies between steps. Count the total number of steps and report to the user how many steps the plan contains and how many are already marked complete before asking to proceed.
+If a single plan file or folder exists, use it. If multiple plan files or folders exist, present the list to the user and ask which to execute. For milestone folders containing numbered step files, start from the first step that is not marked complete (see "Progress Tracking" below for how completion is encoded in each format). If the plan file is specified directly in the user's request (e.g., "execute 01_milestone_name.md" or "execute 01_milestone_name.html"), use that file without asking.
+
+If a milestone folder mixes `.md` and `.html` step files, this is out-of-spec: `write-blueprint` never produces mixed folders. Warn the user, list the mixed files, and ask which format to use for the run. Do not silently pick one extension over the other.
+
+**Detect the plan's format** by file extension. The format affects only how the plan is parsed and how progress is written back; it does not affect how subagents are dispatched. Cache the detected format for the rest of the session.
+
+Read the entire plan file into context before beginning execution. Identify all step headings or step articles, their phase instructions (Phase 1 build, Phase 2 review, Phase 3 verification), and any dependencies between steps:
+
+- For Markdown plans: step headings (`### Step N: ...`) delimit steps; phase headings (`#### Phase 1 — Build`, etc.) delimit phases.
+- For HTML plans: `<article class="step" data-step="N">` elements delimit steps; `<section class="phase phase-build">`, `<section class="phase phase-review">`, `<section class="phase phase-verify">` delimit phases.
+
+Count the total number of steps and report to the user how many steps the plan contains and how many are already marked complete before asking to proceed.
 
 If the user requests executing only specific steps (e.g., "execute steps 3-5" or "skip step 2"), honor the request — execute only the specified steps in order, skipping others. Warn if skipped steps contain dependencies required by the requested steps.
 
 Determine plan complexity from the plan structure:
 
-- **Simple plan**: a single plan document.
-- **Complex plan**: a milestone folder containing multiple milestone files.
+- **Simple plan**: a single plan document (either `.md` or `.html`).
+- **Complex plan**: a milestone folder containing multiple milestone files (either `.md` or `.html`).
 
-The complexity classification is used by the Cadence Gate below.
+The complexity classification is used by the Cadence Gate below. Format does not affect complexity.
 
 ## Phase 2: Git Mode Gate
 
@@ -97,7 +108,7 @@ Wait for the user's answer before continuing. Re-ask every new execution session
 
 - After each individual step passes all three phases, create a commit automatically.
 - If a step requires human intervention (blocking review findings or failed verification checks), do not commit any of that step's changes until the intervention is fully resolved and the step passes all remaining phases. A partial step is never committed.
-- Include the plan file's progress updates (✅ heading prefix and ticked checkboxes) in the same commit as the step's implementation changes — do not create a separate commit for plan progress.
+- Include the plan file's progress updates (✅ heading prefix and ticked checkboxes for Markdown plans; `data-status="complete"`, badge text, ✅ heading prefix, and `checked` attributes for HTML plans) in the same commit as the step's implementation changes — do not create a separate commit for plan progress.
 - Use a clear, descriptive commit message in conventional commits format referencing the step.
 - Never include Claude Code or AI attribution in commit messages. No co-authored-by lines, no bot signatures, no AI references of any kind.
 - Pause cadence is determined by the Cadence Gate below.
@@ -148,6 +159,8 @@ Once both gates have closed, begin step execution. All work in this phase is per
 
 Use Claude Code's Agent tool to dispatch subagents. Reference `references/subagent-prompts.md` for the exact prompt templates. Substitute placeholders with actual values before dispatching.
 
+**Extracting placeholder content from the plan**: For Markdown plans, copy the content beneath the matching heading verbatim. For HTML plans, extract the inner content of the matching section (`<p class="step-objective">` for objective, `<section class="acceptance-criteria">` for criteria, `<section class="phase phase-build">` for Phase 1 instructions, `<section class="phase phase-review">` for Phase 2, `<section class="phase phase-verify">` for Phase 3). Preserve semantic markup (`<ul>`, `<ol>`, `<pre>`, `<code>`, `<p>`, `<a>`) but strip the outer wrapper tag. The subagent reads HTML natively; do not flatten lists or code blocks to plain text.
+
 **Build subagent dispatch:**
 - Pass the step's objective text verbatim from the plan into `{{STEP_OBJECTIVE}}`.
 - Pass the step's acceptance criteria list verbatim from the plan into `{{ACCEPTANCE_CRITERIA}}`.
@@ -164,7 +177,7 @@ Use Claude Code's Agent tool to dispatch subagents. Reference `references/subage
 
 **Verification subagent dispatch:**
 - Pass the step's Phase 3 checklist verbatim from the plan into `{{PHASE_3_CHECKLIST}}`.
-- Pass the project's tool chain configuration (test runner, linter, type checker commands) into `{{TOOL_CHAIN_CONFIG}}`. Extract the tool chain from the plan's Tool Chain table — it was confirmed by the user during planning and is the authoritative source. If the plan has no Tool Chain table, detect from the project's config files (pyproject.toml, package.json, Makefile, etc.) as a fallback. Cache the resolved configuration and reuse it for subsequent verification dispatches unless the plan explicitly changes tool chain requirements.
+- Pass the project's tool chain configuration (test runner, linter, type checker commands) into `{{TOOL_CHAIN_CONFIG}}`. Extract the tool chain from the plan's Tool Chain table — it was confirmed by the user during planning and is the authoritative source. For HTML plans, the table lives inside `<section id="tool-chain">`. If the plan has no Tool Chain table, detect from the project's config files (pyproject.toml, package.json, Makefile, etc.) as a fallback. Cache the resolved configuration and reuse it for subsequent verification dispatches unless the plan explicitly changes tool chain requirements.
 - The verification subagent runs actual tools and reports pass/fail per checklist item.
 - Parse the verification response to identify any failures. A single failed check means the entire verification phase fails.
 
@@ -196,16 +209,33 @@ After the user resolves the intervention (manual fix, re-run build, etc.), re-ru
 
 Advisory review findings do not block execution. Present them to the user as informational notes after the step passes all phases. The user may choose to address them later or ignore them.
 
-Steps that have already passed all three phases and been marked complete retain their checkmarks regardless of subsequent failures in other steps. A failure in Step B does not roll back Step A.
+Steps that have already passed all three phases and been marked complete retain their completion markers regardless of subsequent failures in other steps. A failure in Step B does not roll back Step A.
 
 ### Progress Tracking
 
-Immediately after a step passes all three phases (build, review, verify), mark it complete in the plan file with two updates:
+Immediately after a step passes all three phases (build, review, verify), mark it complete in the plan file. The exact mutation depends on the plan format detected in Phase 1.
+
+**Markdown plans (`.md`)**: Apply two updates:
 
 1. Prepend a checkmark to the step heading. For example, transform `### Step 1: Auth middleware` into `### ✅ Step 1: Auth middleware`.
 2. Tick all markdown checkboxes within the completed step by changing `- [ ]` to `- [x]` for every checkbox in that step's Phase 3 verification checklist (and any other checkboxes within the step).
 
-Write both changes to the plan file on disk so progress persists across sessions. On resume, scan the plan file for the first step heading that does not have a ✅ prefix and begin execution from that step.
+**HTML plans (`.html`)**: Apply three updates to the step's `<article class="step" data-step="N">` element:
+
+1. Change the `data-status` attribute from its current value (typically `pending`) to `complete`. This is the canonical machine-readable state and the basis for resume detection.
+2. Prepend `✅ ` to the inner text of the step's `<h3>` element inside `<header class="step-header">`. For example, `<h3>Step 1: Auth middleware</h3>` becomes `<h3>✅ Step 1: Auth middleware</h3>`. This is the human-visible signal.
+3. Update the status badge text and add the `checked` attribute to verification checkboxes:
+   - Change `<span class="status-badge">Pending</span>` to `<span class="status-badge">Complete</span>` (the badge color updates automatically via the inline CSS).
+   - For every `<input type="checkbox" disabled>` inside that step's `<section class="phase phase-verify">`, add the `checked` attribute → `<input type="checkbox" disabled checked>`. Do not modify checkboxes belonging to other steps.
+
+Use `Edit` (or equivalent surgical string replacement) for these mutations — do not rewrite the entire file. The HTML scaffold defined in `references/step-template-html.md` of the `write-blueprint` skill uses stable IDs (`id="step-N"`) and class names that make targeted edits straightforward.
+
+Write all changes to the plan file on disk so progress persists across sessions. On resume:
+
+- For Markdown plans, scan for the first step heading without a ✅ prefix.
+- For HTML plans, scan for the first `<article class="step">` whose `data-status` is not `complete` (typically `pending`, or `failed`/`skipped` if a prior session encountered issues).
+
+Other terminal statuses (`failed`, `skipped`) follow the same mutation pattern with the appropriate `data-status` value and badge text. Do not prepend `✅ ` for non-complete terminal states.
 
 If the user previously paused execution (user-managed git mode), re-read the entire plan file before resuming. The user may have edited the plan during the pause — added steps, removed steps, reordered steps, or modified instructions. Honor whatever the plan file contains at resume time.
 
@@ -247,7 +277,7 @@ If any of these thoughts appear, the skill is about to be violated. Stop and cor
 | "I'll batch all the builds first, then all the reviews." | No. Steps run strictly serially within a batch: Build → Review → Verify per step before moving to the next step. |
 | "The plan only has 2 milestones, I'll skip the cadence question." | The Cadence Gate fires for any complex (multi-milestone) plan in skill-managed mode. Two milestones still counts. |
 | "User-managed mode in a milestone plan — I should ask the cadence too." | No. Cadence Gate is conditional on skill-managed mode. User-managed always pauses per step. |
-| "I'll squash the plan progress into a separate commit so the diff is cleaner." | No. Plan progress (checkmarks) goes in the same commit as the step's implementation. |
-| "Step B failed verification, but Step A passed — I'll roll back A." | No. Completed steps keep their checkmarks. Failures stop forward progress; they do not undo prior progress. |
+| "I'll squash the plan progress into a separate commit so the diff is cleaner." | No. Plan progress markers (Markdown checkboxes or HTML `data-status` / badge / checkbox attributes) go in the same commit as the step's implementation. |
+| "Step B failed verification, but Step A passed — I'll roll back A." | No. Completed steps keep their completion markers. Failures stop forward progress; they do not undo prior progress. |
 
 All of these mean: stop, re-read the relevant phase or law, and follow it as written.
