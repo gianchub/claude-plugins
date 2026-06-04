@@ -12,7 +12,7 @@ Collaborative implementation planning and execution with build-review-verify cyc
 - **Automatic tool discovery** — detects your project's test runner, linter, formatter, and type checker from config files and CI pipelines, then embeds the exact verification commands into every step.
 - **Build-review-verify cycle** — every step goes through three phases: build the thing, adversarial review targeting likely failure modes, then run the full tool chain to verify.
 - **Adaptive format** — produces a single plan document for small tasks or a milestone folder structure for larger efforts, based on complexity. Output is HTML by default (self-contained, with inline SVG dependency graphs and stable `data-status` attributes so progress mutations stay surgical) or Markdown when requested.
-- **Subagent execution** — the `execute-blueprint` skill drives plans step-by-step using dedicated subagents for each phase, with git handling (manual or automatic with adaptive pause cadence) and progress tracking.
+- **Subagent-driven, lean context** — both skills push heavy work into subagents: `write-blueprint` delegates bulk codebase exploration and the adversarial plan review, while `execute-blueprint` runs every build, review, and verification step in its own subagent. The main conversation stays a lean coordinator holding only distilled summaries — never file contents or tool output — which is what lets both scale to large codebases and multi-milestone plans. Execution adds git handling (manual or automatic with adaptive pause cadence) and progress tracking.
 
 **Skills:**
 

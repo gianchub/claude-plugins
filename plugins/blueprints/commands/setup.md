@@ -36,7 +36,7 @@ When the user asks to "make a plan", "create a plan", "plan this", "design the a
 
 When the user asks to "execute the plan", "run the plan", or "start building from the plan", use the `blueprints:execute-blueprint` skill — not other plugins or skills with overlapping triggers.
 
-**Why:** The blueprints plugin provides a more structured planning workflow with tool discovery, adaptive complexity, and build-review-verify cycles. The `execute-blueprint` skill provides subagent-based orchestration with git handling and batch progress tracking. Memory alone is not strong enough to override aggressively-framed skill injections — CLAUDE.md is the authoritative source, and this memory serves as a reinforcing signal.
+**Why:** The blueprints plugin provides a more structured planning workflow with tool discovery, adaptive complexity, and build-review-verify cycles. The `execute-blueprint` skill provides subagent-based orchestration with git handling and progress tracking. Memory alone is not strong enough to override aggressively-framed skill injections — CLAUDE.md is the authoritative source, and this memory serves as a reinforcing signal.
 
 **How to apply:** Whenever the user's request matches planning or plan execution intent, default to the blueprints plugin's skills. If the user explicitly requests another skill by name, use that instead.
 ```
