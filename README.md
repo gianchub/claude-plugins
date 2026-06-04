@@ -49,19 +49,19 @@ Language-agnostic code-quality and security auditing with structured severity-ra
 
 ## Installation
 
-All commands shown below are slash commands; run them inside an interactive Claude Code session. (CLI equivalents — `claude plugin marketplace add`, `claude plugin install`, etc. — also exist for most of these and behave identically; pick whichever fits your workflow.)
+The commands below are CLI commands — run them from your shell. Each also has a slash-command equivalent (`/plugin marketplace add`, `/plugin install`, …) you can run inside an interactive Claude Code session instead; pick whichever fits your workflow.
 
 ### 1. Add the marketplace
 
-```
-/plugin marketplace add gianchub/claude-plugins
+```sh
+claude plugin marketplace add gianchub/claude-plugins
 ```
 
 ### 2. Install a plugin
 
-```
-/plugin install blueprints@gianchub-plugins
-/plugin install audits@gianchub-plugins
+```sh
+claude plugin install blueprints@gianchub-plugins
+claude plugin install audits@gianchub-plugins
 ```
 
 ### 3. Enable auto-update
@@ -81,57 +81,56 @@ Restart Claude Code, then try:
 
 Remove a plugin:
 
-```
-/plugin uninstall blueprints@gianchub-plugins
-/plugin uninstall audits@gianchub-plugins
+```sh
+claude plugin uninstall blueprints@gianchub-plugins
+claude plugin uninstall audits@gianchub-plugins
 ```
 
 Remove the marketplace entirely:
 
-```
-/plugin marketplace remove gianchub-plugins
+```sh
+claude plugin marketplace remove gianchub-plugins
 ```
 
 ## Updating
 
-With auto-update enabled, plugins update automatically on session start. To trigger an update manually:
+With auto-update enabled, plugins update automatically on session start. To trigger an update manually from your shell:
 
-- **From the interactive UI** — run `/plugin`, switch to the **Installed** tab, and update from there.
-- **From the shell** — there is no `/plugin update` slash form for individual plugins. Use the CLI:
+```sh
+claude plugin update blueprints@gianchub-plugins
+claude plugin update audits@gianchub-plugins
+```
 
-  ```sh
-  claude plugin update blueprints@gianchub-plugins
-  claude plugin update audits@gianchub-plugins
-  ```
+You can also update from the interactive UI: run `/plugin`, switch to the **Installed** tab, and update from there. (There is no `/plugin update` slash form for individual plugins.)
 
 To refresh the marketplace's local cache (so new plugins published to the marketplace become visible):
 
-```
-/plugin marketplace update gianchub-plugins
+```sh
+claude plugin marketplace update gianchub-plugins
 ```
 
 ## Migrating from earlier versions
 
-The 2.0.0 release renamed the plugins (`blueprint` → `blueprints`, `code-audit` → `audits`) and renamed several skills (`blueprint` → `write-blueprint`, `execute` → `execute-blueprint`, `audit` → `code-audit`; `security-audit` is unchanged). Existing installations of `blueprint` or `code-audit` keep working but stop receiving updates. To move forward, run these commands inside an interactive Claude Code session:
+The 2.0.0 release renamed the plugins (`blueprint` → `blueprints`, `code-audit` → `audits`) and renamed several skills (`blueprint` → `write-blueprint`, `execute` → `execute-blueprint`, `audit` → `code-audit`; `security-audit` is unchanged). Existing installations of `blueprint` or `code-audit` keep working but stop receiving updates. To move forward, run these commands from your shell:
 
 1. Uninstall the old plugins:
 
-   ```
-   /plugin uninstall blueprint@gianchub-plugins
-   /plugin uninstall code-audit@gianchub-plugins
+   ```sh
+   claude plugin uninstall blueprint@gianchub-plugins
+   claude plugin uninstall code-audit@gianchub-plugins
    ```
 
-2. Refresh the marketplace cache so Claude Code sees the renamed plugins (without this step, `/plugin install blueprints@…` may fail because the local catalog still lists the old names; a session restart alone does not refresh):
+2. Refresh the marketplace cache so Claude Code sees the renamed plugins (without this step, `claude plugin install blueprints@…` may fail because the local catalog still lists the old names):
 
-   ```
-   /plugin marketplace update gianchub-plugins
+   ```sh
+   claude plugin marketplace update gianchub-plugins
    ```
 
 3. Install the renamed plugins:
 
-   ```
-   /plugin install blueprints@gianchub-plugins
-   /plugin install audits@gianchub-plugins
+   ```sh
+   claude plugin install blueprints@gianchub-plugins
+   claude plugin install audits@gianchub-plugins
    ```
 
 If you previously ran `/blueprint:setup`, run `/blueprints:setup` again so the project preference points at the renamed plugin.
