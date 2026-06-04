@@ -4,6 +4,23 @@ All notable changes to the claude-plugins project are documented in this file.
 
 Version numbers refer to the **blueprints** plugin version (renamed from `blueprint` in 2.0.0), which has been the primary driver of releases. The `audits` plugin version (renamed from `code-audit` in 2.0.0) is noted where it differs.
 
+## [2.2.0] - 2026-06-04
+
+Simplify `execute-blueprint`'s pause model by removing the fixed-size step batching, and reinforce the subagent-driven, lean-context design of both blueprint skills. The `audits` plugin is unchanged and remains at 2.1.0.
+
+### Blueprints (2.2.0)
+
+- Remove the "batches of up to three steps" grouping from `execute-blueprint`. The batch concept is redundant now that plans are organized into milestones: pause cadence is governed entirely by git mode and milestone boundaries. Steps still execute strictly serially — each step completes its full Build → Review → Verify cycle before the next step's build begins — but there is no longer any fixed-size grouping, no per-batch summary, and no batch-boundary logic. The "Batching and Order" section is replaced with "Execution Order"; the batch-summary reporting line and the batch-related red-flag guidance are removed
+- Restate the pause cadence cleanly: **user-managed** pauses after every step; **skill-managed** commits each passing step and either runs a simple (single-document) plan straight through to the end, or — for a complex (multi-milestone) plan — pauses at each milestone boundary by default, with a full-auto option that runs across all milestones without pausing
+- The Git Mode Gate now presents **skill-managed as the default option**. It remains a hard gate that is surfaced every session; the default is a recommendation, not a license to skip the question
+- Reinforce the lean-context rationale throughout `execute-blueprint`: every build, review, and verification runs inside a subagent whose context is reclaimed on return, so the coordinating conversation holds only the plan and each subagent's distilled summary — never file contents or tool output. This is what keeps the context window lean across long, multi-milestone plans
+- `write-blueprint` gains a "Context Discipline (Subagent-Driven)" design principle and now recommends dispatching exploration subagents for bulk codebase reading during Step 1 (in addition to the existing adversarial plan-review subagent), so planning also stays a lean coordinator that holds distilled findings rather than the contents of every file surveyed
+- READMEs (root and plugin) and the `/blueprints:setup` rationale updated to drop batching language and describe the subagent-driven, lean-context model
+
+### Audits
+
+- No changes; remains at 2.1.0
+
 ## [2.1.0] - 2026-05-17
 
 Add HTML as a first-class output format alongside Markdown for both plugins. HTML is the default; Markdown output is fully preserved. HTML files are self-contained — inline CSS, inline SVG, no external resources — and follow a stable structural contract (required IDs, classes, `data-*` attributes) so `execute-blueprint` can mutate progress state surgically.

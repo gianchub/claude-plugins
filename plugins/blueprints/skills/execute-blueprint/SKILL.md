@@ -15,6 +15,8 @@ description: >
 
 Execute blueprint plans by driving each step through a strict build, review, and verify cycle using dedicated subagents. The main conversation is a coordination hub between the user and the subagents — it asks the user the questions defined in this skill, dispatches subagents to do the work, reports results, and handles git according to the user's chosen mode. The main conversation never performs build, review, or verification work itself.
 
+Pushing every build, review, and verification into a subagent is what keeps this skill viable across long, multi-milestone plans: the bulk of the token cost — reading source files, running tools, capturing full output — is spent inside subagents whose context is reclaimed the moment they return. The coordinator's context holds only the plan and the distilled summary each subagent reports back, never the file contents or tool output, so it stays lean no matter how large the plan grows.
+
 ## Iron Laws
 
 These rules govern every execution session. They override any local reasoning that suggests cutting corners.
@@ -31,6 +33,8 @@ Every build, every review, and every verification is dispatched to a subagent vi
 - Marks progress in the plan file.
 
 This rule applies regardless of plan size, step size, or apparent triviality. A one-line config change is still dispatched as a build subagent. The main conversation does not edit source files, run tests, or run linters directly during step execution. Tools the main conversation may use during execution are limited to: reading the plan, writing progress markers back into the plan (the format-specific mutations defined in "Progress Tracking" below), dispatching agents, and creating git commits in skill-managed mode.
+
+**Why this is absolute:** keeping all heavy work in subagents is the mechanism that keeps the coordinator's context window lean. If the main conversation reads source files or captures tool output directly, that material accumulates in its context and the skill degrades over a long plan. Subagent context is ephemeral — reclaimed the moment the subagent returns its summary — so the coordinator pays only for the distilled result, not for the work that produced it.
 </SUBAGENT-ONLY>
 
 <HARD-GATES>
@@ -50,7 +54,7 @@ Execution proceeds through these phases in strict order. Phases 1–3 are gates 
 1. **Locate the Plan** — find or confirm the plan file, report progress so far, ask whether to proceed.
 2. **Git Mode Gate** — ask the user to choose user-managed or skill-managed git handling. Hard gate.
 3. **Cadence Gate** *(conditional)* — only if the user chose skill-managed AND the plan is complex (multi-milestone). Ask whether to pause at milestone boundaries or run full auto. Hard gate.
-4. **Step Execution** — dispatch build, review, and verification subagents per step in batches; pause and commit per the chosen modes; mark progress in the plan file.
+4. **Step Execution** — dispatch build, review, and verification subagents per step, strictly serially; pause and commit per the chosen modes; mark progress in the plan file.
 
 ## Phase 1: Locate the Plan
 
@@ -88,9 +92,9 @@ Present exactly two options to the user, with this wording or equivalent:
 > How would you like git to be handled during execution?
 >
 > 1. **User-managed**: I pause after every step. You inspect, stage, and commit at your own pace.
-> 2. **Skill-managed**: I commit automatically after each step that passes all three phases.
+> 2. **Skill-managed** *(default)*: I commit automatically after each step that passes all three phases.
 
-Wait for the user's answer before continuing. Re-ask every new execution session — never carry the choice over from a previous session, and never assume a default.
+Wait for the user's answer before continuing. Re-ask every new execution session — never carry the choice over from a previous session. Skill-managed is the default option presented, but the gate is still surfaced every session: do not silently start execution without the user choosing or pre-stating a mode.
 
 **Pre-stated answer**: if the user's first execution message already specifies a mode unambiguously (e.g., "execute this plan in skill-managed mode", "use user-managed mode and execute"), accept it as the gate answer and proceed. Do not re-ask for ceremonial confirmation. The gate's purpose is to ensure the user has chosen, not to perform the question. If the wording is ambiguous (e.g., "manage it yourself"), ask the gate question.
 </GIT-MODE-GATE>
@@ -101,7 +105,6 @@ Wait for the user's answer before continuing. Re-ask every new execution session
 - The user inspects changes, stages files, and commits at their discretion.
 - Do not create any commits automatically.
 - Do not resume execution until the user explicitly says to continue.
-- Even when steps are batched, pause after each individual step within the batch. Present a batch summary after the final step in a batch as a cumulative checkpoint, but the user has already had the opportunity to review after each step.
 - The Cadence Gate is skipped — user-managed mode always pauses per step regardless of plan complexity.
 
 ### Skill-managed mode
@@ -144,7 +147,7 @@ Wait for the user's answer before continuing.
 ### Milestone pauses
 
 - After every milestone document completes, present a milestone summary and ask whether to continue.
-- Within a milestone, run all steps continuously without pausing at batch boundaries.
+- Within a milestone, run all steps continuously, pausing only at the milestone boundary.
 
 ### Full auto
 
@@ -181,19 +184,20 @@ Use Claude Code's Agent tool to dispatch subagents. Reference `references/subage
 - The verification subagent runs actual tools and reports pass/fail per checklist item.
 - Parse the verification response to identify any failures. A single failed check means the entire verification phase fails.
 
-### Batching and Order
+### Execution Order
 
-Group steps into batches of up to 3 steps maximum. Execute steps **strictly serially** within a batch: Step A must complete its full build, review, and verify cycle and pass all three phases before Step B begins its build phase. The execution order within a batch is always:
+Execute steps **strictly serially**, one at a time. Step A must complete its full build, review, and verify cycle and pass all three phases before Step B begins its build phase. The order for every step is always:
 
-1. Step A: Build → Review → Verify (all must pass)
-2. Step B: Build → Review → Verify (all must pass)
-3. Step C: Build → Review → Verify (all must pass)
+1. **Build** subagent → 2. **Review** subagent → 3. **Verify** subagent — all three must pass before the step is complete.
 
-Never batch builds together. Never batch reviews together. Never batch verifications together. Never start Step B's build while Step A's review or verification is pending. Each phase gates the next phase. Each step gates the next step.
+Never start a step's build while the previous step's review or verification is still pending. Never run the builds (or reviews, or verifications) of multiple steps together. Each phase gates the next phase within a step; each step gates the next step. The coordinator dispatches exactly one subagent at a time and retains only the structured summary it returns — never the file contents or tool output — which is what keeps its context lean across a long plan.
 
-After a batch completes (all steps in the batch passed all phases), handle git according to the chosen mode, then present a batch summary to the user showing which steps completed. In user-managed mode, the user has already been paused after each step. In skill-managed mode, continue to the next batch without pausing unless a pause cadence boundary has been reached (milestone boundary for milestone pauses, or end of plan for simple plans and full auto).
+After a step passes all three phases, handle git according to the chosen mode and mark progress in the plan file, then decide whether to pause:
 
-A batch never crosses milestone boundaries. If the current milestone has 2 remaining steps and the next milestone has steps, the current batch contains only those 2 steps. If the plan has fewer remaining steps than the batch size, the batch contains only the remaining steps. If a step fails within a batch, the remaining steps in that batch do not execute — present the failure and wait for guidance.
+- **User-managed mode**: pause after every step for the user to inspect and commit.
+- **Skill-managed mode**: commit automatically and continue to the next step without pausing — unless a milestone boundary has been reached under the milestone-pauses cadence, in which case pause and ask. Simple plans and full auto run straight through to the end.
+
+Pausing is governed entirely by git mode and milestones; there is no fixed-size step grouping. If a step fails — a blocking review finding or a failed verification check — stop immediately and do not execute any subsequent step. Present the failure and wait for guidance.
 
 ### Failure Handling
 
@@ -260,8 +264,6 @@ After each step completes all three phases, present a step report. The level of 
 - **Skill-managed continuous modes** (simple plans, or full auto): Condense each step report to a single line — step label, status, files changed, verification result, and commit hash. Present a comprehensive summary at the end of the run.
 - **Skill-managed milestone pauses**: Use the condensed single-line format for steps within a milestone. Present a full milestone summary at each pause point.
 
-After a batch completes, present a batch summary listing all steps that completed in the batch and cumulative statistics.
-
 ## Red Flags — STOP and re-read this skill
 
 If any of these thoughts appear, the skill is about to be violated. Stop and correct course before continuing.
@@ -269,12 +271,12 @@ If any of these thoughts appear, the skill is about to be violated. Stop and cor
 | Thought | Reality |
 |---------|---------|
 | "This plan is short, I'll skip the git question." | Phase 2 runs every session regardless of plan size. Ask. |
-| "User just said 'go' — I'll assume skill-managed." | Never assume. The user's word for "go" is their answer to a specific gate question. If the gate has not been asked, ask it. |
+| "User just said 'go' — I'll assume skill-managed." | The gate is still presented every session. Skill-managed is the default option, but "go" is not an answer to a gate the user has not seen — if the gate has not been asked, ask it. |
 | "The user picked skill-managed last time, I'll reuse it." | Mode choices are session-scoped, not plan-scoped. Re-ask every new session. |
 | "This is a simple one-line edit, I'll just do it inline." | No. Dispatch a build subagent. The Subagent-Only law has no size exception. |
 | "I'll run the tests myself to confirm — it's faster." | No. Verification runs in a verification subagent. Main chat does not run tests during step execution. |
 | "The build subagent's summary is enough — I'll skip the review subagent." | No. Every step runs all three phases. Reviews read files from disk independently. |
-| "I'll batch all the builds first, then all the reviews." | No. Steps run strictly serially within a batch: Build → Review → Verify per step before moving to the next step. |
+| "I'll batch all the builds first, then all the reviews." | No. Steps run strictly serially: Build → Review → Verify per step, fully, before the next step's build begins. |
 | "The plan only has 2 milestones, I'll skip the cadence question." | The Cadence Gate fires for any complex (multi-milestone) plan in skill-managed mode. Two milestones still counts. |
 | "User-managed mode in a milestone plan — I should ask the cadence too." | No. Cadence Gate is conditional on skill-managed mode. User-managed always pauses per step. |
 | "I'll squash the plan progress into a separate commit so the diff is cleaner." | No. Plan progress markers (Markdown checkboxes or HTML `data-status` / badge / checkbox attributes) go in the same commit as the step's implementation. |

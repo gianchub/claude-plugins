@@ -49,6 +49,10 @@ Even a one-line change carries assumptions about where it goes, what it affects,
 
 Plan steps describe intent in prose. Do not include code blocks except for interface signatures, config keys, and schema shapes (full policy in `references/step-template.md`). Tool commands in Phase 3 checklists are operational instructions, not code — they are always permitted.
 
+### Context Discipline (Subagent-Driven)
+
+Planning is deliberately subagent-driven so the main conversation stays a lean coordinator. The two heaviest token consumers — bulk codebase reading during exploration (Step 1) and the adversarial plan review (Step 5) — are pushed into subagents whose context is reclaimed when they return. The main conversation keeps only distilled findings: a structural map, the confirmed tool chain, the resolved requirements, and the review report — not the raw contents of every file surveyed. This mirrors `execute-blueprint`, which keeps every build, review, and verification inside a subagent for the same reason. Keeping the context window lean is what lets both skills scale to large codebases and multi-milestone plans without degrading.
+
 ## Workflow
 
 **Flow:** Explore codebase → Confirm tool chain (hard gate) → Clarify requirements (hard gate) → Propose approaches → Assess complexity → Generate plan → Adversarial review → Plan ready.
@@ -74,7 +78,9 @@ For plans with 3 or more steps, or any plan touching architecture, multiple modu
 
 ### 1. Explore Codebase and Discover Tooling
 
-Begin by reading the codebase broadly. Examine:
+Begin by surveying the codebase broadly. For anything larger than a small project, **dispatch exploration subagents** (via Claude Code's Agent tool) to read areas in parallel and return distilled findings — a map of structure, entry points, data layer, conventions, and discovered tooling — rather than reading every file into the main conversation. The coordinator synthesizes those summaries and keeps only what the planning dialogue needs; this is what keeps the context window lean. Reserve direct reads in the main conversation for the few files you must see verbatim to ask precise clarifying questions.
+
+Across the codebase, examine:
 
 - Project structure (directories, modules, packages).
 - Entry points (main files, route definitions, CLI commands).
@@ -252,7 +258,7 @@ The `README` (`.html` or `.md` matching the plan's format) provides an ordered l
 
 ## Handling Plan Execution
 
-When the user asks to execute, invoke `blueprints:execute-blueprint` — it provides full subagent orchestration with batching, git handling, and progress tracking, and handles both `.md` and `.html` plan formats. If unavailable, work through steps one at a time completing all three phases before advancing. Mark completed steps with a checkmark in the plan heading and tick Phase 3 checkboxes (or, for HTML plans, set `data-status="complete"` on the step's `<article>`, update the status badge text, prepend `✅ ` to the step heading, and add `checked` to verification checkboxes) for cross-session resumability. See `references/step-template.md` or `references/step-template-html.md` for what belongs in each phase of a plan step.
+When the user asks to execute, invoke `blueprints:execute-blueprint` — it provides full subagent orchestration with git handling and progress tracking, and handles both `.md` and `.html` plan formats. If unavailable, work through steps one at a time completing all three phases before advancing. Mark completed steps with a checkmark in the plan heading and tick Phase 3 checkboxes (or, for HTML plans, set `data-status="complete"` on the step's `<article>`, update the status badge text, prepend `✅ ` to the step heading, and add `checked` to verification checkboxes) for cross-session resumability. See `references/step-template.md` or `references/step-template-html.md` for what belongs in each phase of a plan step.
 
 ## Handling Scope Changes
 
