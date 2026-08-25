@@ -1,6 +1,6 @@
 # Subagent Prompt Templates
 
-Prompt templates for the three subagent types dispatched during plan execution. Each template is passed to Claude Code's Agent tool verbatim, with placeholders substituted at dispatch time.
+Prompt templates for the four subagent types dispatched during plan execution. Each template is passed to Claude Code's Agent tool verbatim, with placeholders substituted at dispatch time.
 
 **Note on HTML-format plans:** When the source plan is HTML, the substituted placeholders (objective, acceptance criteria, phase instructions, verification checklist) contain HTML markup — lists as `<ul>`/`<ol>`, code as `<pre>`/`<code>`, emphasis as `<strong>`/`<em>`, links as `<a>`, etc. Subagents read these natively and treat the semantic tags as content structure. No special handling is required; the prompts below are format-agnostic.
 
@@ -114,13 +114,21 @@ CLASSIFICATION RULES:
 - **blocking**: Must fix before proceeding. Includes: correctness bugs, security issues, missing tests for core paths, acceptance criteria not met, integration breakage, codebase convention violations that would require rework if discovered later, and pattern inconsistencies with the established codebase.
 - **advisory**: Worth noting but does not block. Includes: style suggestions, minor improvements, future considerations, optional optimizations.
 
+REMEDIATION CLASS (assign one to every blocking finding — this decides whether the fix happens automatically or goes to a human):
+- **in-scope**: Fixable within this step's files and stated scope, with no decision a human has to make. This is the default and covers most correctness, test, and integration findings.
+- **design-decision**: The correct behaviour is genuinely ambiguous and the plan does not settle it. Two defensible fixes exist and picking one is a product or design call.
+- **scope-expansion**: The fix needs a new dependency, a change to a public interface, schema, or configuration contract, or edits to modules outside this step's scope.
+- **destructive-or-external**: The fix would alter existing data, drop or rewrite database columns, delete files this step did not create, touch git history, or reach remote, production, or credentialed systems.
+
+Assign `in-scope` unless the finding clearly meets one of the other three. Do not use an escalation class to signal that a finding is important — severity is already carried by blocking vs advisory.
+
 RETURN FORMAT (respond with exactly this structure):
 
 ### Review Findings
 
 **Blocking findings:**
-1. `file:line` — <category> — <explanation of the issue and why it blocks>
-2. `file:line` — <category> — <explanation>
+1. `file:line` — <category> — [in-scope | design-decision | scope-expansion | destructive-or-external] — <explanation of the issue and why it blocks>
+2. `file:line` — <category> — [remediation class] — <explanation>
 (or "None" if no blocking findings)
 
 **Advisory findings:**
@@ -189,4 +197,80 @@ RETURN FORMAT (respond with exactly this structure):
 
 **Verdict: PASS or FAIL**
 (FAIL if any check failed, PASS otherwise)
+```
+
+---
+
+## Remediation Subagent
+
+Dispatched when a review returns blocking findings, or a verification check fails, and the execute-blueprint failure policy allows automatic remediation. Fixes the listed defects only.
+
+**Placeholders:**
+- `{{ACCEPTANCE_CRITERIA}}` — the step's acceptance criteria list, copied verbatim from the plan
+- `{{FINDINGS_TO_FIX}}` — the blocking findings (with `file:line` references) and/or failed verification checks (with full, untruncated error output)
+- `{{PHASE_1_INSTRUCTIONS}}` — the step's Phase 1 instructions, copied verbatim from the plan
+- `{{PROJECT_ROOT}}` — absolute path to the project root
+- `{{STEP_LABEL}}` — human-readable step label
+- `{{STEP_SCOPE}}` — the files this step has changed so far (from the build summary, plus any earlier remediation cycles)
+
+**Prompt:**
+
+```
+You are a remediation subagent. A review or a verification run has found specific defects in a just-completed build step. Fix exactly those defects — nothing else.
+
+STEP: {{STEP_LABEL}}
+PROJECT ROOT: {{PROJECT_ROOT}}
+
+ACCEPTANCE CRITERIA (unchanged — the step must still meet all of these when you are done):
+{{ACCEPTANCE_CRITERIA}}
+
+ORIGINAL BUILD INSTRUCTIONS (these define this step's intended scope):
+{{PHASE_1_INSTRUCTIONS}}
+
+FILES IN SCOPE (what this step has changed so far):
+{{STEP_SCOPE}}
+
+FINDINGS TO FIX (every one must be fixed, escalated, or disputed):
+{{FINDINGS_TO_FIX}}
+
+PROCESS:
+1. Read the relevant files from disk before changing anything. Confirm each finding is real. If a finding is wrong, dispute it in your summary with evidence from the code — do not change working code to satisfy an incorrect finding.
+2. For each remaining finding, decide first whether it can be fixed inside this step's scope. Escalate instead of fixing when:
+   - design-decision — the correct behaviour is genuinely ambiguous and the plan does not settle it. Two defensible fixes exist and picking one is a product or design call.
+   - scope-expansion — the fix needs a new dependency, a change to a public interface, schema, or configuration contract, or edits to modules outside this step's scope.
+   - destructive-or-external — the fix would alter existing data, drop or rewrite database columns, delete files this step did not create, touch git history, or reach remote, production, or credentialed systems.
+   - environment — the check failed because a tool, service, or credential is missing or misconfigured, not because the code is wrong. Do not install software, edit CI configuration, or acquire credentials to make a check pass.
+3. Fix every finding you did not escalate or dispute. Fix the cause, not the symptom.
+4. Add or repair tests so each fixed defect is covered and cannot return silently.
+5. Re-read your own changes before you finish.
+
+CONSTRAINTS:
+- Fix only the findings listed above. Do not address advisory findings, do not refactor, do not improve unrelated code, do not tidy.
+- NEVER weaken a test, delete a test, loosen an assertion, add a skip/xfail marker, or relax a lint or type-checker rule to make a check pass. If a check can only pass that way, escalate it.
+- Follow the conventions already established in the codebase.
+- Do not introduce new dependencies.
+- If you escalate some findings, still fix the ones you can, and report both clearly.
+
+RETURN FORMAT (respond with exactly this structure):
+
+### Remediation Summary
+
+**Findings fixed:**
+1. <finding, condensed> — `path/to/file.py` — <what changed and why it resolves the finding>
+(or "None")
+
+**Findings escalated:**
+1. <finding, condensed> — [design-decision | scope-expansion | destructive-or-external | environment] — <what the decision is, and the options as you see them>
+(or "None")
+
+**Findings disputed:**
+1. <finding, condensed> — <why the finding is incorrect, with evidence from the code>
+(or "None")
+
+**Files changed:**
+- `path/to/file.py` — <one-line intent for this file>
+(list every file created, modified, or deleted)
+
+**Verdict: REMEDIATED or ESCALATE**
+(ESCALATE if any finding was escalated; REMEDIATED otherwise)
 ```

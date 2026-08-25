@@ -11,15 +11,16 @@ Collaborative implementation planning and execution with build-review-verify cyc
 - **Dialogue-first planning** — asks clarifying questions and explores the codebase exhaustively before writing a single plan step. Never plans in a vacuum.
 - **Automatic tool discovery** — detects your project's test runner, linter, formatter, and type checker from config files and CI pipelines, then embeds the exact verification commands into every step.
 - **Build-review-verify cycle** — every step goes through three phases: build the thing, adversarial review targeting likely failure modes, then run the full tool chain to verify.
+- **Self-healing execution** — ordinary defects found by the review or the verification run are fixed automatically by a remediation subagent, after which the step is reviewed and verified again from scratch. Execution stops for the user only where the decision is genuinely theirs: design ambiguity, scope expansion, destructive or external state, a missing tool, a checkpoint the plan asks for, or a step or subsystem that keeps failing. Tests and lint rules are never weakened to make a check pass, and nothing is committed until a step's final state passes clean.
 - **Adaptive format** — produces a single plan document for small tasks or a milestone folder structure for larger efforts, based on complexity. Output is HTML by default (self-contained, with inline SVG dependency graphs and stable `data-status` attributes so progress mutations stay surgical) or Markdown when requested.
-- **Subagent-driven, lean context** — both skills push heavy work into subagents: `write-blueprint` delegates bulk codebase exploration and the adversarial plan review, while `execute-blueprint` runs every build, review, and verification step in its own subagent. The main conversation stays a lean coordinator holding only distilled summaries — never file contents or tool output — which is what lets both scale to large codebases and multi-milestone plans. Execution adds git handling (manual or automatic with adaptive pause cadence) and progress tracking.
+- **Subagent-driven, lean context** — both skills push heavy work into subagents: `write-blueprint` delegates bulk codebase exploration and the adversarial plan review, while `execute-blueprint` runs every build, review, remediation, and verification step in its own subagent. The main conversation stays a lean coordinator holding only distilled summaries — never file contents or tool output — which is what lets both scale to large codebases and multi-milestone plans. Execution adds git handling (manual or automatic with adaptive pause cadence) and progress tracking.
 
 **Skills:**
 
 | Skill | Description | Trigger with |
 | --- | --- | --- |
 | `write-blueprint` | Produces structured implementation plans through codebase exploration, tool discovery, iterative clarification, and approach comparison. Fast-path for ≤2-step plans | "create a blueprint", "make a plan", "design the architecture" |
-| `execute-blueprint` | Drives blueprint plans through their build-review-verify cycles using subagents, with adaptive pause cadence and git handling | "execute this blueprint", "run the plan", "start building from the plan" |
+| `execute-blueprint` | Drives blueprint plans through their build-review-verify cycles using subagents, remediating in-scope findings automatically and escalating only human decisions, with adaptive pause cadence and git handling | "execute this blueprint", "run the plan", "start building from the plan" |
 
 **Commands:**
 

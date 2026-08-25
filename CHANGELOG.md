@@ -4,6 +4,33 @@ All notable changes to the claude-plugins project are documented in this file.
 
 Version numbers refer to the **blueprints** plugin version (renamed from `blueprint` in 2.0.0), which has been the primary driver of releases. The `audits` plugin version (renamed from `code-audit` in 2.0.0) is noted where it differs.
 
+## [2.3.0] - 2026-08-25
+
+Rewrite `execute-blueprint`'s failure policy. Findings that the run itself created are now fixed by a remediation subagent and re-verified automatically; the user is stopped only for decisions that are genuinely theirs. The `audits` plugin is unchanged and remains at 2.1.0.
+
+### Blueprints (2.3.0)
+
+- **Automatic remediation replaces blanket escalation.** Previously *every* blocking review finding and *every* failed verification check stopped the run and waited for the user — a policy that interrupted for a missing null check as readily as for a schema redesign. Now in-scope correctness, test, and integration findings are dispatched to a new **remediation subagent** that fixes the listed defects and nothing else, after which the review and the verification both run again in full
+- **Escalation classes.** Every blocking finding carries a remediation class. `in-scope` findings are fixed automatically; four classes stop the run and hand the decision to the user:
+  - `design-decision` — the plan does not settle what the correct behaviour is, and choosing is a product or design call
+  - `scope-expansion` — the fix needs a new dependency, a change to a public interface, schema, or configuration contract, or edits outside the step's scope
+  - `destructive-or-external` — the fix would alter existing data, drop or rewrite columns, delete files the step did not create, touch git history, or reach remote, production, or credentialed systems
+  - `environment` — a check failed because a tool, service, or credential is missing or misconfigured, not because the code is wrong
+
+  The review subagent assigns the class (its prompt template and return format now require one per blocking finding); the remediation subagent, which has read the code, has the final say and can escalate anything it was handed. If any finding in a set escalates, the run stops before remediating *anything* — a design decision can change what the right fix is, and a half-remediated tree is harder to reason about than an untouched one
+- **Two budgets bound the loop.** A step gets at most **two** remediation cycles before it escalates. A subsystem — keyed on the nearest common parent directory of the files cited in the findings — gets at most **two** cycles per session once two different steps have contributed to them; the third stops the run and asks for an **architectural decision**, presenting the pattern across steps rather than asking about one more finding. Both counters are session-scoped and reset once the user resolves an escalation and asks to continue
+- **Manual checkpoints are honoured.** A step whose plan text explicitly asks for human confirmation, sign-off, approval, or manual verification pauses in both git modes. `write-blueprint` now tells plan authors to state such a checkpoint explicitly, since execution no longer pauses by default
+- **`<PASS-BEFORE-COMMIT>` added to the Iron Laws.** Remediation makes the preceding review and verification stale, so a step is complete only when a full review pass *and* a full verification pass both succeed against its final state. The commit captures that state — never an intermediate attempt, never an open finding, never a partially remediated tree. This is the pre-existing no-partial-commit rule, promoted to a law and extended to cover remediation
+- **Guardrails against green-washing.** The remediation prompt forbids weakening a test, deleting a test, loosening an assertion, adding a skip/xfail marker, or relaxing a lint or type-checker rule to make a check pass — if a check can only pass that way, it is escalated. It also forbids touching advisory findings, refactoring, or tidying. A finding the remediation subagent believes is wrong is **disputed** rather than silently accepted, with evidence; the next review is the arbiter
+- **Never re-run only the failed check.** After remediation, the full review and the full verification checklist both re-run, because a fix can regress a check that was green
+- **Remediation stays visible.** Step reports carry the remediation cycles run and what each one fixed, plus any disputed findings; condensed step lines carry a cycle count; milestone and end-of-run summaries carry a remediation roll-up, so auto-fixed work can be reviewed in one place
+- **Subagent-Only law extended** to cover remediation — a one-character fix for a review finding is still dispatched as a subagent — and `references/subagent-prompts.md` gains the fourth (remediation) template
+- Ten new entries in the Red Flags table covering the new failure policy, and READMEs (root and plugin) updated to describe remediate-or-escalate
+
+### Audits
+
+- No changes; remains at 2.1.0
+
 ## [2.2.0] - 2026-06-04
 
 Simplify `execute-blueprint`'s pause model by removing the fixed-size step batching, and reinforce the subagent-driven, lean-context design of both blueprint skills. The `audits` plugin is unchanged and remains at 2.1.0.
