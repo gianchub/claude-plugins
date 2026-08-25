@@ -106,6 +106,8 @@ Run the full verification checklist. Every item must pass before the step is con
 
 **Failure protocol**: If any check fails, fix the issue and re-run the full checklist — do not selectively re-run only the failing check, as fixes can introduce regressions.
 
+**Human checkpoints**: If the step cannot be signed off without a person looking — a rendered UI, a migration against real data, an external integration — write that into the checklist in plain words ("have the user confirm the export opens correctly in a spreadsheet app"). Execution remediates ordinary findings on its own and pauses only where the plan says a human is needed.
+
 ---
 
 ## Example: Complete Step
